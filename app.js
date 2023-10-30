@@ -18,6 +18,7 @@ const app = express();
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 const UserRouter = require("./router/user");
 
@@ -26,14 +27,6 @@ const UserRouter = require("./router/user");
 //   // res.setHeader('authorization',SetHeaderss )
 //   next();
 // });
-app.use(function (req, res, next) {
-  console.log(req.headers,"this is headers o")
-
-  // res.header('authorization', req.headers;
-  // res.json(props);
-  // req.props = props;
-  next();
-});
 
 
 app.use("/api/v1/user", UserRouter);
