@@ -3,11 +3,13 @@ const ActivityModel = require("../model/ActivityModel");
 const UserModel = require("../model/user");
 const moment = require("moment");
 const TokenModel = require("../model/TokenModel");
+const upload = require("../utils/fileUpload");
+const sendMail = require("../utils/sendMail");
+
 const Validator = require("validatorjs");
-const multer = require('multer')
+const multer = require("multer");
 
-const path = require('path')
-
+const path = require("path");
 
 // DISABLE OTHER ACCOUNT
 const disableOtherAccounts = async (userId) => {
@@ -30,6 +32,8 @@ const updateUserActivity = async (activityname, user) => {
 
 const Signin = async (req, res) => {
   try {
+    console.log("login started");
+    console.log(req.body);
     const { username, password } = req.body;
     console.log(req.body);
     const user = await UserModel.findOne({ username });
@@ -45,9 +49,11 @@ const Signin = async (req, res) => {
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
-      return next(
-        new ErrorHandler("Please provide the correct information", 400)
-      );
+      return res.json({
+        message: "password is not currect ",
+        code: "403",
+        type: "Authentication Error",
+      });
     }
     console.log(user, "this si user");
     if (user.username !== "admin" && !user.isapproved) {
@@ -108,6 +114,7 @@ const Signin = async (req, res) => {
     console.log("resid");
     const result = Object.assign(user.getBrief(), {
       authorization: token,
+      code: 415,
     });
     console.log("resid");
 
@@ -393,7 +400,6 @@ const changeUserPassword = async (req, res) => {
       "max.old_password": "new password most be less than 30 caractor",
       "max.new_password": "new password most be less than 25 caractor",
       "min.new_password": "new password most be more than 4 caractor",
-
     });
     let status = validation.fails();
     if (status) {
@@ -404,7 +410,6 @@ const changeUserPassword = async (req, res) => {
         type: "InputsError",
         //  errors:errors
       });
-
     }
     const user = await UserModel.findOne({ _id: user_id });
 
@@ -423,8 +428,6 @@ const changeUserPassword = async (req, res) => {
       code: 200,
       message: "password changed successfully",
     });
-   
-    
   } catch (error) {
     return res.json({
       message: "change password is not changed successfully",
@@ -434,16 +437,13 @@ const changeUserPassword = async (req, res) => {
   }
 };
 
-
-
-const changeOtherPassword = async (req,res)=>{
+const changeOtherPassword = async (req, res) => {
   try {
     const userId = req.body.userId;
     const new_password = req.body.newPassword;
     let inputs = {
       userId: userId,
       newPassword: new_password,
-
     };
 
     let vald = {
@@ -456,7 +456,6 @@ const changeOtherPassword = async (req,res)=>{
       "required.newPassword": "new Password is required",
       "max.newPassword": "new password most be less than 25 caractors",
       "min.newPassword": "new Password most be more then 4 caractors",
-
     });
     let status = validation.fails();
     if (status) {
@@ -464,133 +463,123 @@ const changeOtherPassword = async (req,res)=>{
       return res.json({
         code: 415,
         type: "InputsError",
-         errors:errors
+        errors: errors,
       });
-      
     }
 
+    const userFounded = await UserModel.findOne({ _id: userId });
 
-     const userFounded = await UserModel.findOne({ _id:userId });
-
-     if(!userFounded){
+    if (!userFounded) {
       return res.json({
         code: 400,
         message: "user not found",
         //  errors:errors
       });
-     }
+    }
     //  console.log(userFounded,'this is user ramy')
-    
-     userFounded.hashedPassword = new_password;
-     await userFounded.save().then(()=>{
-       res.json({
-         code:200,
-         message:"user password change successfully "
-       })
-     })
+
+    userFounded.hashedPassword = new_password;
+    await userFounded.save().then(() => {
+      res.json({
+        code: 200,
+        message: "user password change successfully ",
+      });
+    });
+  } catch (error) {
+    return res.json({
+      message: "",
+      systemMsg: error?.message,
+      code: 400,
+    });
   }
-    catch (error) {
-      return res.json({
-        message: "",
-        systemMsg: error?.message,
-        code: "400",
+};
+const forgotPasswordRequest = async (req, res) => {
+  const user = req.body.username;
+
+  const username = await UserModel.findOne({ username: user });
+  if (!username) {
+    console.log(req.body);
+    return res.json({
+      message: "entered username is not exist",
+      code: 400,
+    });
+  }
+  // console.log("come1")
+  // console.log(username)
+  try {
+    let password = Math.floor(Math.random() * (255552 - 25552)) + 25552;
+
+    await sendMail({
+      email: username.email,
+      subject: "Reco your account",
+      message: `رمز عبور جديد شما ${password}`,
+    });
+    username.hashedPassword = password;
+    await username.save();
+    // console.log("come2")
+
+    res.json({
+      success: true,
+      code: 415,
+      message: `password recovered and send , please check your email   ${username.email}`,
+    });
+  } catch (error) {
+    {
+      console.log(error);
+      res.json({
+        error: "error in ercovery password section",
+        errorsys: error.message,
       });
     }
-  };
+  }
+};
 
-
-
-  const uploadProfilePicture =async (req,res)=>{
-    
-    
-
-    console.log(req)
-var storage = multer.diskStorage({
-    destination: function(req, file, cb){
-        cb(null, 'uploads/')
-        console.log(req, file ,cb)
-    },
-    filename: function(req, file, cb){
-        let ext = path.extname(file.originalname)
-        cb(null, Date.now() + ext);
-    }
-})
-      
-
-
-    //   const { userId } = data;
-    //   const name = data.file.hapi.filename;
-    //   UserModel.findOne({ _id: userId }).exec(function(err, user) {
-    //       if (err) {
-    //           logger.error(err);
-    //           return res({ msg: err }).code(404);
-    //       }
-    //       if (!user) {
-    //           return res({ msg: 'user not found' }).code(404);
-    //       }
-    //       user.profileImage = name;
-    //       user.save(null);
-    //       const path = `${__dirname}/../uploads/users/${userId}/${name}`;
-    //       if (!fs.existsSync(`${__dirname}/../uploads`)) {
-    //           fs.mkdirSync(`${__dirname}/../uploads`);
-    //       }
-    //       if (!fs.existsSync(`${__dirname}/../uploads/users`)) {
-    //           fs.mkdirSync(`${__dirname}/../uploads/users`);
-    //       }
-    //       if (
-    //           !fs.existsSync(
-    //               `${__dirname}/../uploads/users/${userId}`
-    //           )
-    //       ) {
-    //           fs.mkdirSync(`${__dirname}/../uploads/users/${userId}`);
-    //       }
-    //       const file = fs.createWriteStream(path);
-    //       file.on('error', function(errFile) {
-    //           logger.error(errFile);
-    //           return res({ msg: errFile }).code(404);
-    //       });
-    //       data.file.pipe(file);
-    //       data.file.on('end', function(errFile) {
-    //           const ret = {
-    //               filename: data.file.hapi.filename,
-    //               headers: data.file.hapi.headers,
-    //           };
-    //           return res(JSON.stringify(ret)).code(200);
-    //       });
-    //   });
-
-
-
-    // }
-
+const addPhoneNumber = async (req, res) => {
+  const { firstName, lastName, phoneNumber, email } = req.body;
+  if (!firstName) {
+    return res.json({
+      message: "نام الزامی است",
+      code: "422",
+      validate: false,
+      field: "firstName",
+    });
+  }
+  if (!lastName) {
+    return res.json({
+      msg: "نام خانوادگی الزامی است",
+      code: "422",
+      validate: false,
+      field: "lastName",
+    });
+  }
+  if (!phoneNumber) {
+    return res.json({
+      msg: "شماره تلفن الزامی است",
+      code: "422",
+      validate: false,
+      field: "phoneNumber",
+    });
   }
 
 
 
 
+  
+  
+   const ff= await PhoneBookModel.exists({ phoneNumber })
+    
+    if(pp){
+    return res.json({
+        msg: 'این شماره تلفن قبلا ثبت شده است',
+        code: '422',
+        validate: false,
+        field: 'phoneNumber',
+    })
+}
 
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const getPhoneBook = async (req, res) => {};
 
 const addRoleToUser = async (req, res) => {
   try {
@@ -631,8 +620,8 @@ const addRoleToUser = async (req, res) => {
 
 const test = async (req, res) => {
   // console.log(req)
-  
-  console.log(req.user.roles)
+
+  console.log(req.user.roles);
 
   // console.log(req.headers)
   // console.log(object);
@@ -646,7 +635,9 @@ module.exports = {
   unlockUser,
   changeUserPassword,
   changeOtherPassword,
-  uploadProfilePicture,
+  forgotPasswordRequest,
+  addPhoneNumber,
+  getPhoneBook,
   addRoleToUser,
   test,
 };

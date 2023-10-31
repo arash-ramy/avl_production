@@ -38,12 +38,20 @@ router.post(
     "/change-password-other",headerAuth,userController.changeOtherPassword
 )
 
-
-
 router.post(
-    "/upload-Prof-pic",userController.uploadProfilePicture
+    "/passwordrecovery",userController.forgotPasswordRequest
 )
 
+router.post(
+    "/phoneNumbers/add",userController.addPhoneNumber
+)
+router.get(
+    "/phoneNumbers/show",userController.getPhoneBook
+)
+
+// router.post(
+//     "/upload-Prof-pic",multiupload.array('files', 10),userController.uploadProfilePicture
+// )
 
 
 
