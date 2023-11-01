@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const { headerAuth } = require("../utils/authHeader");
 
 
 const userController = require("../controller/userController");
-const { headerAuth } = require("../utils/authHeader");
 
-const headerAccess= 
+
 // login user
 router.post(
     "/signin",userController.Signin);

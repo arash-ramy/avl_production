@@ -33,6 +33,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 const UserRouter = require("./router/user");
+const DeviceRouter = require("./router/device");
 
 // authorization
 // app.use(function(req, res, next) {
@@ -42,6 +43,7 @@ const UserRouter = require("./router/user");
 
 
 app.use("/api/v1/user", UserRouter);
+app.use("/api/v1/device", DeviceRouter);
 
 
 app.use(function (req, res, next) {

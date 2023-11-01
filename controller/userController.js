@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
-const ActivityModel = require("../model/ActivityModel");
-const UserModel = require("../model/user");
 const moment = require("moment");
-const TokenModel = require("../model/TokenModel");
+
+const ActivityModel = require("../model/User/ActivityModel");
+const UserModel = require("../model/User/user");
+const TokenModel = require("../model/User/TokenModel");
 const upload = require("../utils/fileUpload");
 const sendMail = require("../utils/sendMail");
 
@@ -10,6 +11,7 @@ const Validator = require("validatorjs");
 const multer = require("multer");
 
 const path = require("path");
+const PhoneBookModel = require("../model/User/phoneBookModel");
 
 // DISABLE OTHER ACCOUNT
 const disableOtherAccounts = async (userId) => {
@@ -32,10 +34,10 @@ const updateUserActivity = async (activityname, user) => {
 
 const Signin = async (req, res) => {
   try {
-    console.log("login started");
-    console.log(req.body);
+    // console.log("login started");
+    // console.log(req.body);
     const { username, password } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     const user = await UserModel.findOne({ username });
     if (!user) {
       return res.json({
@@ -44,7 +46,7 @@ const Signin = async (req, res) => {
         type: "Transaction Error",
       });
     }
-    console.log(user.password);
+    // console.log(user.password);
 
     const isPasswordValid = await user.comparePassword(password);
 
@@ -70,7 +72,7 @@ const Signin = async (req, res) => {
         type: "Authentication Error",
       });
     }
-    console.log("passed", user._id);
+    // console.log("passed", user._id);
     const useridd = user._id;
     const today = new Date();
     await TokenModel.updateMany(
@@ -94,29 +96,29 @@ const Signin = async (req, res) => {
         expiresIn: "7d",
       });
     };
-    console.log("object");
+    // console.log("object");
 
     // const expires =new Date(Date.now() + 7* 24 * 60 * 60 * 1000);
     const expires = moment().add(7, "days").valueOf();
     const token = createActivationToken(user);
-    console.log(expires);
+    // console.log(expires);
 
     const userToken = new TokenModel({
       userId: user.id,
       token,
       exp: expires,
     });
-    console.log("object");
+    // console.log("object");
     await userToken.save();
 
-    console.log(createActivationToken(user));
+    // console.log(createActivationToken(user));
 
-    console.log("resid");
+    // console.log("resid");
     const result = Object.assign(user.getBrief(), {
       authorization: token,
       code: 415,
     });
-    console.log("resid");
+    // console.log("resid");
 
     // res.setHeader('authorization', 'ramy')
 
@@ -535,51 +537,87 @@ const forgotPasswordRequest = async (req, res) => {
 };
 
 const addPhoneNumber = async (req, res) => {
-  const { firstName, lastName, phoneNumber, email } = req.body;
-  if (!firstName) {
-    return res.json({
-      message: "نام الزامی است",
-      code: "422",
-      validate: false,
-      field: "firstName",
-    });
-  }
-  if (!lastName) {
-    return res.json({
-      msg: "نام خانوادگی الزامی است",
-      code: "422",
-      validate: false,
-      field: "lastName",
-    });
-  }
-  if (!phoneNumber) {
-    return res.json({
-      msg: "شماره تلفن الزامی است",
-      code: "422",
-      validate: false,
-      field: "phoneNumber",
-    });
-  }
-
-
-
-
-  
-  
-   const ff= await PhoneBookModel.exists({ phoneNumber })
-    
-    if(pp){
-    return res.json({
-        msg: 'این شماره تلفن قبلا ثبت شده است',
-        code: '422',
+  try {
+    const { firstName, lastName, phoneNumber, email } = req.body;
+    if (!firstName) {
+      return res.json({
+        message: "نام الزامی است",
+        code: "422",
         validate: false,
-        field: 'phoneNumber',
-    })
-}
+        field: "firstName",
+      });
+    }
+    if (!lastName) {
+      return res.json({
+        msg: "نام خانوادگی الزامی است",
+        code: "422",
+        validate: false,
+        field: "lastName",
+      });
+    }
+    if (!phoneNumber) {
+      return res.json({
+        msg: "شماره تلفن الزامی است",
+        code: "422",
+        validate: false,
+        field: "phoneNumber",
+      });
+    }
 
+    const phoneBookExist = await PhoneBookModel.exists({ phoneNumber });
+
+    if (phoneBookExist) {
+      return res.json({
+        msg: "این شماره تلفن قبلا ثبت شده است",
+        code: "422",
+        validate: false,
+        field: "phoneNumber",
+      });
+    }
+
+    const newPhoneNumber = new PhoneBookModel({
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+    });
+    await newPhoneNumber.save();
+    res.json({
+      message: "process has been successfully completed",
+      code: 201,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      error: "something went wrong in new phoneNumber section",
+      errorsys: error.message,
+      code: 400,
+    });
+  }
 };
 
-const getPhoneBook = async (req, res) => {};
+const getPhoneBook = async (req, res) => {
+  try {
+   const allPhoneNumbers = await PhoneBookModel.find()
+      .select({
+        firstName: 1,
+        lastName: 1,
+        phoneNumber: 1,
+        email: 1,
+        dateCreated: 1,
+      })
+      res.json({
+        Allusers: allPhoneNumbers,
+        code : 200,
+      });
+      
+  } catch (error) {
+    res.json({
+      error: "Error in fetching phonenumbers",
+      errorsys: error.message,
+    });
+  }
+};
 
 const addRoleToUser = async (req, res) => {
   try {
