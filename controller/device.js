@@ -1,7 +1,7 @@
 const Validator = require("validatorjs");
 const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const VehicleStatusModel = require("../model/GpsLocation/VehicleStatusModel");
-const VehicleTypeModel = require("../model/VehicleTypeModel");
+const VehicleTypeModel = require("../model/GpsLocation/VehicleTypeModel");
 
 async function addDevice(req, res) {
   console.log(req.body);
