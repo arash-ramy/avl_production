@@ -197,19 +197,16 @@ async function addDeviceModels(req, res) {
 
 
 
-
-
+const NodeGeocoder = require('node-geocoder');
 
 async function tests (req,res){
-    var vehicleId = req.body.vehicleId;
 
-    const vehicle = await VehicleModel.findOne({ _id: vehicleId });
+  const geocoder = NodeGeocoder({ provider: 'openstreetmap' });
+  const dataa =geocoder.reverse({lat:35.6741, lon:51.44159}, function(err, ress) {
+    console.log(ress);
+    return res.json({ress})
+  });
 
-    const oldVehicle = { ...vehicle._doc };
-console.log(oldVehicle,"oldVehicle")
-console.log("---------------------------------")
-
-console.log(vehicle,"vehicle")
 
 }
 module.exports = {

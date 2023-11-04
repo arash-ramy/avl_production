@@ -183,27 +183,222 @@ const addVehicleToGroup = async (req, res) => {
     }
     if (!foundedDeviceGroup.devices) foundedDeviceGroup.devices = new Array();
     if (foundedDeviceGroup.devices.indexOf(vehicleId) < 0) {
-        foundedDeviceGroup.devices.push(vehicleId);
+      foundedDeviceGroup.devices.push(vehicleId);
     }
-    await foundedDeviceGroup.save()
+    await foundedDeviceGroup.save();
     return res.json({
-        foundedDeviceGroup,
-        code :200
-      })
-    //   
+      foundedDeviceGroup,
+      code: 200,
+    });
+    //
   } catch (error) {
     // logger.error(ex);
     return res.json({
       message: "somthing went wrong in add vehicle to device group",
-        code :400
+      code: 400,
     });
   }
 };
+const editGroup = async (req, res) => {
+  try {
+    var groupId = req.body.groupId;
+    var name = req.body.name;
+    var desc = req.body.desc;
+    var color = req.body.color;
+    var userId = req.user._id;
 
+    const doundedDevices = await DeviceGroupModel.findOne({
+      $and: [{ user: userId }, { _id: groupId }],
+    });
+
+    if (!doundedDevices) {
+      return res.json({
+        msg: "There is no device group",
+        code: 400,
+      });
+    }
+
+    name && (doundedDevices.name = name);
+    desc && (doundedDevices.desc = desc);
+    color && (doundedDevices.color = color);
+    await doundedDevices.save();
+    return res.json({
+      doundedDevices,
+      code: 200,
+    });
+  } catch (error) {
+    return res.json({
+      message: "Somthing went wrong in device groupe",
+      code: 200,
+    });
+  }
+};
+const shareGroupsWithUser = async (req, res) => {
+  try {
+    console.log("shared3");
+    var userId = req.user._id;
+    var groupId = req.body.groupId;
+    var sharee = req.body.sharee;
+    if (!sharee) {
+      return res.json({
+        message: "sharee required",
+        code: 413,
+        validate: false,
+      });
+    }
+    const foundedGroup = await DeviceGroupModel.findOne({
+      $and: [{ user: userId }, { _id: groupId }],
+    }).populate("devices");
+    console.log("shared4");
+
+    if (!foundedGroup) {
+      return res.json({
+        message: "There is no device group",
+        code: 400,
+      });
+    }
+    console.log("object");
+    if (!foundedGroup.sharees) foundedGroup.sharees = new Array();
+    if (foundedGroup.sharees.indexOf(sharee) < 0) {
+      foundedGroup.sharees.push(sharee);
+      await foundedGroup.save();
+      return res.json({ group: foundedGroup, sharee: sharee, code: 200 });
+    }
+  } catch (error) {
+    console.log(error);
+    // logger.error(ex);
+    return res.json({
+      error,
+      code: 500,
+    });
+  }
+};
+const unshareGroupsWithUser = async (req, res) => {
+  try {
+    console.log("shared3");
+    var userId = req.user._id;
+    var groupId = req.body.groupId;
+    var sharee = req.body.sharee;
+    if (!sharee) {
+      return res.json({
+        message: "sharee required",
+        code: 413,
+        validate: false,
+      });
+    }
+    const foundedGroup = await DeviceGroupModel.findOne({
+      $and: [{ user: userId }, { _id: groupId }],
+    }).populate("devices");
+    console.log("shared4");
+
+    if (!foundedGroup) {
+      return res.json({
+        message: "There is no device group",
+        code: 400,
+      });
+    }
+    console.log("object1");
+    if (!foundedGroup.sharees) foundedGroup.sharees = new Array();
+    if (foundedGroup.sharees.indexOf(sharee) >= 0) {
+      foundedGroup.sharees.splice(foundedGroup.sharees.indexOf(sharee), 1);
+      await foundedGroup.save();
+      return res.json({ group: foundedGroup, sharee: sharee, code: 200 });
+    }
+  } catch (error) {
+    console.log(error);
+    // logger.error(ex);
+    return res.json({
+      error,
+      code: 500,
+    });
+  }
+};
+const getVehiclesofGroup = async (req, res) => {
+  try {
+    var groupId = req.params.groupId;
+    var userId = req.user._id;
+    const vehiclesofGroup = await DeviceGroupModel.findOne({
+      $and: [
+        { $or: [{ user: userId }, { sharees: userId }] },
+        { _id: groupId },
+      ],
+    }).populate({
+      path: "devices",
+      select:
+        "_id simNumber deviceIMEI vehicleName type plate driverName driverPhoneNumber model",
+      populate: {
+        path: "model",
+        select: { name: 1, _id: 1 },
+      },
+    });
+
+    // console.log(vehiclesofGroup);
+    
+    var vehicles = vehiclesofGroup.devices;
+    return res.json({
+      vehiclesofGroup,
+     s: vehicles.length
+    });
+    // var result = new Array();
+    // for (var i = 0; i < vehicles.length; i++) {
+    //               var tmpVehicle = {};
+    //               var remainingDate = -1;
+    //               tmpVehicle.deviceInfo = vehicles[i];
+    //               if (vehicles[i].lastLocation) {
+    //                   var oneDay = 24 * 60 * 60 * 1000;
+    //                   var startDate = new Date(vehicles[i].lastLocation.date);
+    //                   var endDate = new Date();
+    //                   remainingDate = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / (oneDay)));
+  
+    //               }
+    // .exec(function (err, dgs) {
+    //     if (err) {
+    //         logger.error(err);
+    //         return res({
+    //             msg: err
+    //         }).code(500);
+    //     }
+    //     else if (!dgs) {
+    //         return res({
+    //             msg: 'There is no device group'
+    //         }).code(404);
+    //     }
+    //     else {
+    //         var vehicles = dgs.devices;
+    //         var result = new Array;
+    //         for (var i = 0; i < vehicles.length; i++) {
+    //             var tmpVehicle = {};
+    //             var remainingDate = -1;
+    //             tmpVehicle.deviceInfo = vehicles[i];
+    //             if (vehicles[i].lastLocation) {
+    //                 var oneDay = 24 * 60 * 60 * 1000;
+    //                 var startDate = new Date(vehicles[i].lastLocation.date);
+    //                 var endDate = new Date();
+    //                 remainingDate = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / (oneDay)));
+
+    //             }
+    //             tmpVehicle.lastLocationDiff = remainingDate;
+    //             result.push(tmpVehicle);
+    //         }
+    //         res(result).code(200);
+    //     }
+    // })
+  } catch (error) {
+    // logger.error(ex);
+    return res.json({
+      message: "somthing went wrong in Get Vehicles Of Group",
+      code: 500,
+    });
+  }
+};
 module.exports = {
   getDeviceGroups,
   addDeviceGroup,
   getDeviceGroupById,
   editDeviceGroup,
   addVehicleToGroup,
+  editGroup,
+  shareGroupsWithUser,
+  unshareGroupsWithUser,
+  getVehiclesofGroup,
 };
