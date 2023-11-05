@@ -1,7 +1,7 @@
 const NodeGeocoder = require('node-geocoder');
+const LocationModel = require('../model/GpsLocation/LocationModel');
 
 // const { logger } = require('./customlog');
-// const  LocationModel = require('../model/GpsLocation/LocationModel';
 
 class AddressCache {
     constructor() {

@@ -4,6 +4,9 @@ const bodyParser = require("body-parser");
 const controller =require("./controller/userController")
 const cors = require('cors')
 const app = express();
+var path = require("path");
+const { headerAuth } = require("./utils/authHeader");
+
 // process.on("uncaughtException", (err) => {
 //     console.log("UNCAUGHT EXCEPTION! 💥💥🚀 Shutting down ...");
 //     console.log(err.name, err.message);
@@ -27,6 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/media',headerAuth,express.static(path.resolve('./public')));
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -35,6 +39,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 const UserRouter = require("./router/user");
 const DeviceRouter = require("./router/device");
 const DeviceGroupRouter = require("./router/deviceGroupe");
+const GPSLocation = require("./router/gpslocation");
 
 // authorization
 // app.use(function(req, res, next) {
@@ -44,6 +49,8 @@ const DeviceGroupRouter = require("./router/deviceGroupe");
 
 
 app.use("/api/v1/user", UserRouter);
+app.use("/api/v1/gpsdata", GPSLocation);
+
 app.use("/api/v1/device", DeviceRouter);
 app.use("/api/v1/devicegroup", DeviceGroupRouter);
 

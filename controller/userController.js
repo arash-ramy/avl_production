@@ -12,6 +12,7 @@ const multer = require("multer");
 
 const path = require("path");
 const PhoneBookModel = require("../model/User/phoneBookModel");
+const { text } = require("body-parser");
 
 // DISABLE OTHER ACCOUNT
 const disableOtherAccounts = async (userId) => {
@@ -619,6 +620,43 @@ const getPhoneBook = async (req, res) => {
   }
 };
 
+
+const uploadProfilePicture = async (req, res) => {
+
+// let address = "media/prof-uploads/";
+// console.log(req.file)
+// path.join(address,  'demo_path.js');
+
+  
+}
+
+
+const getProfilePicture = async (req, res) => {
+  var fs = require('fs');
+
+  // fs.unlinkSync(req.protocol + '://' + req.get('host')+"/"+"text.text");
+
+  // const url = req.protocol + '://' + req.get('host');
+  // const ll= path.join(url, "media","prof-uploads","653f8e8daf1214140ce981dd-1699184968746.jpg");
+  // const img = req.protocol + '://' + req.get('host')+"/"+"public"+"/"+"prof-uploads"+"/"+"653f8e8daf1214140ce981dd-1699184968746.jpg"
+  
+  // console.log(__dirname,"sjflk")
+
+  // fs.unlinkSync(img);
+
+  fs.unlink(path.join("public/prof-uploads/",  "653f8e8daf1214140ce981dd.jpg"), function(response) {
+  console.log(response)
+  })
+
+ return res.json({
+helooL:"goood by"
+ })
+}
+
+
+
+
+
 const addRoleToUser = async (req, res) => {
   try {
     const { userId, roleName } = req.body;
@@ -676,6 +714,8 @@ module.exports = {
   forgotPasswordRequest,
   addPhoneNumber,
   getPhoneBook,
+  uploadProfilePicture,
+  getProfilePicture,
   addRoleToUser,
   test,
 };
