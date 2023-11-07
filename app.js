@@ -6,6 +6,21 @@ const cors = require('cors')
 const app = express();
 var path = require("path");
 const { headerAuth } = require("./utils/authHeader");
+var http = require("http");
+const { GT06Controller } = require("./controller/GT06Controller");
+
+// مشخصات SSH:
+
+// SSH PORT : 3311
+
+// 65.109.138.40
+
+// root
+
+// fLR7K4WNu99msLXViiAs
+
+// var serverS = http.createServer(GT06Controller)
+// serverS.listen(80,"65.109.138.40");
 
 // process.on("uncaughtException", (err) => {
 //     console.log("UNCAUGHT EXCEPTION! 💥💥🚀 Shutting down ...");

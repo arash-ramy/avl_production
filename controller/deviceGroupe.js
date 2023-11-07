@@ -1,5 +1,6 @@
 const DeviceGroupModel = require("../model/GpsLocation/DeviceGroupeModel");
 const VehicleModel = require("../model/GpsLocation/VehicleModel");
+const UserModel = require("../model/User/user");
 
 const getDeviceGroups = async (req, res) => {
   try {
@@ -332,12 +333,37 @@ const getVehiclesofGroup = async (req, res) => {
       },
     });
 
-    // console.log(vehiclesofGroup);
-    
+    if (!vehiclesofGroup) {
+      return res.json({
+        message: "There is no device group",
+        code: 404,
+      });
+    }
     var vehicles = vehiclesofGroup.devices;
+    var result = new Array();
+
+    for (var i = 0; i < vehicles.length; i++) {
+      var tmpVehicle = {};
+      var remainingDate = -1;
+      tmpVehicle.deviceInfo = vehicles[i];
+      if (vehicles[i].lastLocation) {
+        var oneDay = 24 * 60 * 60 * 1000;
+        var startDate = new Date(vehicles[i].lastLocation.date);
+        var endDate = new Date();
+        remainingDate = Math.round(
+          Math.abs((endDate.getTime() - startDate.getTime()) / oneDay)
+        );
+      }
+      tmpVehicle.lastLocationDiff = remainingDate;
+      result.push(tmpVehicle);
+    }
+
+    console.log(result);
+    // console.log(vehiclesofGroup);
+
     return res.json({
-      vehiclesofGroup,
-     s: vehicles.length
+      code: 200,
+      result: result,
     });
     // var result = new Array();
     // for (var i = 0; i < vehicles.length; i++) {
@@ -349,7 +375,7 @@ const getVehiclesofGroup = async (req, res) => {
     //                   var startDate = new Date(vehicles[i].lastLocation.date);
     //                   var endDate = new Date();
     //                   remainingDate = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / (oneDay)));
-  
+
     //               }
     // .exec(function (err, dgs) {
     //     if (err) {
@@ -391,6 +417,189 @@ const getVehiclesofGroup = async (req, res) => {
     });
   }
 };
+
+const removeVehicleFromGroup = async (req, res) => {
+  try {
+    var vehicleId = req.params.vehicleId;
+    var groupId = req.params.groupId;
+    var userId;
+    if (req.user) {
+      userId = req.user._id;
+    }
+    const foundDeviceGroup = await DeviceGroupModel.findOne({
+      $and: [{ user: userId }, { _id: groupId }],
+    });
+    if (!foundDeviceGroup) {
+      return res.json({
+        message: "There is no device group",
+        code: 400,
+      });
+    }
+    const foundedVehicle = await VehicleModel.findOne({ _id: vehicleId });
+
+    if (!foundedVehicle) {
+      return res.json({
+        message: "There is no vhicle",
+        code: 400,
+      });
+    }
+
+    foundDeviceGroup.devices = new Array();
+    if (foundDeviceGroup.devices.indexOf(vehicleId) >= 0) {
+      foundDeviceGroup.devices.splice(
+        foundDeviceGroup.devices.indexOf(vehicleId),
+        1
+      );
+    }
+    await foundDeviceGroup.save();
+    res.json({ foundedVehicle, code: 200 });
+  } catch (ex) {
+    // logger.error(ex);
+    return res({
+      message: "Something went wrong in removeVehicleFromGroup",
+      code: 500,
+    });
+  }
+};
+const getUserDeviceGroups = async (req, res) => {
+  try {
+    var userId = req.params.id;
+    console.log(userId);
+    const deviceFounded = await DeviceGroupModel.find({ user: userId });
+
+    if (!deviceFounded) {
+      return res.json({
+        message: "device not founded ",
+        code: 400,
+      });
+    }
+    return res.json({
+      code: 200,
+      deviceFounded,
+    });
+  } catch (error) {
+    // logger.error(ex);
+    return res.json({
+      messagesys: error.message,
+      message: "somthing went wrong in getUserDeviceGroups",
+      code: 500,
+    });
+  }
+};
+
+const getVehiclesofMultiGroup = async (req, res) => {
+  try {
+    var groupId = req.body.groups;
+    var userId = req.user._id;
+    const foundItem = await DeviceGroupModel.find({
+      $and: [
+        // { $or: [{user: userId}, {sharees: userId}] },
+        { _id: { $in: groupId } },
+      ],
+    }).populate("devices");
+    console.log(foundItem);
+
+    if (!foundItem) {
+      return res.json({
+        message: "not founded ",
+        code: 400,
+      });
+    }
+    var result = new Array();
+    for(var ii = 0 ; ii < foundItem.length ; ii++) {
+    var vehicles = foundItem[ii].devices;
+    for (var i = 0; i < vehicles.length; i++) {
+        var tmpVehicle = {};
+        var remainingDate = -1;
+        tmpVehicle.deviceInfo = vehicles[i];
+        if (vehicles[i].lastLocation) {
+            var oneDay = 24 * 60 * 60 * 1000;
+            var startDate = new Date(vehicles[i].lastLocation.date);
+            var endDate = new Date();
+            remainingDate = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / (oneDay)));
+  
+        }
+        tmpVehicle.lastLocationDiff = remainingDate;
+        result.push(tmpVehicle);
+    }
+  }
+  return res.json({
+    result
+    ,"code":200
+  })
+    // .populate('devices').exec(function (err, dgs) {
+    //     if (err) {
+    //         logger.error(err);
+    //         return res({
+    //             msg: err
+    //         }).code(500);
+    //     }
+    //     else if (!dgs) {
+    //         return res({
+    //             msg: 'There is no device group'
+    //         }).code(404);
+    //     }
+    //     else {
+    //         var result = new Array;
+
+    //         for(var ii = 0 ; ii < dgs.length ; ii++) {
+    //             var vehicles = dgs[ii].devices;
+    //             for (var i = 0; i < vehicles.length; i++) {
+    //                 var tmpVehicle = {};
+    //                 var remainingDate = -1;
+    //                 tmpVehicle.deviceInfo = vehicles[i];
+    //                 if (vehicles[i].lastLocation) {
+    //                     var oneDay = 24 * 60 * 60 * 1000;
+    //                     var startDate = new Date(vehicles[i].lastLocation.date);
+    //                     var endDate = new Date();
+    //                     remainingDate = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / (oneDay)));
+
+    //                 }
+    //                 tmpVehicle.lastLocationDiff = remainingDate;
+    //                 result.push(tmpVehicle);
+    //             }
+    //         }
+    //         res(result).code(200);
+
+    //     }
+    // })
+  } catch (ex) {
+    logger.error(ex);
+    return res({
+      msg: ex,
+    }).code(404);
+  }
+};
+
+// this is reportVehicleOfGroups
+const reportVehicleOfGroups = async (req, res) => {
+  var groupId = req.params.groupId;
+  var userId = req.params.userId;
+
+  const foundedUser = await UserModel.findOne({'_id': userId})
+  // console.log(data)
+  if(!foundedUser){
+  return res.json({
+    msg: 'There is no user data'
+    ,"code":400
+  });}
+req.user = userId
+
+console.log(req.user)
+ const foundedDevice=  await  DeviceGroupModel.findOne({
+    $and: [
+        { $or: [{user: userId}, {sharees: userId}] },
+        {'_id': groupId}
+    ]
+}).populate('devices')
+.populate('devices.gpsdata')
+return res.json({
+  "foundedUser": foundedUser
+  ,"foundedDevice":foundedDevice
+});
+
+}
+
 module.exports = {
   getDeviceGroups,
   addDeviceGroup,
@@ -401,4 +610,8 @@ module.exports = {
   shareGroupsWithUser,
   unshareGroupsWithUser,
   getVehiclesofGroup,
+  removeVehicleFromGroup,
+  getUserDeviceGroups,
+  getVehiclesofMultiGroup,
+  reportVehicleOfGroups
 };
