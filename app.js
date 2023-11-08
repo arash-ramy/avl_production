@@ -8,26 +8,12 @@ var path = require("path");
 const { headerAuth } = require("./utils/authHeader");
 var http = require("http");
 const { GT06Controller } = require("./controller/GT06Controller");
+var cron = require('node-cron');
 
-// مشخصات SSH:
 
-// SSH PORT : 3311
-
-// 65.109.138.40
-
-// root
-
-// fLR7K4WNu99msLXViiAs
-
-// var serverS = http.createServer(GT06Controller)
-// serverS.listen(80,"65.109.138.40");
-
-// process.on("uncaughtException", (err) => {
-//     console.log("UNCAUGHT EXCEPTION! 💥💥🚀 Shutting down ...");
-//     console.log(err.name, err.message);
-//     process.exit(1);
-//   });
-  
+cron.schedule('*/1 * * * * *', () => {
+  console.log('running every minute 1, 2, 4 and 5');
+});
 // connect db
 const connectDatabase = require("./DB/DbConnection");
 connectDatabase();
