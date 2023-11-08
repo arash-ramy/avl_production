@@ -9,11 +9,14 @@ const { headerAuth } = require("./utils/authHeader");
 var http = require("http");
 const { GT06Controller } = require("./controller/GT06Controller");
 var cron = require('node-cron');
+var shell = require('shelljs');
 
+// shell.echo('hello world');
+shell.exec('node --version');
 
-cron.schedule('*/1 * * * * *', () => {
-  console.log('running every minute 1, 2, 4 and 5');
-});
+// cron.schedule('*/3 * * * * *', () => {
+//   console.log(new Date());
+// });
 // connect db
 const connectDatabase = require("./DB/DbConnection");
 connectDatabase();

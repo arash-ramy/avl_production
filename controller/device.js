@@ -2,7 +2,33 @@ const Validator = require("validatorjs");
 const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const VehicleStatusModel = require("../model/GpsLocation/VehicleStatusModel");
 const VehicleTypeModel = require("../model/GpsLocation/VehicleTypeModel");
+const PhoneBookModel = require("../model/User/phoneBookModel");
 const { NotifyUtility } = require("./NotifyUtility");
+
+// RESET DEVICE =>   THIS API IS NOT VERIFIED
+async function resetDevice(req, res) {
+  try {
+    const { IMEI } = req.params;
+    const foundedVehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
+
+    if (!foundedVehicle) {
+      return res.json({ message: "vehicle not found", code: 400 });
+    }
+    if (["GT06", "MVT380"].includes(vehicle.trackerModel)) {
+      await NotifyUtility.resetDevice(
+        vehicle.simNumber,
+        vehicle.trackerModel === "GT06"
+      );
+    }
+
+    return res.json({
+      msg: "process has been successfully completed",
+      code: 200,
+    });
+  } catch (error) {
+    return res.json({ error: error, code: 404 });
+  }
+}
 
 // ADD NEW VHICELS            === COLLECTION => VEHICLE
 async function addDevice(req, res) {
@@ -204,7 +230,7 @@ async function getDeviceModels(req, res) {
     });
   }
 }
-// this is api is not tested and pro mode
+// this is CONTROLER is not tested and pro mode
 async function setDeviceStatus(req, res) {
   try {
     let status = req.body.status;
@@ -229,70 +255,48 @@ async function setDeviceStatus(req, res) {
       });
     }
     // W
-    const foundedVhicleByIMEI = await VehicleModel.findOne({ deviceIMEI: imei }).populate("vehicleStatus")
+    const foundedVhicleByIMEI = await VehicleModel.findOne({
+      deviceIMEI: imei,
+    }).populate("vehicleStatus");
+
+    if (!foundedVhicleByIMEI)
+      return res.json({
+        msg: "vehicle not found",
+        code: 404,
+      });
+
+    if (foundedVhicleByIMEI.vehicleStatus.status !== status) {
+      let vehicleStatus = new VehicleStatusModel({
+        vehicleIMEI: imei,
+        status: status,
+        date: createDate,
+        desc: desc,
+      });
+      await vehicleStatus.save();
+
+      const updatedvhcile = await foundedVhicleByIMEI.updateMany(
+        {
+          vehicleStatus: vehicleStatus._id,
+        },
+        { upsert: true }
+      );
+      return res.json({
+        code: 200,
+      });
+    }
+    if (vehicle.vehicleStatus.status === status) {
+      let id = vehicle.vehicleStatus._id;
+      await VehicleStatusModel.findOneAndUpdate({ _id: id }, { desc: desc });
+
+      res.json({ code: 200 });
+    }
+  } catch (error) {
     return res.json({
-      msg: "vehicle not found",
-      code :404
-    })
-    
-      // if(foundedVhicleByIMEI.vehicleStatus.status !== status)
-      // {
-      //   let vehicleStatus = new VehicleStatusModel({
-      //     vehicleIMEI: imei,
-      //     status: status,
-      //     date: createDate,
-      //     desc: desc,
-      //   });
-      //   await vehicleStatus.save();
-
-      // const updatedvhcile = await vehicle
-      //   .updateMany(
-      //     {
-      //       vehicleStatus: vehicleStatus._id,
-      //     },
-      //     { upsert: true }
-      //   )
-      // }
-    
-      // {
-
-    
-      //       // create new vehicleStatusModel
-      //       if (vehicle.vehicleStatus.status !== status) {
-      //         let vehicleStatus = new VehicleStatusModel({
-      //           vehicleIMEI: imei,
-      //           status: status,
-      //           date: createDate,
-      //           desc: desc,
-      //         });
-
-      //         await vehicleStatus.save();
-
-      //           .exec();
-      //         await vehicle.save();
-
-      //         return res().code(200);
-      //       } else if (vehicle.vehicleStatus.status === status) {
-      //         // update desc
-      //         let id = vehicle.vehicleStatus._id;
-      //         VehicleStatusModel.findOneAndUpdate(
-      //           { _id: id },
-      //           { desc: desc }
-      //         ).exec(function (err, result) {
-      //           if (err) {
-      //             logger.error(err);
-      //           } else {
-      //             return res().code(200);
-      //           }
-      //         });
-            // }
-          // }
-        // });
-    // }
-  } catch (error) {}
+      message: "somthing went wrong in setDeviceStatus",
+    });
+  }
 }
-
-// this is api is not tested and pro mode
+// this is CONTROLER is not tested and pro mode
 async function deleteDeviceStatus(req, res) {
   try {
     var deviceId = req.params.id;
@@ -412,8 +416,245 @@ async function deleteDeviceStatus(req, res) {
     });
   }
 }
+// this is CONTROLER is not tested and pro mode
+async function setInterval(req, res) {
+  try {
+    const { IMEI, interval } = req.params;
+    const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
 
-const NodeGeocoder = require("node-geocoder");
+    if (!vehicle) {
+      return res.json({ msg: "vehicle not found", code: 404 });
+    }
+
+    if (["GT06", "MVT380"].includes(vehicle.trackerModel)) {
+      NotifyUtility.setInterval(
+        vehicle.simNumber,
+        interval,
+        vehicle.trackerModel === "GT06"
+      ).then(() => {
+        res({ msg: "OK" }).code(200);
+      });
+    }
+  } catch (error) {
+    return res.json({ message: error.message, code: 404 });
+  }
+}
+// this is CONTROLER is not tested and pro mode
+async function configure(req, res) {
+  try {
+    const { IMEI } = req.params;
+    const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
+
+    if (!vehicle) {
+      return res.json({ message: "vehicle not found", code: 404 });
+    }
+    if (vehicle.trackerModel === "GT06") {
+      NotifyUtility.setServerAutomatic(vehicle.simNumber);
+      return res.json({
+        message: "success",
+        code: 200,
+      });
+    }
+   
+    if (vehicle.trackerModel === "MVT380") {
+      NotifyUtility.reconfigureDevice(vehicle.simNumber);
+      return res.json({
+        message: "success",
+        code: 200,
+      });
+    }
+    return res.json({
+      message: "configure was not successfully",
+      code: 200,
+    });
+
+    // res
+    //           if (vehicle.trackerModel === 'GT06') {
+    //               NotifyUtility.setServerAutomatic(
+    //                   vehicle.simNumber
+    //               )
+    //                   .then(() => {
+    //                       res({ msg: 'OK' })
+    //                           .code(200);
+    //                   });
+    //           } else if (vehicle.trackerModel === 'MVT380') {
+    //               NotifyUtility.reconfigureDevice(
+    //                   vehicle.simNumber
+    //               )
+    //                   .then(() => {
+    //                       res({ msg: 'OK' })
+    //                           .code(200);
+    //                   });
+    //           }
+
+    //   );
+  } catch (error) {
+    return res.json({ msg: error.message, code: 500 });
+  }
+}
+// this is CONTROLER is not tested and pro mode
+async function addDevice(req, res) {
+
+}
+// this is api is not tested and pro mode
+async function setAPN(req, res) {
+  try {
+    const { IMEI, apnname } = req.params;
+    const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
+    if (vehicle) {
+      return res.json({
+        message: "vehicle not founded",
+        code: 404,
+      });
+    }
+    if (["GT06", "MVT380"].includes(vehicle.trackerModel)) {
+      NotifyUtility.setAPN(
+        vehicle.simNumber,
+        apnname,
+        vehicle.trackerModel === "GT06"
+      );
+      res.json({ message: "successfully", code: 200 });
+    }
+  } catch (error) {
+    return res.json({ messageSys: error.message });
+  }
+}
+// this is api is not tested and pro mode
+async function setSOS(req, res) {
+  try {
+    const { IMEI, sos } = req.params;
+    const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
+    if (!vehicle) {
+      return res.json({ msg: "vehicle not found", code: 404 });
+    }
+
+    if (vehicle.trackerModel === "GT06") {
+      NotifyUtility.setSOSNumber(vehicle.simNumber, sos);
+      return res.json({
+        message: "success",
+        code: 200,
+      });
+    }
+
+    if (vehicle.trackerModel === "MVT380") {
+      res.json({ msg: "Not Implemented", code: 404 });
+    }
+  } catch (error) {
+    return res({
+      messageSys: error.message,
+      code: 500,
+      message: "somthing went wrong in Set Sos",
+    });
+  }
+}
+async function getDevices(req, res) {
+
+
+
+
+
+
+
+  try {
+    console.log(req.user)
+   const allVehicles = await  VehicleModel.find()
+        .setAuthorizationUser(req.user)
+        .select({
+            _id: 1,
+            deviceIMEI: 1,
+            driverName: 1,
+            driverPhoneNumber: 1,
+            gpsDataCount: 1,
+            lastLocation: 1,
+            plate: 1,
+            simNumber: 1,
+            trackerModel: 1,
+            vehicleName: 1,
+            speedAlarm: 1,
+            maxSpeed: 1,
+            maxPMDistance: 1,
+            createDate:1,
+            permissibleZone:1,
+            vehicleStatus: 1,
+            zoneAlarm: 1,
+            fuel: 1,
+            currentMonthDistance: 1,
+            usage: 1,
+            model: 1,
+        })
+        .populate('lastLocation')
+        .populate({
+            path: 'speedAlarm.smsReceivers',
+            model: PhoneBookModel,
+            select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
+        })
+        .populate({
+            path: 'zoneAlarm.smsReceivers',
+            model: PhoneBookModel,
+            select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
+        })
+        // .populate({ path: 'groups', select: 'name' })
+        .populate('vehicleStatus')
+        .populate({
+            path: 'model',
+            model: VehicleTypeModel,
+            select: { 'name': 1, '_id': 0 }
+        })
+        .sort({ _id: -1 })
+        .lean()
+
+          return res.json({
+            allVehicles
+          })
+
+
+        // .exec((err, vehicles) => {
+        //     if (err) {
+        //         logger.error(err);
+        //         return res({
+        //             msg: err,
+        //         }).code(500);
+        //     }
+        //     if (!vehicles) {
+        //         return res({
+        //             msg: 'There is no vehicles',
+        //         }).code(404);
+        //     }
+        //     const getElapsedDate = date => {
+        //         const oneDay = 24 * 60 * 60 * 1000;
+        //         const now = new Date();
+        //         return Math.floor(Math.abs((now - date) / oneDay));
+        //     };
+        //     const result = vehicles.map(vehicle => {
+        //         const { lastLocation, deviceInfo } = vehicle;
+        //         return {
+        //             deviceInfo: vehicle,
+        //             lastLocationDiff: lastLocation
+        //                 ? getElapsedDate(lastLocation.date)
+        //                 : -1,
+        //         };
+        //     });
+        //     return res(result).code(200);
+        // });
+} catch (error) {
+    // logger.error(ex);
+    return res.json({
+        messageSys:error.message,
+      code : 500
+      })
+}
+
+
+
+
+
+
+
+
+
+}
+
+
 
 async function tests(req, res) {
   const geocoder = NodeGeocoder({ provider: "openstreetmap" });
@@ -426,6 +667,12 @@ async function tests(req, res) {
   );
 }
 module.exports = {
+  resetDevice,
+  setInterval,
+  setAPN,
+  setSOS,
+  configure,
+  getDevices,
   addDevice,
   editDevice,
   addDeviceModels,
