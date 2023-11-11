@@ -14,10 +14,17 @@ router.get("/cmd/sos/:IMEI/:sos",headerAuth, deviceController.setSOS);
 // SET CONFIGURE => DEVICE => NOTIFYUTITY => SET CONFIGURE
 router.get("/cmd/sos/:IMEI/:sos",headerAuth, deviceController.configure);
 // get  CONFIGURE => DEVICE => NOTIFYUTITY => SET CONFIGURE
+router.get("/last",headerAuth, deviceController.getLastLocationOfAllDevice);
+// get  CONFIGURE => DEVICE => NOTIFYUTITY => SET CONFIGURE
+
+
+
+
 
 
 router.get("/",headerAuth, deviceController.getDevices);
 
+router.get("/tests",headerAuth, deviceController.tests);
 
 // ADD DEVICE =>
 router.post("/add",headerAuth, deviceController.addDevice);
@@ -40,6 +47,10 @@ router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatu
 
 
 
+router.post("/alarmsettings/",headerAuth, deviceController.setAlarmSettings);
+
+
+router.get("/alarmsettings/:IMEI/:settingsType",headerAuth, deviceController.getAlarmSettings);
 
 
 

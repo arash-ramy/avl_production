@@ -53,6 +53,7 @@ exports.headerAuth = async (req, res, next) => {
 }
 catch(error)
 {
+  console.log(error)
   return res.json({
     message: "Authorization failed",
     code: 403,

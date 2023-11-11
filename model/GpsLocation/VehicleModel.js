@@ -182,6 +182,11 @@ VehicleSchema.post('remove', async vehicle => {
 
 VehicleSchema.pre('find', async function getUserAuthenticatedDevices() {
     console.log("ky")
+    console.log(this.authUser,"this is authuser")
+    console.log(this.user)
+    console.log("ky*")
+
+
     if (this.authUser && !this.authUser.isAdmin()) {
         const { _id: userId, deviceModel } = this.authUser;
         const [userResult] = await mongoose.model('devicegroup').aggregate([

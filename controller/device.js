@@ -455,7 +455,7 @@ async function configure(req, res) {
         code: 200,
       });
     }
-   
+
     if (vehicle.trackerModel === "MVT380") {
       NotifyUtility.reconfigureDevice(vehicle.simNumber);
       return res.json({
@@ -493,9 +493,9 @@ async function configure(req, res) {
   }
 }
 // this is CONTROLER is not tested and pro mode
-async function addDevice(req, res) {
+// async function addDevice(req, res) {
 
-}
+// }
 // this is api is not tested and pro mode
 async function setAPN(req, res) {
   try {
@@ -548,123 +548,399 @@ async function setSOS(req, res) {
   }
 }
 async function getDevices(req, res) {
-
-
-
-
-
-
-
   try {
-    console.log(req.user)
-   const allVehicles = await  VehicleModel.find()
-        .setAuthorizationUser(req.user)
-        .select({
-            _id: 1,
-            deviceIMEI: 1,
-            driverName: 1,
-            driverPhoneNumber: 1,
-            gpsDataCount: 1,
-            lastLocation: 1,
-            plate: 1,
-            simNumber: 1,
-            trackerModel: 1,
-            vehicleName: 1,
-            speedAlarm: 1,
-            maxSpeed: 1,
-            maxPMDistance: 1,
-            createDate:1,
-            permissibleZone:1,
-            vehicleStatus: 1,
-            zoneAlarm: 1,
-            fuel: 1,
-            currentMonthDistance: 1,
-            usage: 1,
-            model: 1,
-        })
-        .populate('lastLocation')
-        .populate({
-            path: 'speedAlarm.smsReceivers',
-            model: PhoneBookModel,
-            select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
-        })
-        .populate({
-            path: 'zoneAlarm.smsReceivers',
-            model: PhoneBookModel,
-            select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
-        })
-        // .populate({ path: 'groups', select: 'name' })
-        .populate('vehicleStatus')
-        .populate({
-            path: 'model',
-            model: VehicleTypeModel,
-            select: { 'name': 1, '_id': 0 }
-        })
-        .sort({ _id: -1 })
-        .lean()
+    console.log(req.user, "c`est user ");
+    const allVehicles = await VehicleModel.find()
+      .setAuthorizationUser(req.user)
 
-          return res.json({
-            allVehicles
-          })
+      .select({
+        _id: 1,
+        deviceIMEI: 1,
+        driverName: 1,
+        driverPhoneNumber: 1,
+        gpsDataCount: 1,
+        lastLocation: 1,
+        plate: 1,
+        simNumber: 1,
+        trackerModel: 1,
+        vehicleName: 1,
+        speedAlarm: 1,
+        maxSpeed: 1,
+        maxPMDistance: 1,
+        createDate: 1,
+        permissibleZone: 1,
+        vehicleStatus: 1,
+        zoneAlarm: 1,
+        fuel: 1,
+        currentMonthDistance: 1,
+        usage: 1,
+        model: 1,
+      })
+      .populate("lastLocation")
+      // .populate({
+      //     path: 'speedAlarm.smsReceivers',
+      //     model: PhoneBookModel,
+      //     select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
+      // })
+      // .populate({
+      //     path: 'zoneAlarm.smsReceivers',
+      //     model: PhoneBookModel,
+      //     select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
+      // })
+      // .populate({ path: 'groups', select: 'name' })
+      .populate("vehicleStatus")
+      .populate({
+        path: "model",
+        model: VehicleTypeModel,
+        select: { name: 1, _id: 0 },
+      })
+      .sort({ _id: -1 })
+      .lean()
+      .clone();
 
+    return res.json({
+      allVehicles,
+    });
 
-        // .exec((err, vehicles) => {
-        //     if (err) {
-        //         logger.error(err);
-        //         return res({
-        //             msg: err,
-        //         }).code(500);
-        //     }
-        //     if (!vehicles) {
-        //         return res({
-        //             msg: 'There is no vehicles',
-        //         }).code(404);
-        //     }
-        //     const getElapsedDate = date => {
-        //         const oneDay = 24 * 60 * 60 * 1000;
-        //         const now = new Date();
-        //         return Math.floor(Math.abs((now - date) / oneDay));
-        //     };
-        //     const result = vehicles.map(vehicle => {
-        //         const { lastLocation, deviceInfo } = vehicle;
-        //         return {
-        //             deviceInfo: vehicle,
-        //             lastLocationDiff: lastLocation
-        //                 ? getElapsedDate(lastLocation.date)
-        //                 : -1,
-        //         };
-        //     });
-        //     return res(result).code(200);
-        // });
-} catch (error) {
+    // .exec((err, vehicles) => {
+    //     if (err) {
+    //         logger.error(err);
+    //         return res({
+    //             msg: err,
+    //         }).code(500);
+    //     }
+    //     if (!vehicles) {
+    //         return res({
+    //             msg: 'There is no vehicles',
+    //         }).code(404);
+    //     }
+    //     const getElapsedDate = date => {
+    //         const oneDay = 24 * 60 * 60 * 1000;
+    //         const now = new Date();
+    //         return Math.floor(Math.abs((now - date) / oneDay));
+    //     };
+    //     const result = vehicles.map(vehicle => {
+    //         const { lastLocation, deviceInfo } = vehicle;
+    //         return {
+    //             deviceInfo: vehicle,
+    //             lastLocationDiff: lastLocation
+    //                 ? getElapsedDate(lastLocation.date)
+    //                 : -1,
+    //         };
+    //     });
+    //     return res(result).code(200);
+    // });
+  } catch (error) {
     // logger.error(ex);
     return res.json({
-        messageSys:error.message,
-      code : 500
+      messageSys: error.message,
+      code: 500,
+    });
+  }
+}
+
+async function getLastLocationOfAllDevice(req, res) {
+  try {
+    VehicleModel.find({ lastLocation: { $ne: null } })
+      .setAuthorizationUser(req.user)
+      .select({
+        driverName: 1,
+        driverPhoneNumber: 1,
+        plate: 1,
+        simNumber: 1,
+        vehicleName: 1,
+        lastLocation: 1,
+        model: 1,
       })
+      .populate({ path: "model", select: { name: 1, _id: 0 } })
+      .populate("lastLocation")
+      .exec(async (err, vehicles) => {
+        if (err) {
+          logger.error(err);
+          return res({
+            msg: err,
+          }).code(500);
+        }
+        if (!vehicles) {
+          return res({
+            msg: "There is no vehicles",
+          }).code(404);
+        }
+
+        const result = await vehicles.map(async (vehicle) => {
+          const group = await DeviceGroupModel.findOne(
+            { devices: vehicle._id },
+            "name color"
+          );
+          const {
+            model,
+            vehicleName,
+            driverName,
+            simNumber,
+            driverPhoneNumber,
+            plate,
+            lastLocation: { lat, lng, IMEI, date, speed },
+          } = vehicle;
+          return {
+            deviceInfo: {
+              model,
+              vehicleName,
+              driverName,
+              simNumber,
+              driverPhoneNumber,
+              plate,
+            },
+            lastLocation: {
+              lat,
+              lng,
+              IMEI,
+              date,
+              speed,
+            },
+            group,
+          };
+        });
+        Promise.all(result).then((values) => {
+          return res(values).code(200);
+        });
+      });
+  } catch (ex) {
+    logger.error(ex);
+    return res({
+      msg: ex,
+    }).code(404);
+  }
 }
 
+async function getAlarmSettings(req, res) {
+  try {
+    var IMEI = req.params.IMEI;
+    var settingsType = req.params.settingsType;
+    const foundedVehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
 
-
-
-
-
-
-
-
+    if (!foundedVehicle) {
+      res.json({ message: "vehicle not founded ", code: 404 });
+    }
+    const vehcile = foundedVehicle.getAlarmSettings(settingsType);
+    res.json({ message: "success ", code: 200, vehcile });
+  } catch (error) {
+    return res.json({
+      messageSys: error.message,
+      message: "someghing went wrong in sending alarm in getAlarmSettings",
+      code: 404,
+    });
+  }
 }
 
+async function setAlarmSettings(req, res) {
+  try {
+    var IMEI = req.body.IMEI;
+    var sendSMS = req.body.sendSMS ? req.body.sendSMS : false;
+    var smsNumbers = req.body.smsNumbers;
+    var sendEmail = req.body.sendEmail ? req.body.sendEmail : false;
+    var emails = req.body.emails;
+    var settingsType = req.body.settingsType;
+    var speedLimit = req.body.maxSpeed;
+    var pmDistance = req.body.maxPmDistance;
+    let phoneNumbers = req.body.smsReceivers;
 
+    const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
+    console.log(vehicle)
+
+    if (!vehicle) {
+      return res.json({
+        message: "vehicle not founded !",
+        code: 404,
+      });
+    }
+    let receivers = await PhoneBookModel.find({
+      phoneNumber: { $in: [...new Set(phoneNumbers)] },
+    });
+    console.log(receivers,"this is ph")
+    var setting = {
+      sendSMS: sendSMS.toString() == "true" ? true : false,
+      rcvSMSNumbers: smsNumbers,
+      sendEmail: sendEmail.toString() == "true" ? true : false,
+      rcvEmails: emails,
+      smsReceivers: receivers,
+    };
+
+    if (settingsType.toString().toLowerCase() === "speed") {
+      await vehicle
+        .update({ speedAlarm: setting }, {multi:true})
+        .then(() => {
+          vehicle.maxSpeed = isNaN(speedLimit) ? vehicle.maxSpeed : speedLimit;
+        });
+    }
+    if (settingsType.toString().toLowerCase() === "pm") {
+      vehicle.pmAlarm.sendEmail = setting.sendEmail;
+      vehicle.pmAlarm.sendSMS = setting.sendSMS;
+      vehicle.pmAlarm.rcvEmails = setting.rcvEmails;
+      vehicle.pmAlarm.rcvSMSNumbers = setting.rcvSMSNumbers;
+      vehicle.maxPMDistance = isNaN(pmDistance)
+        ? vehicle.maxPMDistance
+        : pmDistance;
+    }
+    if (settingsType.toString().toLowerCase() === "region") {
+      vehicle.regionAlarm.sendEmail = setting.sendEmail;
+      vehicle.regionAlarm.sendSMS = setting.sendSMS;
+      vehicle.regionAlarm.rcvEmails = setting.rcvEmails;
+      vehicle.regionAlarm.rcvSMSNumbers = setting.rcvSMSNumbers;
+    }
+    await vehicle.save();
+    let vehiclAlarmset=vehicle.getAlarmSettings(settingsType)
+    return res.json({vehiclAlarmset,code:200})
+    
+    //  .exec(async function (err, vehicle) {
+    //           if (err) {
+    //               return res({
+    //                   msg: err
+    //               })
+    //                   .code(500);
+    //           } else if (!vehicle) {
+    //               return res({
+    //                   msg: 'vehicle not found'
+    //               })
+    //                   .code(404);
+    //           } else {
+    //               let receivers = await PhoneBookModel.find({ 'phoneNumber': { '$in': [...new Set(phoneNumbers)] } })
+    //               var setting = {
+    //                   sendSMS: (sendSMS.toString() == 'true') ? true : false,
+    //                   rcvSMSNumbers: smsNumbers,
+    //                   sendEmail: (sendEmail.toString() == 'true') ? true : false,
+    //                   rcvEmails: emails,
+    //                   smsReceivers: receivers
+    //               };
+
+    //               if (settingsType.toString().toLowerCase() === 'speed') {
+    //                   vehicle.update({speedAlarm: setting},  {upsert:true}).exec()
+    //                   vehicle.maxSpeed = (isNaN(speedLimit) ? vehicle.maxSpeed : speedLimit);
+    //               }
+    //               if (settingsType.toString().toLowerCase() === 'pm') {
+    //                   vehicle.pmAlarm.sendEmail = setting.sendEmail;
+    //                   vehicle.pmAlarm.sendSMS = setting.sendSMS;
+    //                   vehicle.pmAlarm.rcvEmails = setting.rcvEmails;
+    //                   vehicle.pmAlarm.rcvSMSNumbers = setting.rcvSMSNumbers;
+    //                   vehicle.maxPMDistance = (isNaN(pmDistance) ? vehicle.maxPMDistance : pmDistance);
+
+    //               }
+    //               if (settingsType.toString().toLowerCase() === 'region') {
+    //                   vehicle.regionAlarm.sendEmail = setting.sendEmail;
+    //                   vehicle.regionAlarm.sendSMS = setting.sendSMS;
+    //                   vehicle.regionAlarm.rcvEmails = setting.rcvEmails;
+    //                   vehicle.regionAlarm.rcvSMSNumbers = setting.rcvSMSNumbers;
+    //               }
+
+    //               vehicle.save(function (err) {
+    //                   if (err) {
+    //                       return res({
+    //                           msg: err
+    //                       })
+    //                           .code(404);
+    //                   } else {
+    //                       return res(vehicle.getAlarmSettings(settingsType))
+    //                           .code(200);
+    //                   }
+    //               });
+    //           }
+    //       });
+  } catch (error) {
+    return res.json({
+      messageSys: error.message,
+      code: 500,
+      message: "somthing went wrong in setAlarmSettings",
+    });
+  }
+}
 
 async function tests(req, res) {
-  const geocoder = NodeGeocoder({ provider: "openstreetmap" });
-  const dataa = geocoder.reverse(
-    { lat: 35.6741, lon: 51.44159 },
-    function (err, ress) {
-      console.log(ress);
-      return res.json({ ress });
-    }
-  );
+  try {
+    console.log(req.user);
+    const allVehicles = await VehicleModel.find()
+      .setAuthorizationUser(req.user)
+      .select({
+        _id: 1,
+        deviceIMEI: 1,
+        driverName: 1,
+        driverPhoneNumber: 1,
+        gpsDataCount: 1,
+        lastLocation: 1,
+        plate: 1,
+        simNumber: 1,
+        trackerModel: 1,
+        vehicleName: 1,
+        speedAlarm: 1,
+        maxSpeed: 1,
+        maxPMDistance: 1,
+        createDate: 1,
+        permissibleZone: 1,
+        vehicleStatus: 1,
+        zoneAlarm: 1,
+        fuel: 1,
+        currentMonthDistance: 1,
+        usage: 1,
+        model: 1,
+      });
+    // .populate('lastLocation')
+    // .populate({
+    //     path: 'speedAlarm.smsReceivers',
+    //     model: PhoneBookModel,
+    //     select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
+    // })
+    // .populate({
+    //     path: 'zoneAlarm.smsReceivers',
+    //     model: PhoneBookModel,
+    //     select: { 'firstName': 1, 'lastName': 1, 'phoneNumber': 1 }
+    // })
+    // // .populate({ path: 'groups', select: 'name' })
+    // .populate('vehicleStatus')
+    // .populate({
+    //     path: 'model',
+    //     model: VehicleTypeModel,
+    //     select: { 'name': 1, '_id': 0 }
+    // })
+    // .sort({ _id: -1 })
+    // .lean()
+
+    return res.json({
+      allVehicles,
+    });
+
+    // .exec((err, vehicles) => {
+    //     if (err) {
+    //         logger.error(err);
+    //         return res({
+    //             msg: err,
+    //         }).code(500);
+    //     }
+    //     if (!vehicles) {
+    //         return res({
+    //             msg: 'There is no vehicles',
+    //         }).code(404);
+    //     }
+    //     const getElapsedDate = date => {
+    //         const oneDay = 24 * 60 * 60 * 1000;
+    //         const now = new Date();
+    //         return Math.floor(Math.abs((now - date) / oneDay));
+    //     };
+    //     const result = vehicles.map(vehicle => {
+    //         const { lastLocation, deviceInfo } = vehicle;
+    //         return {
+    //             deviceInfo: vehicle,
+    //             lastLocationDiff: lastLocation
+    //                 ? getElapsedDate(lastLocation.date)
+    //                 : -1,
+    //         };
+    //     });
+    //     return res(result).code(200);
+    // });
+  } catch (error) {
+    // logger.error(ex);
+    return res.json({
+      messageSys: error.message,
+      code: 500,
+    });
+  }
 }
 module.exports = {
   resetDevice,
@@ -679,5 +955,8 @@ module.exports = {
   getDeviceModels,
   setDeviceStatus,
   deleteDeviceStatus,
+  getLastLocationOfAllDevice,
+  getAlarmSettings,
+  setAlarmSettings,
   tests,
 };
