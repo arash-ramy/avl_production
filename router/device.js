@@ -29,13 +29,12 @@ router.get("/tests",headerAuth, deviceController.tests);
 // ADD DEVICE =>
 router.post("/add",headerAuth, deviceController.addDevice);
 // EDIT DEVICE =>
-router.post("/edit",headerAuth, deviceController.editDevice);
+router.put("/edit",headerAuth, deviceController.editDevice);
 // ADD TYPES OF DEVICES (VEHICLE MODELS)
 router.post("/models/add",headerAuth, deviceController.addDeviceModels);
 // GET ALL TYPES OF DEVICES (VEHICLE MODELS)
 router.get("/models/get",headerAuth, deviceController.getDeviceModels);
 // THIS API IS NOT COMPLETED AND IS NOT TESTED BY RAMY
-router.post("/status",headerAuth, deviceController.setDeviceStatus);
 // THIS API IS NOT COMPLETED AND IS NOT TESTED BY RAMY
 router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatus);
 
@@ -44,17 +43,13 @@ router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatu
 
 
 
-
-
-
-router.post("/alarmsettings/",headerAuth, deviceController.setAlarmSettings);
+// this api is ok ==> sending alarm to email and sms  has been defined 
+router.post("/alarmsettings",headerAuth, deviceController.setAlarmSettings);
+// this api is ok ==> seting alarms
+router.post("/status",headerAuth, deviceController.setDeviceStatus);
 
 
 router.get("/alarmsettings/:IMEI/:settingsType",headerAuth, deviceController.getAlarmSettings);
-
-
-
-
 
 
 

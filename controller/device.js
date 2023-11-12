@@ -147,37 +147,34 @@ async function editDevice(req, res) {
     fuel && (vehicle.fuel = fuel);
     usage && (vehicle.usage = usage);
 
-    await vehicle.save(async function (err) {
-      if (err) {
-        return res({
-          msg: err,
-        }).code(500);
-      } else {
-        // create new event for changing name and phone number of driver
-        for (let fieldName of ["driverName", "driverPhoneNumber"]) {
-          let vehicleEvent;
-          if (vehicle[fieldName] !== oldVehicle[fieldName]) {
-            vehicleEvent = new ActionEventModel({
-              userId: req.user._id,
-              date: new Date().AsDateJs(),
-              objectModel: "vehicle",
-              objectId: vehicleId,
-              actionType: "update",
-              fieldName,
-              oldValue: oldVehicle[fieldName],
-              newValue: vehicle[fieldName],
-            });
-            await vehicleEvent.save();
-          }
+    await vehicle.save()
+    for (let fieldName of ["driverName", "driverPhoneNumber"]) {
+        let vehicleEvent;
+        if (vehicle[fieldName] !== oldVehicle[fieldName]) {
+          vehicleEvent = new ActionEventModel({
+            userId: req.user._id,
+            date: new Date().AsDateJs(),
+            objectModel: "vehicle",
+            objectId: vehicleId,
+            actionType: "update",
+            fieldName,
+            oldValue: oldVehicle[fieldName],
+            newValue: vehicle[fieldName],
+          });
+          await vehicleEvent.save();
         }
-        return res(vehicle).code(200);
+
+  
+
+
+        return res.json({vehicle,"code":200})
       }
-    });
-  } catch (ex) {
-    logger.error(ex);
-    return res({
-      msg: ex,
-    }).code(500);
+  } catch (error) {
+    // logger.error(ex);
+    return res.json({
+      message:error.message,
+      code:500
+     })
   }
 }
 // ADD TYPES OF DEVICE MODELS ===> (VEHICLE MODELS)   COLLECTION =>*VHEICLETYPES*
@@ -274,7 +271,7 @@ async function setDeviceStatus(req, res) {
       });
       await vehicleStatus.save();
 
-      const updatedvhcile = await foundedVhicleByIMEI.updateMany(
+      const updatedvhcile = await foundedVhicleByIMEI.updateOne(
         {
           vehicleStatus: vehicleStatus._id,
         },
@@ -292,6 +289,7 @@ async function setDeviceStatus(req, res) {
     }
   } catch (error) {
     return res.json({
+      messagesys:error.message,
       message: "somthing went wrong in setDeviceStatus",
     });
   }
@@ -767,7 +765,7 @@ async function setAlarmSettings(req, res) {
 
     if (settingsType.toString().toLowerCase() === "speed") {
       await vehicle
-        .update({ speedAlarm: setting }, {multi:true})
+        .updateOne({ speedAlarm: setting }, {multi:true})
         .then(() => {
           vehicle.maxSpeed = isNaN(speedLimit) ? vehicle.maxSpeed : speedLimit;
         });

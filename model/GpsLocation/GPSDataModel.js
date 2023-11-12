@@ -32,6 +32,7 @@ const GPSSchema = new Schema({
 GPSSchema.index({ vehicleId: 1 });
 
 GPSSchema.post('save', async gpsData => {
+    try{
     const vehicle = await VehicleModel.findOne({
         deviceIMEI: gpsData.IMEI,
     }).select('_id');
@@ -41,12 +42,12 @@ GPSSchema.post('save', async gpsData => {
             IMEI: gpsData.IMEI,
         });
         await vehicle.save();
-    } else {
-        // logger.error(
-        //     `no vehicle found with IMEI ${gpsData.IMEI} for update last location`
-        // );
-        console.log("somthing went wrong in gps data lv212")
-    }
+    } 
+
+}
+catch(error){
+    console.log(error)
+}
 });
 
 const GPSDataModel = mongoose.model('gpsdata', GPSSchema);
