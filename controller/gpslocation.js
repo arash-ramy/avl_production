@@ -50,11 +50,13 @@ const getGPSDataIMEI = async (req, res) => {
         field: "vehicleId",
       });
     }
+    console.log(req.params)
+
     count = !count || !+count ? 10 : +count;
     skip = !skip || !+skip ? 0 : +skip;
     console.log(count, skip, "this is count and skip");
-
-    const foundedItem = await GPSDataModel.find({ vehicleId })
+    console.log(vehicleId,"rrrrr")
+    const foundedItem = await GPSDataModel.find({ "_id":vehicleId })
       .skip(skip)
       .limit(count)
       .sort({ date: -1 });
@@ -66,18 +68,19 @@ const getGPSDataIMEI = async (req, res) => {
       });
     }
 
-    return res.json({ data, code: 200 });
+    return res.json({ foundedItem, code: 200 });
   } catch (error) {
     // logger.error(ex);
     return res.json({
       messageSys: error.message,
       code: 500,
+      error:"somthing went wrong in  getGPSDataIMEI"
     });
   }
 };
 const getAllIMEIs = async (req, res) => {
   try {
-    GPSDataModel.aggregate(
+    const AllGpsbyImei = await  GPSDataModel.aggregate(
       [
         {
           $group: {
@@ -86,21 +89,20 @@ const getAllIMEIs = async (req, res) => {
           },
         },
       ],
-      function (err, result) {
-        if (err) {
-          logger.error(ex);
-          return res.json({
-            msg: err,
-          });
-        } else {
-          return res.json(result);
-        }
-      }
+  
     );
+
+// console.log(AllGpsbyImei)
+return res.json({
+  AllGpsbyImei
+  ,code: 200,
+})
   } catch (error) {
     // logger.error(ex);
     return res.json({
-      error: error.message,
+      messageSys: error.message,
+      message:"somthing went wrong in getAllIMEIs .",
+      code :500
     });
   }
 };
@@ -271,10 +273,85 @@ const getGPSDataIMEIReport = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
+const getNLastDataIMEI = async (req, res) => {
+  
+  try{
+    var IMEI = req.params.IMEI;
+    var count = req.params.count;
+    if(!IMEI){
+        return res({
+            msg: "IMEI required",
+            code: "404",
+            validate: false,
+            field: "IMEI"
+        })
+    }
+
+    if(!count) count = 10;
+
+    GPSDataModel.find({IMEI: IMEI}).sort({date:-1}).limit(count)
+    
+    
+    
+    .exec(function (err, data) {
+        if (err) {
+            logger.error(err);
+            return res({
+                msg: err
+            }).code(500);
+        }
+        else if (!data) {
+            return res({
+                msg: 'There is no gps data'
+            }).code(404);
+        }
+        else {
+            VehicleModel.findOne({'deviceIMEI': IMEI}).exec(function(err, vehicle){
+                if (err) {
+                    logger.error(err);
+                    return res({
+                        msg: err
+                    }).code(500);
+                }
+                else if (!vehicle) {
+                    return res({
+                        msg: 'There is no vehicle'
+                    }).code(404);
+                }
+                else{
+                    if(data[0]) {
+                        var oneDay = 24 * 60 * 60 * 1000;
+                        var startDate = new Date(data[0].date);
+                        var endDate = new Date();
+                        var remainingDate = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / (oneDay)));
+                        data[0].lastLocationDiff = remainingDate;
+                    }
+                    return res(data).code(200);
+                }
+            });
+
+        }
+    })
+}
+catch(ex){
+    logger.error(ex);
+    return res({
+        msg: ex
+    }).code(500);
+}
+}
+
 module.exports = {
   updateAddressOfLocations,
   getGPSData,
   getGPSDataIMEI,
   getAllIMEIs,
+  getNLastDataIMEI,
   getGPSDataIMEIReport,
 };

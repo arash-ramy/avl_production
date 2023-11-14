@@ -3,6 +3,7 @@ const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const VehicleStatusModel = require("../model/GpsLocation/VehicleStatusModel");
 const VehicleTypeModel = require("../model/GpsLocation/VehicleTypeModel");
 const PhoneBookModel = require("../model/User/phoneBookModel");
+const { FMXXXXController } = require("./FMXXXXController");
 const { NotifyUtility } = require("./NotifyUtility");
 
 // RESET DEVICE =>   THIS API IS NOT VERIFIED
@@ -126,14 +127,14 @@ async function editDevice(req, res) {
         msg: "vehicle not found",
       });
     }
-    if (vehicle.deviceIMEI !== deviceIMEI) {
-      if (VehicleModel.exists({ deviceIMEI: deviceIMEI })) {
-        return res.json({
-          msg: "وسیله نقلیه دیگری با این IMEI موجود است",
-          code: "400",
-        });
-      }
-    }
+    // if (vehicle.deviceIMEI !== deviceIMEI) {
+    //   if (VehicleModel.exists({ deviceIMEI: deviceIMEI })) {
+    //     return res.json({
+    //       msg: "وسیله نقلیه دیگری با این IMEI موجود است",
+    //       code: "400",
+    //     });
+    //   }
+    // }
 
     const oldVehicle = { ...vehicle._doc };
     simNumber && (vehicle.simNumber = simNumber);
@@ -147,34 +148,31 @@ async function editDevice(req, res) {
     fuel && (vehicle.fuel = fuel);
     usage && (vehicle.usage = usage);
 
-    await vehicle.save()
+    await vehicle.save();
     for (let fieldName of ["driverName", "driverPhoneNumber"]) {
-        let vehicleEvent;
-        if (vehicle[fieldName] !== oldVehicle[fieldName]) {
-          vehicleEvent = new ActionEventModel({
-            userId: req.user._id,
-            date: new Date().AsDateJs(),
-            objectModel: "vehicle",
-            objectId: vehicleId,
-            actionType: "update",
-            fieldName,
-            oldValue: oldVehicle[fieldName],
-            newValue: vehicle[fieldName],
-          });
-          await vehicleEvent.save();
-        }
-
-  
-
-
-        return res.json({vehicle,"code":200})
+      let vehicleEvent;
+      if (vehicle[fieldName] !== oldVehicle[fieldName]) {
+        vehicleEvent = new ActionEventModel({
+          userId: req.user._id,
+          date: new Date().AsDateJs(),
+          objectModel: "vehicle",
+          objectId: vehicleId,
+          actionType: "update",
+          fieldName,
+          oldValue: oldVehicle[fieldName],
+          newValue: vehicle[fieldName],
+        });
+        await vehicleEvent.save();
       }
+
+      return res.json({ vehicle, code: 200 });
+    }
   } catch (error) {
     // logger.error(ex);
     return res.json({
-      message:error.message,
-      code:500
-     })
+      message: error.message,
+      code: 500,
+    });
   }
 }
 // ADD TYPES OF DEVICE MODELS ===> (VEHICLE MODELS)   COLLECTION =>*VHEICLETYPES*
@@ -234,7 +232,7 @@ async function setDeviceStatus(req, res) {
     let imei = req.body.imei;
     let desc = req.body.desc;
     let createDate = new Date();
-
+    console.log(req.body, "555555555555");
     if (!imei) {
       return res.json({
         msg: "IMEI required",
@@ -277,8 +275,10 @@ async function setDeviceStatus(req, res) {
         },
         { upsert: true }
       );
+      console.log(updatedvhcile, "updatedvhcile");
       return res.json({
         code: 200,
+        message: "success",
       });
     }
     if (vehicle.vehicleStatus.status === status) {
@@ -289,7 +289,7 @@ async function setDeviceStatus(req, res) {
     }
   } catch (error) {
     return res.json({
-      messagesys:error.message,
+      messagesys: error.message,
       message: "somthing went wrong in setDeviceStatus",
     });
   }
@@ -742,8 +742,9 @@ async function setAlarmSettings(req, res) {
     var pmDistance = req.body.maxPmDistance;
     let phoneNumbers = req.body.smsReceivers;
 
+    console.log(req.body, "89888888");
     const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
-    console.log(vehicle)
+    console.log(vehicle);
 
     if (!vehicle) {
       return res.json({
@@ -754,7 +755,7 @@ async function setAlarmSettings(req, res) {
     let receivers = await PhoneBookModel.find({
       phoneNumber: { $in: [...new Set(phoneNumbers)] },
     });
-    console.log(receivers,"this is ph")
+    console.log(receivers, "this is ph");
     var setting = {
       sendSMS: sendSMS.toString() == "true" ? true : false,
       rcvSMSNumbers: smsNumbers,
@@ -764,8 +765,9 @@ async function setAlarmSettings(req, res) {
     };
 
     if (settingsType.toString().toLowerCase() === "speed") {
+      console.log("speedddddddddddddddddddddddd");
       await vehicle
-        .updateOne({ speedAlarm: setting }, {multi:true})
+        .updateOne({ speedAlarm: setting }, { multi: true })
         .then(() => {
           vehicle.maxSpeed = isNaN(speedLimit) ? vehicle.maxSpeed : speedLimit;
         });
@@ -786,9 +788,9 @@ async function setAlarmSettings(req, res) {
       vehicle.regionAlarm.rcvSMSNumbers = setting.rcvSMSNumbers;
     }
     await vehicle.save();
-    let vehiclAlarmset=vehicle.getAlarmSettings(settingsType)
-    return res.json({vehiclAlarmset,code:200})
-    
+    let vehiclAlarmset = vehicle.getAlarmSettings(settingsType);
+    return res.json({ vehiclAlarmset, code: 200 });
+
     //  .exec(async function (err, vehicle) {
     //           if (err) {
     //               return res({
@@ -852,33 +854,45 @@ async function setAlarmSettings(req, res) {
 }
 
 async function tests(req, res) {
+  const data = {
+    deviceName: "FMXXXX",
+    date: new Date(),
+    IMEI: "121234",
+    lat: 51,
+    lng: 32,
+    speed: 120,
+    sat: 154,
+    raw: "thisdataisraw",
+  };
+  FMXXXXController.savePacketData(data);
+console.log("one")
   try {
-    console.log(req.user);
-    const allVehicles = await VehicleModel.find()
-      .setAuthorizationUser(req.user)
-      .select({
-        _id: 1,
-        deviceIMEI: 1,
-        driverName: 1,
-        driverPhoneNumber: 1,
-        gpsDataCount: 1,
-        lastLocation: 1,
-        plate: 1,
-        simNumber: 1,
-        trackerModel: 1,
-        vehicleName: 1,
-        speedAlarm: 1,
-        maxSpeed: 1,
-        maxPMDistance: 1,
-        createDate: 1,
-        permissibleZone: 1,
-        vehicleStatus: 1,
-        zoneAlarm: 1,
-        fuel: 1,
-        currentMonthDistance: 1,
-        usage: 1,
-        model: 1,
-      });
+    // console.log(req.user);
+    // const allVehicles = await VehicleModel.find()
+    //   .setAuthorizationUser(req.user)
+    //   .select({
+    //     _id: 1,
+    //     deviceIMEI: 1,
+    //     driverName: 1,
+    //     driverPhoneNumber: 1,
+    //     gpsDataCount: 1,
+    //     lastLocation: 1,
+    //     plate: 1,
+    //     simNumber: 1,
+    //     trackerModel: 1,
+    //     vehicleName: 1,
+    //     speedAlarm: 1,
+    //     maxSpeed: 1,
+    //     maxPMDistance: 1,
+    //     createDate: 1,
+    //     permissibleZone: 1,
+    //     vehicleStatus: 1,
+    //     zoneAlarm: 1,
+    //     fuel: 1,
+    //     currentMonthDistance: 1,
+    //     usage: 1,
+    //     model: 1,
+    //   });
     // .populate('lastLocation')
     // .populate({
     //     path: 'speedAlarm.smsReceivers',
@@ -899,11 +913,9 @@ async function tests(req, res) {
     // })
     // .sort({ _id: -1 })
     // .lean()
-
-    return res.json({
-      allVehicles,
-    });
-
+    // return res.json({
+    //   allVehicles,
+    // });
     // .exec((err, vehicles) => {
     //     if (err) {
     //         logger.error(err);

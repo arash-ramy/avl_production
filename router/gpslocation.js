@@ -3,14 +3,18 @@ const router = express.Router();
 const { headerAuth } = require("../utils/authHeader");
 const GPSController = require("../controller/gpslocation");
 
+// ok
 router.get("/",headerAuth, GPSController.getGPSData);
 
-
-router.get("/:id/:skip/:count",headerAuth, GPSController.getGPSDataIMEI);
-
+// ok
 router.get("/group/IMEI",headerAuth, GPSController.getAllIMEIs);
 
+// ok
+router.get("/:id/:skip/:count",headerAuth, GPSController.getGPSDataIMEI);
 
+
+
+router.get("/last/:IMEI/:count",headerAuth, GPSController.getNLastDataIMEI);
 
 
 

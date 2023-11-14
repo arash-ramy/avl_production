@@ -29,14 +29,41 @@ router.get("/tests",headerAuth, deviceController.tests);
 // ADD DEVICE =>
 router.post("/add",headerAuth, deviceController.addDevice);
 // EDIT DEVICE =>
-router.put("/edit",headerAuth, deviceController.editDevice);
+router.put("/",headerAuth, deviceController.editDevice);
 // ADD TYPES OF DEVICES (VEHICLE MODELS)
 router.post("/models/add",headerAuth, deviceController.addDeviceModels);
 // GET ALL TYPES OF DEVICES (VEHICLE MODELS)
 router.get("/models/get",headerAuth, deviceController.getDeviceModels);
+// ADD POLYGON 
+// router.get("/models/get",headerAuth, deviceController.getDeviceModels);
+
+
+
+
+
+
+// server.route({
+//     method: 'POST',
+//     path: '/devices/addpolygon',
+//     config: {
+//         auth: {
+//             strategy: 'jwt',
+//             access: { scope: ['polygon_edit'] },
+//         },
+//     },
+//     handler: DeviceController().setPolygon,
+// });
+
+
+
+
 // THIS API IS NOT COMPLETED AND IS NOT TESTED BY RAMY
 // THIS API IS NOT COMPLETED AND IS NOT TESTED BY RAMY
 router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatus);
+
+
+
+
 
 
 
