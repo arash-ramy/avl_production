@@ -164,14 +164,14 @@ const Signin = async (req, res) => {
 };
 
 const signup = async (req, res) => {
-  console.log(req.headers);
+  console.log(req.body);
   try {
     console.log("sign up passed");
     const user = new UserModel({
       username: req.body.username,
       hashedPassword: req.body.password,
-      firstname: req.body.firstName,
-      lastname: req.body.lastName,
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
       gender: req.body.gender,
       email: req.body.email,
       mobileNumber: req.body.mobileNumber,
@@ -190,7 +190,7 @@ const signup = async (req, res) => {
       })
       .catch((error) => {
         return res.json({
-          message: "user not add to database",
+          message: "user could not register",
           code: "401",
           type: "sing up Error",
           error,
@@ -205,25 +205,6 @@ const signup = async (req, res) => {
     });
   }
 
-  //   {
-  //     if (error) {
-  //       //   logger.error(error);
-  //       return res.json({
-  //         message: "user can't login, user doesn't exist or is blocked",
-  //         code: "401",
-  //         type: "sing up Error",
-  //         error,
-  //       });
-
-  //     }
-  //     logger.info(
-  //       `New user ${user.firstname} ${user.lastname} added successfully`
-  //     );
-  //     return res.json({
-  //       message: "user added to database successfully",
-  //       userId: user.id,
-  //     });
-  //   });
 };
 
 function editUser(req, res) {

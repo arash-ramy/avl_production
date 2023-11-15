@@ -5,6 +5,7 @@ const VehicleTypeModel = require("../model/GpsLocation/VehicleTypeModel");
 const PhoneBookModel = require("../model/User/phoneBookModel");
 const { FMXXXXController } = require("./FMXXXXController");
 const { NotifyUtility } = require("./NotifyUtility");
+const morgan = require('morgan');
 
 // RESET DEVICE =>   THIS API IS NOT VERIFIED
 async function resetDevice(req, res) {
@@ -854,19 +855,22 @@ async function setAlarmSettings(req, res) {
 }
 
 async function tests(req, res) {
+  try {
+
   const data = {
     deviceName: "FMXXXX",
     date: new Date(),
     IMEI: "121234",
     lat: 51,
     lng: 32,
-    speed: 120,
+    speed: 190,
     sat: 154,
     raw: "thisdataisraw",
   };
-  FMXXXXController.savePacketData(data);
+  const lastdata = new Date() 
+  FMXXXXController.savePacketData(data,lastdata);
 console.log("one")
-  try {
+ 
     // console.log(req.user);
     // const allVehicles = await VehicleModel.find()
     //   .setAuthorizationUser(req.user)

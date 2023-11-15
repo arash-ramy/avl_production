@@ -26,7 +26,7 @@ connectDatabase();
 
 app.use(morgan(chalk` {hex('
 #fff200
-').bold :method} {hex('#f57a33').bold :url} {hex('#9dff00').bold  :status} {hex('#ff0000').bold :response-time ms }-  :res[content-length] `));
+').bold :method} {hex('#f57a33').bold :url} {hex('#9dff00').bold  :status} :response-time ms - :res[content-length] `));
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", '*');
   res.header(
@@ -74,7 +74,7 @@ app.use(function (req, res, next) {
 });
 
 // create server
-const server = app.listen(process.env.PORT, () => {
+const server = app.listen(3000, () => {
     console.log(
       `Server is running on http://localhost:${process.env.PORT}`
     );
@@ -89,6 +89,3 @@ process.on("unhandledRejection", (err) => {
       process.exit(1);
     });
   });
-   // console.log(
-      //   chalk.red.bold("🔥🔥🔥", chalk.red.bold("someghing went weong in gps"))
-      // );
