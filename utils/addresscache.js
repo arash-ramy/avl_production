@@ -10,6 +10,7 @@ class AddressCache {
 
     async findAddress(lat, lon) {
         try {
+            console.log("lon",lon)
             const cachedLocation = await LocationModel.findOne({
                 geo: { $near: [lat, lon], $maxDistance: 0.015 },
             });
@@ -22,10 +23,11 @@ class AddressCache {
                 });
                 newLocation.save();
                 return newLocation.address;
+                console.log("ramyyyyyyyyyyyyyyyy")
             }
         } catch (e) {
             // logger.error(e);
-            console.log(error)
+            console.log(e)
         }
         return null;
     }

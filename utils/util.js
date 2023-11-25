@@ -8,6 +8,8 @@ var util =
 {
 	send_email : function (templateName, locals, fn)
     {
+
+        // console.log(locals,"localslocalslocals")
         if (!locals.email)
         {
             return fn(EmailAddressRequiredError);
@@ -17,7 +19,7 @@ var util =
             return fn(EmailAddressRequiredError);
         }
 
-        emailTemplates(templatesDir, function (err, template)
+     new    emailTemplates(templatesDir, function (err, template)
         {
             if (err)
             {

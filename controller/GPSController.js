@@ -12,14 +12,14 @@ const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const GPSDataModel = require("../model/GpsLocation/GPSDataModel");
 
 const { AddressCache } = require("../utils/addresscache");
-// const { SMSGW } = require("../utils/smsgw");
-// const { util } = require("../utility/util");
+const { SMSGW } = require("../utils/smsgw");
+const { util } = require("../utils/util");
 // const { logger } = require("../utility/customlog");
-// const { SpeedSMSText } = require("../template/sms/alarms");
+const { SpeedSMSText } = require("../template/sms/alarms");
 // const { ZoneSMSText } = require("../template/sms/alarms");
 // const { BackToZoneSMSText } = require("../template/sms/alarms");
 const moment = require("moment");
-// const { ShortenerLink } = require("../utility/shortenerLink");
+const { ShortenerLink } = require("../utils/shortenerLink");
 
 class GPSController {
   constructor() {
@@ -32,16 +32,19 @@ class GPSController {
   }
 
   static async savePacketData(data, force = false, lastData) {
-    // console.log("*** savePacketData RUNNED");
+    try{
+    console.log(data,"*** savePacketData RUNNED");
     // console.log("two");
-    // console.log(data, "data");
-    // console.log(lastData, "lastDataaaa");
+    console.log(data, "data");
+    console.log(lastData, "lastDataaaa");
 
     const gpsData = new GPSDataModel(data);
+
+    console.log(gpsData,"gpsData ramy")
     const valid = await this.checkGPSDataInterval(gpsData, lastData);
 
-    // console.log("third", valid);
-    // console.log("gpsData", gpsData);
+    console.log(valid,"valid***");
+    
 
     if (valid || force) {
       // logger.debug(
@@ -49,14 +52,20 @@ class GPSController {
       //   { IMEI: gpsData.IMEI, time: gpsData.date }
       // );
       gpsData.url = `http://maps.google.com/maps?q=${gpsData.lat},${gpsData.lng}`;
+
+
+      this.checkSpeed(gpsData);
+
       const gpsdataaa = await gpsData.save();
 
       // console.log("until here");
 
+      console.log(gpsData,"gpsData")
       gpsData.address = await new AddressCache().findAddress(
         gpsData.lat,
         gpsData.lng
       );
+
       // console.log(gpsdataaa, "this is gpsdataaa");
       await gpsdataaa.save();
 
@@ -64,66 +73,84 @@ class GPSController {
 
       // query to find out deviceId
       const foundedVehicle =   await VehicleModel.findOne({ deviceIMEI: gpsData.IMEI });
+
+      // console.log(foundedVehicle,"foundedVehicle")
+      // console.log(gpsData,"gpsData")
+
       if (!foundedVehicle) {
-        console.log("vehicle is not found")
+        // console.log("vehicle is not found")
       }
       gpsData.vehicleId = foundedVehicle._id;
             await gpsData.save();
+            // console.log(gpsData,"gpsData2")
+
      
-      console.log(gpsData,"gpsData");
-      this.checkSpeed(gpsData);
-      // this.checkZone(gpsData);
+      // console.log(gpsData,"gpsData");
+      this.checkZone(gpsData);
     }
+  }catch(e){
+    console.log(e)
   }
+  }
+
 
   static async checkSpeed({ speed, IMEI, url }) {
     try {
-      console.log("happend")
+      // console.log("happend")
       const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI })
-        .select("_id lastLocation maxSpeed driverName driverPhoneNumber alarms")
-        .populate("lastLocation");
+        .select("_id lastLocation maxSpeed driverName driverPhoneNumber alarms simNumber plate")
+        .populate("lastLocation").populate("speedAlarm")
       if (vehicle) {
-        console.log("vehicle",vehicle)
-        console.log("speed",+speed)
-        console.log("IMEI",IMEI)
-        console.log("vehicle.maxSpeed",vehicle.maxSpeed)
+        // console.log("vehicle2",vehicle)
+        // console.log("speed",+speed)
+        // console.log("IMEI",IMEI)
+        // console.log("vehicle.maxSpeed",vehicle.maxSpeed)
 
         const lastSpeed = vehicle.lastLocation.speed || 0;
-        console.log("lastSpeed",lastSpeed)
+        // console.log("lastSpeed",lastSpeed)
 
         if(speed > vehicle.maxSpeed){
-          console.log("speed is greather then max")
+          // console.log("speed is greather then max")
         }
         if(lastSpeed < vehicle.maxSpeed){
-          console.log("speed is greather then max")
+          // console.log("speed is greather then max")
         }
 
         if(vehicle){
-          console.log("object1")
+          // console.log("object1")
           if(speed > vehicle.maxSpeed){
-            console.log("object2")
-            console.log("object2 d", +lastSpeed,+speed)
+            // console.log("object2")
+            // console.log("object2 d", +lastSpeed,+speed)
 
             if(lastSpeed < speed){
               console.log("object3")
             }
           }
         }
+        // console.log(speed,vehicle.maxSpeed,"ramy")
 
-        if (vehicle && +speed > +vehicle.maxSpeed && lastSpeed < +vehicle.maxSpeed)  {
+        if (vehicle && +speed > +vehicle.maxSpeed 
+          // && lastSpeed < +vehicle.maxSpeed
+          )  {
           try {
-            console.log("yes of course")
+            // console.log("yes of course")
             const lastAlarm = await VehicleAlarmModel.findOne({
               _id: vehicle.alarms[vehicle.alarms.length - 1],
             });
             const alarmBreak = moment(new Date(lastAlarm.date))
               .add(30, "m")
               .toDate();
-            if (alarmBreak > new Date()) return;
+
+              // console.log(moment(new Date(),"new Date()"))
+              // console.log(alarmBreak,"alarmBreak")
+
+
+            
+            // if (alarmBreak > new Date()) return  console.log("hello m");
           } catch (e) {}
           const newAlarm = new VehicleAlarmModel({
             type: "Over Speed",
-            date: new Date().AsDateJs(),
+            date: new Date(),
             vehicleId: vehicle._id,
             desc: `must be ${vehicle.maxSpeed} but is ${speed}`,
           });
@@ -131,15 +158,21 @@ class GPSController {
           vehicle.alarms.push(newAlarm._id);
           vehicle.save();
 
-          this.sendSpeedSMS(
-            vehicle,
-            speed,
-            IMEI,
-            url,
-            vehicle.driverName,
-            vehicle.driverPhoneNumber
-          );
-          // this.sendSpeedEmail(vehicle, speed, IMEI, address);
+
+          // this.sendSpeedSMS(
+          //   vehicle,
+          //   speed,
+          //   IMEI,
+          //   url,
+          //   vehicle.driverName,
+          //   "09381378120"
+          // );
+          // console.log("55555555")
+
+          // console.log(vehicle.lastLocation.address,"vehicle.address")
+            let address = vehicle.lastLocation.address;
+
+          this.sendSpeedEmail(vehicle, speed, IMEI, address);
         }
       }
     } catch (error) {
@@ -147,20 +180,25 @@ class GPSController {
       console.log(error);
     }
   }
-
+// OK
   static async sendSpeedSMS(vehicle, speed, IMEI, url, driverName) {
-    const smsgw = SMSGW();
+    // console.log("SMSGW")
 
+    const smsgw = SMSGW();
     const { rcvSMSNumbers } = vehicle.speedAlarm || {};
     const receivers = rcvSMSNumbers ? rcvSMSNumbers.split(";") : [];
     const driverFamilyName =
       driverName.split(" ")[driverName.split(" ").length - 1];
     receivers.push(vehicle.driverPhoneNumber);
+    // console.log("SMSGW2")
+
     let shortLink = await ShortenerLink()
       .zayaShortenerLink(url)
       .catch(() => {
         return url;
       });
+      // console.log("SMSGW3")
+
     const message = SpeedSMSText(
       speed,
       vehicle.maxSpeed,
@@ -168,14 +206,24 @@ class GPSController {
       shortLink,
       driverFamilyName
     );
+
     smsgw
       .sendSmsToNumber(message, [...new Set(receivers)])
       .catch((e) => logger.error(e));
+      // console.log("SMSGW4")
+
   }
 
   static sendSpeedEmail(vehicle, speed, IMEI, address) {
+    // console.log("sendSpeedEmail")
+    // console.log(vehicle,"vehicle")
+
     const { rcvEmails } = vehicle.speedAlarm || {};
+
+    // console.log(rcvEmails,"rcvEmails")
+
     const { simNumber, driverName, plate, driverPhoneNumber } = vehicle;
+    // console.log({vehicle, speed, IMEI, address},"vehicle, speed, IMEI, address")
     const context = {
       IMEI,
       speed,
@@ -189,13 +237,16 @@ class GPSController {
       lastLocationDate: "--------",
       alarmType: "Over speed",
     };
+    // console.log("send_email")
+
     util.send_email("mail/alarms/speed", context, (e) => console.error(e));
+    // console.log("bye")
   }
 
   // this function do =>
   static async checkGPSDataInterval({ date, IMEI, speed }, lastRecord) {
     try {
-      console.log("*** checkGPSDataInterval RUNNED");
+      // console.log("*** checkGPSDataInterval RUNNED");
 
       const vehicle = await VehicleModel.findOne({
         deviceIMEI: IMEI,
@@ -203,11 +254,12 @@ class GPSController {
         .select("lastLocation maxSpeed")
         .populate("lastLocation");
 
-      console.log(lastRecord, "lastRecord");
-
-      console.log(vehicle, "vehicle");
+      // console.log(lastRecord, "lastRecord");
+      // console.log(vehicle, "vehicle");
       if (!vehicle) return false;
       lastRecord = lastRecord || vehicle.lastLocation;
+
+      // console.log(vehicle.lastLocation,"mailLastLocatoin")
       if (!lastRecord) return true;
       const tenMinutes = 10 * 60 * 1000;
       return (
@@ -215,8 +267,10 @@ class GPSController {
         Math.abs(lastRecord.speed - speed) >= 10 ||
         speed >= (vehicle.maxSpeed || 100)
       );
+      
     } catch (e) {
-      logger.error(e);
+      // logger.error(e);
+      console.log(e)
       return false;
     }
   }
@@ -265,11 +319,17 @@ class GPSController {
   }
 
   static async checkZone({ IMEI, lat, lng, address }) {
+    // console.log("checkZone ")
+
+    // console.log({ IMEI, lat, lng, address },"checkZone 2")
     try {
       const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI }).populate(
         "lastLocation"
       );
+      // console.log(vehicle,"vehicle-checkZone")
       if (vehicle && vehicle.permissibleZone) {
+        // console.log( vehicle.permissibleZone," vehicle.permissibleZone")
+
         var permissibleZone = vehicle.permissibleZone;
         var point = [lat, lng];
         var driverName = vehicle.driverName;
@@ -301,7 +361,10 @@ class GPSController {
                   vehicle.zoneStatus === "IN" ||
                   vehicle.zoneStatus === undefined)
               ) {
-                const newAlarm = new VehicleAlarmModel({
+                const newAlarm
+                
+                
+                = new VehicleAlarmModel({
                   type: "Out of Zone",
                   date: new Date().AsDateJs(),
                   vehicleId: vehicle._id,
@@ -399,6 +462,8 @@ class GPSController {
   }
 
   static sendZoneEmail(vehicle, permissibleZone, point, IMEI) {
+    // console.log("sendZoneEmail")
+
     const { rcvEmails } = vehicle.zoneAlarm || {};
     const { simNumber, driverName, plate, driverPhoneNumber } = vehicle;
     const context = {
@@ -417,6 +482,7 @@ class GPSController {
 
   // *************************************************
   static async sendLocationSMS(message, receiver) {
+    // console.log("sendLocationSMS")
     const smsgw = SMSGW();
     const data = await smsgw.sendSmsToNumber(message, receiver, true);
     return data;

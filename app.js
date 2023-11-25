@@ -26,7 +26,7 @@ connectDatabase();
 
 app.use(morgan(chalk` {hex('
 #fff200
-').bold :method} {hex('#f57a33').bold :url} {hex('#9dff00').bold  :status} {hex('#ff0000').bold :response-time ms }-  :res[content-length] `));
+').bold :method} {hex('#f57a33').bold :url} {hex('#9dff00').bold  :status} {hex('#ff0000').bold :response-time ms }-  :res[content-length]  `, new Date().getDay));
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", '*');
   res.header(

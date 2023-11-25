@@ -6,6 +6,8 @@ const { GPSController } = require('./GPSController');
 
 class GT06Controller extends GPSController {
     static async parsePacket(packet, socket) {
+        console.log("parsePacket")
+
         try {
             console.log("something come here")
             const protocolId = packet.readInt8(3).toString(16);
@@ -31,6 +33,8 @@ class GT06Controller extends GPSController {
     }
 
     static getAck(packet) {
+        console.log("parsePacket")
+
         const data = Buffer.from([
             0x05,
             packet[3],
@@ -42,6 +46,8 @@ class GT06Controller extends GPSController {
     }
 
     static parseLocationPacket(packet, IMEI) {
+        console.log("parseLocationPacket")
+        
         /* eslint-disable no-bitwise */
         const year = packet.readUInt8(4);
         const month = packet.readUInt8(5);
@@ -69,6 +75,8 @@ class GT06Controller extends GPSController {
      * `getDate` sets buggy dates to now.
      */
     static getDate(year, month, day, hour, minute, second) {
+        console.log("getDate")
+
         const now = new Date();
         const fullYear = Math.floor(now.getFullYear() / 100) * 100 + year;
         const date = new Date(fullYear, month, day, hour, minute, second);
@@ -85,6 +93,8 @@ class GT06Controller extends GPSController {
     }
 
     static parseAlarmPacket(packet, IMEI) {
+        console.log("parseAlarmPacket")
+
         const terminalInfo = packet.readUInt8(31);
         const alarmTable = [
             'Normal',

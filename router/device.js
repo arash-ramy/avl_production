@@ -37,26 +37,6 @@ router.get("/models/get",headerAuth, deviceController.getDeviceModels);
 // ADD POLYGON 
 // router.get("/models/get",headerAuth, deviceController.getDeviceModels);
 
-
-
-
-
-
-// server.route({
-//     method: 'POST',
-//     path: '/devices/addpolygon',
-//     config: {
-//         auth: {
-//             strategy: 'jwt',
-//             access: { scope: ['polygon_edit'] },
-//         },
-//     },
-//     handler: DeviceController().setPolygon,
-// });
-
-
-
-
 // THIS API IS NOT COMPLETED AND IS NOT TESTED BY RAMY
 // THIS API IS NOT COMPLETED AND IS NOT TESTED BY RAMY
 router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatus);
@@ -79,13 +59,9 @@ router.post("/status",headerAuth, deviceController.setDeviceStatus);
 router.get("/alarmsettings/:IMEI/:settingsType",headerAuth, deviceController.getAlarmSettings);
 
 
+router.post("/addpolygon",headerAuth, deviceController.setPolygon);
 
-
-
-
-
-
-
+router.delete("/polygon/:id",headerAuth, deviceController.deletePolygon);
 
 
 

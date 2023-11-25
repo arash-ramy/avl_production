@@ -4,8 +4,13 @@ const VehicleStatusModel = require("../model/GpsLocation/VehicleStatusModel");
 const VehicleTypeModel = require("../model/GpsLocation/VehicleTypeModel");
 const PhoneBookModel = require("../model/User/phoneBookModel");
 const { FMXXXXController } = require("./FMXXXXController");
+const { GT06Controller } = require("./GT06Controller");
+
+
+
 const { NotifyUtility } = require("./NotifyUtility");
 const morgan = require('morgan');
+const ActionEventModel = require("../model/GpsLocation/ActionEventModel");
 
 // RESET DEVICE =>   THIS API IS NOT VERIFIED
 async function resetDevice(req, res) {
@@ -150,12 +155,14 @@ async function editDevice(req, res) {
     usage && (vehicle.usage = usage);
 
     await vehicle.save();
+    
     for (let fieldName of ["driverName", "driverPhoneNumber"]) {
       let vehicleEvent;
+
       if (vehicle[fieldName] !== oldVehicle[fieldName]) {
         vehicleEvent = new ActionEventModel({
           userId: req.user._id,
-          date: new Date().AsDateJs(),
+          date: new Date(),
           objectModel: "vehicle",
           objectId: vehicleId,
           actionType: "update",
@@ -856,21 +863,20 @@ async function setAlarmSettings(req, res) {
 
 async function tests(req, res) {
   try {
-
   const data = {
-    deviceName: "FMXXXX",
+    deviceName: "GT06",
     date: new Date(),
     IMEI: "121234",
-    lat: 51,
-    lng: 32,
+    lat: 29.68552652571643,
+    lng: 52.45619347959546,
     speed: 190,
     sat: 154,
     raw: "thisdataisraw",
   };
   const lastdata = new Date() 
-  FMXXXXController.savePacketData(data,lastdata);
-console.log("one")
- 
+  // FMXXXXController.savePacketData(data,lastdata);
+  GT06Controller.savePacketData(data,lastdata);
+
     // console.log(req.user);
     // const allVehicles = await VehicleModel.find()
     //   .setAuthorizationUser(req.user)
@@ -956,6 +962,127 @@ console.log("one")
     });
   }
 }
+
+
+
+
+
+
+
+const setPolygon = async (req, res) => {
+
+  var id = req.body.id;
+  var Polygon = req.body.coordinates;
+  var createDate = (new Date());
+  var creator = req.user._id;
+  var sendSMS = req.body.sendSMS ? req.body.sendSMS : false;
+  var smsNumbers = req.body.smsNumbers;
+  var smsReceivers = req.body.smsReceivers;
+  var sendEmail = req.body.sendEmail ? req.body.sendEmail : false;
+  var emails = req.body.emails;
+  var smsInterval = req.body.smsInterval || 3;
+
+
+  console.log(req.body,"this is body")
+
+  let receivers = await PhoneBookModel.find({ 'phoneNumber': { '$in': [...new Set(smsReceivers)] } })
+  var alarmSetting = {
+      sendSMS: (sendSMS.toString() === 'true'),
+      rcvSMSNumbers: smsNumbers,
+      smsReceivers: receivers,
+      sendEmail: (sendEmail.toString() === 'true'),
+      rcvEmails: emails
+  };
+
+  var zoneSetting = {
+      createDate: createDate,
+      creator: creator,
+      coordinates: Polygon,
+      alarmInterval: smsInterval,
+  };
+
+
+  console.log(receivers,"receivers")
+  if (!id) {
+      return res.json({
+          msg: 'id required',
+          code: '422',
+          validate: false,
+          field: 'vehicleIMEI'
+      })
+    }
+ const foundedandupdated = await VehicleModel.findOneAndUpdate({ _id: id },   {
+                zoneAlarm: alarmSetting,
+                permissibleZone: zoneSetting
+            },
+            { upsert: true , new: true},)
+
+
+          console.log(foundedandupdated,"foundedandupdated")
+return res.json({foundedandupdated,code:200})
+  //         .code(422);
+  // } else {
+  //     VehicleModel.findOneAndUpdate({ _id: id },
+  //         {
+  //             zoneAlarm: alarmSetting,
+  //             permissibleZone: zoneSetting
+  //         },
+  //         { upsert: true , new: true},
+  //         (error, vehicle) => {
+  //             if (error) {
+  //                 return res({
+  //                     msg: error
+  //                 })
+  //                     .code(500);
+  //             } else if (!vehicle) {
+  //                 return res({
+  //                     msg: 'vehicle not found'
+  //                 })
+  //                     .code(404);
+  //             } else {
+  //                 return res(vehicle)
+  //                     .code(200);
+  //             }
+  //         });
+  // }
+
+
+
+
+};
+
+const deletePolygon = async (req, res) => {
+
+  var deviceId = req.params.id;
+  if (!deviceId) {
+      return res.json({
+          msg: 'id required',
+          code: '422',
+          validate: false,
+          field: 'vehicleIMEI'
+      })
+         
+  } else {
+     const deletePer= await VehicleModel.updateOne({ _id: deviceId }, { $unset: { permissibleZone: 1 } })
+      console.log(deletePer)
+      return res.json({
+        code:200,
+        message:"Permission Zone Delete Successfully"
+      })
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
   resetDevice,
   setInterval,
@@ -973,4 +1100,6 @@ module.exports = {
   getAlarmSettings,
   setAlarmSettings,
   tests,
+  setPolygon,
+  deletePolygon
 };

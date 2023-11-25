@@ -32,41 +32,42 @@ class FMXXXXController extends GPSController {
     }
     static async parsePacket(packet, socket) {
         try {
-            // if (packet.readUInt32BE(0) === 0) {
-            //     const numberOfData = packet.readUInt8(9);
-            //     let start = 10;
-            //     let record;
-            //     let lastData;
-            //     for (let i = 0; i < numberOfData; i += 1) {
-            //         record = this.parseRecord(packet.slice(start));
-            //         const data = {
-            //             deviceName: 'FMXXXX',
-            //             date: new Date(record.timestamp),
-            //             IMEI: socket.IMEI,
-            //             lat: record.latitude,
-            //             lng: record.longitude,
-            //             speed: record.speed,
-            //             sat: record.satelites,
-            //             raw: record.raw,
-            //         };
-            //         this.savePacketData(data, record.priority > 0, lastData);
-            //         start += record.raw.length;
-            //         lastData = data;
-            //     }
-            //     const response = Buffer.alloc(4);
-            //     response.writeUInt32BE(numberOfData);
-            //     if (socket.readyState === 'open') socket.write(response);
-            // } else {
-            //     const IMEILength = packet.readUInt16BE(0);
-            //     const IMEI = packet.toString('utf8', 2, IMEILength + 2);
-            //     if (await VehicleModel.exists({ deviceIMEI: IMEI })) {
-            //         socket.IMEI = IMEI;
-            //         if (socket.readyState === 'open')
-            //             socket.write(Buffer.from([1]));
-            //     } else {
-            //         socket.end(Buffer.from([0]));
-            //     }
-            // }
+            if (packet.readUInt32BE(0) === 0) {
+                const numberOfData = packet.readUInt8(9);
+                let start = 10;
+                let record;
+                let lastData;
+                for (let i = 0; i < numberOfData; i += 1) {
+                    record = this.parseRecord(packet.slice(start));
+                    const data = {
+                        deviceName: 'FMXXXX',
+                        date: new Date(record.timestamp),
+                        IMEI: socket.IMEI,
+                        lat: record.latitude,
+                        lng: record.longitude,
+                        speed: record.speed,
+                        sat: record.satelites,
+                        raw: record.raw,
+                    };
+                    console.log("comes until here")
+                    this.savePacketData(data, record.priority > 0, lastData);
+                    start += record.raw.length;
+                    lastData = data;
+                }
+                const response = Buffer.alloc(4);
+                response.writeUInt32BE(numberOfData);
+                if (socket.readyState === 'open') socket.write(response);
+            } else {
+                const IMEILength = packet.readUInt16BE(0);
+                const IMEI = packet.toString('utf8', 2, IMEILength + 2);
+                if (await VehicleModel.exists({ deviceIMEI: IMEI })) {
+                    socket.IMEI = IMEI;
+                    if (socket.readyState === 'open')
+                        socket.write(Buffer.from([1]));
+                } else {
+                    socket.end(Buffer.from([0]));
+                }
+            }
             const data = {
                 deviceName: 'FMXXXX',
                 date: new Date(),
