@@ -59,7 +59,6 @@ const GPSLocation = require("./router/gpslocation");
 
 app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/gpsdata", GPSLocation);
-
 app.use("/api/v1/device", DeviceRouter);
 app.use("/api/v1/devicegroup", DeviceGroupRouter);
 
@@ -82,8 +81,8 @@ const server = app.listen(process.env.PORT, () => {
   
   // unhandled promise rejection
 process.on("unhandledRejection", (err) => {
-    console.log(`Shutting down the server for ${err.message}`);
-    console.log(`shutting down the server for unhandle promise rejection`);
+    // console.log(`Shutting down the server for ${err.message}`);
+    console.log(` 🔥🔥🔥shutting down the server for unhandle promise rejection`);
   
     server.close(() => {
       process.exit(1);

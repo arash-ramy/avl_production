@@ -1,4 +1,4 @@
-const { VehicleModel } = require('../model/GpsLocation/GPSDataModel');
+const { VehicleModel } = require('../model/GpsLocation/VehicleModel');
 const { GPSController } = require('./GPSController');
 
 class FMXXXXController extends GPSController {

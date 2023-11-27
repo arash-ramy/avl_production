@@ -41,12 +41,9 @@ router.get("/models/get",headerAuth, deviceController.getDeviceModels);
 // THIS API IS NOT COMPLETED AND IS NOT TESTED BY RAMY
 router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatus);
 
+router.post("/getinfo",headerAuth, deviceController.getBachInfoViaIMEI);
 
-
-
-
-
-
+router.post("/report/locations",headerAuth, deviceController.reportDeviceLocations);
 
 
 

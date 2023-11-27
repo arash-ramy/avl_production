@@ -599,7 +599,55 @@ return res.json({
 });
 
 }
+// GETING BACH FROM IMEI DEVICE GROUP
+const getBachInfoViaIMEI = async (req, res) => {
+  try {
 
+    var requiredFields = ['IMEIs'];
+    var arrayOfIMEIS = new Array;
+    for (var i = 0; i < requiredFields.length; i++) {
+        if ((requiredFields[i] in req.body) == false) {
+            return res.json({
+                message: requiredFields[i] + ' doesn\'t exist',
+                code: '400',
+                validate: false,
+                field: requiredFields[i]
+            })
+                
+        }
+    }
+
+    for (var i = 0; i < req.payload.IMEIs.length; i++) {
+        arrayOfIMEIS.push({ 'deviceIMEI': req.payload.IMEIs[i] });
+    }
+
+    var condition = { $or: arrayOfIMEIS };
+
+    VehicleModel.find(condition)
+        .exec(function (err, vehicles) {
+            if (err) {
+                return res({
+                    msg: err
+                })
+                    .code(500);
+            } else {
+                return res({
+                    msg: 'fetched successfully',
+                    vehicles: vehicles,
+                    code: 200
+                })
+                    .code(200);
+            }
+        });
+
+} catch (ex) {
+    logger.error(ex);
+    return res({
+        msg: ex
+    })
+        .code(500);
+}
+}
 module.exports = {
   getDeviceGroups,
   addDeviceGroup,
@@ -613,5 +661,6 @@ module.exports = {
   removeVehicleFromGroup,
   getUserDeviceGroups,
   getVehiclesofMultiGroup,
-  reportVehicleOfGroups
-};
+  reportVehicleOfGroups,
+  
+}

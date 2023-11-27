@@ -5,6 +5,7 @@ const VehicleTypeModel = require("../model/GpsLocation/VehicleTypeModel");
 const PhoneBookModel = require("../model/User/phoneBookModel");
 const { FMXXXXController } = require("./FMXXXXController");
 const { GT06Controller } = require("./GT06Controller");
+const DeviceGroupModel = require("../model/GpsLocation/DeviceGroupeModel");
 
 
 
@@ -647,7 +648,7 @@ async function getDevices(req, res) {
 
 async function getLastLocationOfAllDevice(req, res) {
   try {
-    VehicleModel.find({ lastLocation: { $ne: null } })
+  const vehicles = await   VehicleModel.find({ lastLocation: { $ne: null } })
       .setAuthorizationUser(req.user)
       .select({
         driverName: 1,
@@ -660,61 +661,50 @@ async function getLastLocationOfAllDevice(req, res) {
       })
       .populate({ path: "model", select: { name: 1, _id: 0 } })
       .populate("lastLocation")
-      .exec(async (err, vehicles) => {
-        if (err) {
-          logger.error(err);
-          return res({
-            msg: err,
-          }).code(500);
-        }
-        if (!vehicles) {
-          return res({
-            msg: "There is no vehicles",
-          }).code(404);
-        }
 
-        const result = await vehicles.map(async (vehicle) => {
-          const group = await DeviceGroupModel.findOne(
-            { devices: vehicle._id },
-            "name color"
-          );
-          const {
-            model,
-            vehicleName,
-            driverName,
-            simNumber,
-            driverPhoneNumber,
-            plate,
-            lastLocation: { lat, lng, IMEI, date, speed },
-          } = vehicle;
-          return {
-            deviceInfo: {
+
+      if(!vehicles){
+        return res.json({
+          code:404,
+          message:"There is no vehicle "
+        })
+      }
+      const result = await vehicles.map(async (vehicle) => {
+            const group = await DeviceGroupModel.findOne(
+              { devices: vehicle._id },
+              "name color"
+            );
+             const  {
               model,
               vehicleName,
               driverName,
               simNumber,
               driverPhoneNumber,
               plate,
-            },
-            lastLocation: {
-              lat,
-              lng,
-              IMEI,
-              date,
-              speed,
-            },
-            group,
-          };
-        });
-        Promise.all(result).then((values) => {
-          return res(values).code(200);
-        });
-      });
-  } catch (ex) {
-    logger.error(ex);
-    return res({
-      msg: ex,
-    }).code(404);
+              lastLocation: { lat, lng, IMEI, date, speed },
+            } = vehicle;
+
+
+           
+            return res.json({code : 200 , lastLocation: { lat, lng, IMEI, date, speed },group , deviceInfo: {
+                      model,
+                      vehicleName,
+                      driverName,
+                      simNumber,
+                      driverPhoneNumber,
+                      plate,
+              }  })
+                  }
+                    )
+                    
+  } catch (error) {
+    // logger.error(ex);
+    console.log(error)
+    return res.json({
+      messageSys: error.message,
+      message: "someghing went wrong in sending alarm in getLastLocationOfAllDevice",
+      code: 500,
+    });
   }
 }
 
@@ -1073,14 +1063,211 @@ const deletePolygon = async (req, res) => {
 }
 
 
+// OK
+// GETING BACH FROM IMEI DEVICE GROUP
+const getBachInfoViaIMEI = async (req, res) => {
+  try {
+
+    var requiredFields = ['IMEIs'];
+    var arrayOfIMEIS = new Array;
+    for (var i = 0; i < requiredFields.length; i++) {
+        if ((requiredFields[i] in req.body) == false) {
+            return res.json({
+                message: requiredFields[i] + ' doesn\'t exist',
+                code: '400',
+                validate: false,
+                field: requiredFields[i]
+            })
+                
+        }
+    }
+    console.log(arrayOfIMEIS,"befor")
+
+    for (var i = 0; i < req.body.IMEIs.length; i++) {
+        arrayOfIMEIS.push({ 'deviceIMEI': req.body.IMEIs[i] });
+    }
+    console.log(arrayOfIMEIS,"after")
+
+    var condition = { $or: arrayOfIMEIS };
+
+  const vehiclefounded = await  VehicleModel.find(condition)
+
+  res.json({
+    code:200,
+    vehiclefounded
+  })
+        // .exec(function (err, vehicles) {
+        //     if (err) {
+        //         return res({
+        //             msg: err
+        //         })
+        //             .code(500);
+        //     } else {
+        //         return res({
+        //             msg: 'fetched successfully',
+        //             vehicles: vehicles,
+        //             code: 200
+        //         })
+        //             .code(200);
+        //     }
+        // });
+
+} catch (ex) {
+    logger.error(ex);
+    return res({
+        msg: ex
+    })
+        .code(500);
+}
+}
 
 
 
 
+const reportDeviceLocations=  async (req, res) => {
+  try {
+      const {
+          type,
+          dateFilter: { start: startDate, end: endDate },
+          speedFilter: { min: minSpeed, max: maxSpeed },
+          timeFilter: { start: startTime, end: endTime },
+      } = req.body;
 
+      
+      if (
+          startDate &&
+          endDate &&
+          new Date(startDate) > new Date(endDate)
+      ) {
+          throw new Error(
+              'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
+          );
+      }
+      if (
+          startTime &&
+          endTime &&
+          startTime > endTime
+      ) {
+          throw new Error(
+              'ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.'
+          );
+      }
+      if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
+          throw new Error(
+              'کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد.'
+          );
+      }
+      const { reportDevices } = await reports.getReportDevices(req);
+      reportDevices.select({ deviceIMEI: 1 });
+      const deviceIMEIs = (await reportDevices).map(
+          vehicle => vehicle.deviceIMEI
+      );
+      const deviceIds = (await reportDevices).map(
+          vehicle => vehicle._id
+      );
 
+      const reportLocations = GPSDataModel.aggregate()
+          .match({ vehicleId: { $in: deviceIds } })
+          .addFields({
+              dateCreated: {
+                  $dateFromString: { dateString: { $substr: ['$date', 0, 34 ] } },
+              },
+              dateCreatedHour: {
+                  $hour: {
+                      date: {
+                          $dateFromString: {
+                              dateString: { $substr: ['$date', 0, 34] },
+                          },
+                      },
+                      timezone: 'Asia/Tehran',
+                  }
+              }
+          });
+      if (startDate) {
+          reportLocations.match({
+              dateCreated: { $gte: new Date(startDate) },
+          });
+      }
+      if (endDate) {
+          reportLocations.match({
+              dateCreated: { $lte: new Date(endDate) },
+          });
+      }
+      if (minSpeed) {
+          reportLocations.match({ speed: { $gte: +minSpeed } });
+      }
+      if (maxSpeed) {
+          reportLocations.match({ speed: { $lte: +maxSpeed } });
+      }
+      if (startTime) {
+          reportLocations.match({
+              dateCreatedHour: { $gte: startTime }
+          })
+      }
+      if (endTime) {
+          reportLocations.match({
+              dateCreatedHour: { $lt: endTime }
+          })
+      }
+      const vehiclesLocationData = await reportLocations
+          .group({
+              _id: '$vehicleId',
+              locations: {
+                  $push: {
+                      date: '$dateCreated',
+                      latitude: '$lat',
+                      longitude: '$lng',
+                      address: '$address',
+                      speed: '$speed',
+                      url: '$url',
+                  },
+              },
+              minSpeed: { $min: '$speed' },
+              maxSpeed: { $max: '$speed' },
+              avgSpeed: { $avg: '$speed' },
+              lastLocation: {
+                  $last: { address: '$address', date: '$date' },
+              },
+          })
+          .lookup({
+              from: 'vehicles',
+              localField: '_id',
+              foreignField: '_id',
+              as: 'device',
+          })
+          .unwind('device')
+          .lookup({
+              from: 'devicegroups',
+              localField: 'device._id',
+              foreignField: 'devices',
+              as: 'device.groups',
+          })
+          .replaceRoot({
+              $mergeObjects: [
+                  '$$ROOT',
+                  {
+                      groups: '$device.groups.name',
+                      device: {
+                          IMEI: '$device.deviceIMEI',
+                          type: '$device.type',
+                          simNumber: '$device.simNumber',
+                          fuel: '$device.fuel'
+                      },
+                      driver: {
+                          name: '$device.driverName',
+                          phoneNumber: '$device.driverPhoneNumber',
+                      },
+                  },
+              ],
+          });
 
+      return res(vehiclesLocationData).code(200);
+  } catch (ex) {
+      logger.error(ex);
+      return res({ msg: ex.message }).code(404);
+  }
 
+}
 
 
 module.exports = {
@@ -1101,5 +1288,7 @@ module.exports = {
   setAlarmSettings,
   tests,
   setPolygon,
-  deletePolygon
+  deletePolygon,
+  getBachInfoViaIMEI
+  ,reportDeviceLocations
 };
