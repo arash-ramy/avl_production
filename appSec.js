@@ -44,7 +44,7 @@ const UserRouter = require("./router/user");
 const DeviceRouter = require("./router/device");
 const DeviceGroupRouter = require("./router/deviceGroupe");
 const GPSLocation = require("./router/gpslocation");
-// const CronTest = require("./router/cronTest");
+const CronTest = require("./router/cronTest");
 
 
 
@@ -52,11 +52,11 @@ app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/gpsdata", GPSLocation);
 app.use("/api/v1/device", DeviceRouter);
 app.use("/api/v1/devicegroup", DeviceGroupRouter);
-// app.use("/api/v1/testcron", CronTest);
+app.use("/api/v1/testcron", CronTest);
 
 
 // create server
-const server = app.listen(process.env.PORT, () => {
+const server = app.listen(3008, () => {
     console.log(
       `Server is running on http://localhost:${process.env.PORT}`
     );
