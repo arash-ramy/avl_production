@@ -1,22 +1,35 @@
 /*eslint-disable */
-const {
-    VehicleModel,
-    VehicleAlarmModel
-} = require('../models/gpslocation');
-const { logger } = require('../utility/customlog');
+// const {
+//     VehicleModel,
+//     VehicleAlarmModel
+// } = require('../models/gpslocation');
+
+const VehicleModel = require('../model/GpsLocation/VehicleModel');
+const VehicleAlarmModel = require('../model/GpsLocation/VehicleAlarmModel');
+
+// const { logger } = require('../utility/customlog');
 const cron = require('node-cron');
 const moment = require('moment');
-const { SMSGW } = require('../utility/smsgw');
-const { util } = require('../utility/util');
+
+// const { SMSGW } = require('../utility/smsgw');
+const {SMSGW} = require("../utils/smsgw")
+
+const { util } = require('../utils/util');
+
 const { DelayLocation } = require('../template/sms/alarms');
 const smsgw = SMSGW();
 const jalali_moment = require('moment-jalaali');
+console.log("object 888")
+
 
 class DeviceCheckLastLocationDelayCron {
+    
     static async checkLastLocationDelay() {
         try {
+            console.log("comes here 001")
             const today = new Date();
             let delays = [];
+            
             ['کاوه سودا', 'کاوه سیلیس', 'فلوت کاویان', 'متانول کاوه', 'کربنات کاوه', 'ابهر سیلیس', 'مظروف یزد', 'دفتر مرکزی'].map((group) => {
                 delays.push({
                     groupName: group,
@@ -25,64 +38,194 @@ class DeviceCheckLastLocationDelayCron {
                 });
             });
 
-            VehicleModel.find()
+           const vehicles = await VehicleModel.find()
                 .select('_id deviceIMEI lastLocation driverName plate')
                 .populate('lastLocation')
                 .populate({
                     path: 'groups',
                     select: 'name'
                 })
-                .exec((err, vehicles) => {
-                    if (err) {
-                        logger.error(err);
-                        return;
-                    }
-                    const result = vehicles.map(async vehicle => {
-                        try {
-                            const lastLocationDurationDays = vehicle.lastLocation ? moment.duration(today.getTime() - vehicle.lastLocation.date.getTime())
-                                .asDays() : 0;
+                // console.log(vehicles)
+
+
+
+
+
+                const result = vehicles.map(async vehicle => {
+                    try {
+
+                        const lastLocationDurationDays = vehicle.lastLocation ? moment.duration(today.getTime() - vehicle.lastLocation.date.getTime())
+                            .asDays() : 0;
                             const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne({
                                 vehicleId: vehicle._id,
                                 type: 'Delay Alarm'
                             }, 'date')
                                 .sort({ date: -1 });
-                            if (lastLocationDurationDays > 5 &&
-                                (
-                                    !lastVehicleDelayAlarm ||
-                                    (lastVehicleDelayAlarm && moment.duration(today.getTime() - new Date(lastVehicleDelayAlarm.date).getTime())
-                                        .asDays() > 5)
-                                ) &&
-                                vehicle.groups[0] !== undefined
-                            ) {
-                                if (vehicle.groups[0].name !== 'اسقاطی') {
-                                    const newAlarm = new VehicleAlarmModel({
-                                        type: 'Delay Alarm',
-                                        date: (new Date()).AsDateJs(),
-                                        vehicleId: vehicle._id,
-                                        desc: 'location not received for ' + Math.floor(lastLocationDurationDays) + ' days'
-                                    });
-                                    await newAlarm.save();
-                                    const delayIndex = delays.findIndex(delay => delay.groupName === vehicle.groups[0].name);
-                                    delays[delayIndex].vehicles.push({
-                                        IMEI: vehicle.deviceIMEI,
-                                        driverName: vehicle.driverName,
-                                        plate: vehicle.plate,
-                                        lastLocationDurationDays: Math.floor(lastLocationDurationDays),
-                                    });
+                                console.log(lastVehicleDelayAlarm)
+                                const ss = moment.duration(today.getTime() - new Date(lastVehicleDelayAlarm.date).getTime())
+                                console.log(ss)
+                                if (lastLocationDurationDays > 5 &&
+                                    (
+                                        !lastVehicleDelayAlarm ||
+                                        (lastVehicleDelayAlarm && moment.duration(today.getTime() - new Date(lastVehicleDelayAlarm.date).getTime())
+                                            .asDays() > 5)
+                                    )
+                                )
+                                {
+                                    console.log("_____*  ")
+
                                 }
-                            }
-                            return delays;
-                        } catch (e) {
-                            logger.error(e);
-                        }
-                    });
-                    Promise.all(result)
-                        .then(async (values) => {
-                            this.sendDelaySmsToAdmins(values, today);
-                        });
+
+                            // console.log("lastLocationDurationDays",lastLocationDurationDays)
+                            // console.log("lastVehicleDelayAlarm",lastVehicleDelayAlarm)
+
+                                
+                            // console.log(lastLocationDurationDays,"lastLocationDurationDays")
+                            // console.log(vehicle.lastLocation,"vehicle.lastLocation")
+                            // console.log(" moment.duration(today.getTime()", moment.duration(today.getTime()))
+                            const dd =vehicle?.lastLocation?.date.getTime()
+                            // const dd1 =vehicle?.lastLocation
+                            // const dd =vehicle?.lastLocation?.date.getTime()
+                            // const dd =vehicle?.lastLocation?.date.getTime()
+                            
+                            // console.log("vehicle.lastLocation.date.getTime()",dd)
+                            // console.log("lastLocationDurationDays",lastLocationDurationDays)
+
+                            // console.log("vehicle?.lastLocation",dd1)
+                            // console.log("vehicle.lastLocation.date.getTime()",dd)
+                            // console.log("vehicle.lastLocation.date.getTime()",dd)
+
+                        // const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne({
+                        //     vehicleId: vehicle._id,
+                        //     type: 'Delay Alarm'
+                        // }, 'date')
+                        //     .sort({ date: -1 });
+                        // if (lastLocationDurationDays > 5 &&
+                        //     (
+                        //         !lastVehicleDelayAlarm ||
+                        //         (lastVehicleDelayAlarm && moment.duration(today.getTime() - new Date(lastVehicleDelayAlarm.date).getTime())
+                        //             .asDays() > 5)
+                        //     ) &&
+                        //     vehicle.groups[0] !== undefined
+                        // ) {
+                        //     if (vehicle.groups[0].name !== 'اسقاطی') {
+                        //         const newAlarm = new VehicleAlarmModel({
+                        //             type: 'Delay Alarm',
+                        //             date: (new Date()).AsDateJs(),
+                        //             vehicleId: vehicle._id,
+                        //             desc: 'location not received for ' + Math.floor(lastLocationDurationDays) + ' days'
+                        //         });
+                        //         await newAlarm.save();
+                        //         const delayIndex = delays.findIndex(delay => delay.groupName === vehicle.groups[0].name);
+                        //         delays[delayIndex].vehicles.push({
+                        //             IMEI: vehicle.deviceIMEI,
+                        //             driverName: vehicle.driverName,
+                        //             plate: vehicle.plate,
+                        //             lastLocationDurationDays: Math.floor(lastLocationDurationDays),
+                        //         });
+                        //     }
+                        // }
+                        // return delays;
+                    } catch (e) {
+                        // logger.error(e);
+                        console.log("something went wrong in checkLastLocationDelay ",e)
+                    }
                 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                // .exec((err, vehicles) => {
+                //     if (err) {
+                //         logger.error(err);
+                //         return;
+                //     }
+                //     const result = vehicles.map(async vehicle => {
+                //         try {
+                //             const lastLocationDurationDays = vehicle.lastLocation ? moment.duration(today.getTime() - vehicle.lastLocation.date.getTime())
+                //                 .asDays() : 0;
+                //             const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne({
+                //                 vehicleId: vehicle._id,
+                //                 type: 'Delay Alarm'
+                //             }, 'date')
+                //                 .sort({ date: -1 });
+                //             if (lastLocationDurationDays > 5 &&
+                //                 (
+                //                     !lastVehicleDelayAlarm ||
+                //                     (lastVehicleDelayAlarm && moment.duration(today.getTime() - new Date(lastVehicleDelayAlarm.date).getTime())
+                //                         .asDays() > 5)
+                //                 ) &&
+                //                 vehicle.groups[0] !== undefined
+                //             ) {
+                //                 if (vehicle.groups[0].name !== 'اسقاطی') {
+                //                     const newAlarm = new VehicleAlarmModel({
+                //                         type: 'Delay Alarm',
+                //                         date: (new Date()).AsDateJs(),
+                //                         vehicleId: vehicle._id,
+                //                         desc: 'location not received for ' + Math.floor(lastLocationDurationDays) + ' days'
+                //                     });
+                //                     await newAlarm.save();
+                //                     const delayIndex = delays.findIndex(delay => delay.groupName === vehicle.groups[0].name);
+                //                     delays[delayIndex].vehicles.push({
+                //                         IMEI: vehicle.deviceIMEI,
+                //                         driverName: vehicle.driverName,
+                //                         plate: vehicle.plate,
+                //                         lastLocationDurationDays: Math.floor(lastLocationDurationDays),
+                //                     });
+                //                 }
+                //             }
+                //             return delays;
+                //         } catch (e) {
+                //             logger.error(e);
+                //         }
+                //     });
+                //     Promise.all(result)
+                //         .then(async (values) => {
+                //             this.sendDelaySmsToAdmins(values, today);
+                //         });
+                // });
         } catch (ex) {
-            logger.error(ex);
+            console.log("something went wrong in DeviceCheckLastLocationDelayCron ", ex)
         }
     }
 
@@ -122,54 +265,56 @@ class DeviceCheckLastLocationDelayCron {
         switch (groupName) {
             case 'کاوه سودا':
                 return {
-                    phone: ['09191160065', '09121167210'],
-                    email: ['soleimani-m@kavehglass.com', 'ma-yasari@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
             case'کاوه سیلیس':
                 return {
-                    phone: ['09191160065', '09121167210'],
-                    email: ['soleimani-m@kavehglass.com', 'ma-yasari@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
             case'فلوت کاویان':
                 return {
-                    phone: ['09191160065', '09121167210'],
-                    email: ['soleimani-m@kavehglass.com', 'ma-yasari@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
             case'متانول کاوه':
                 return {
-                    phone: ['09191160065', '09121167210'],
-                    email: ['soleimani-m@kavehglass.com', 'ma-yasari@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
             case'کربنات کاوه':
                 return {
-                    phone: ['09191160065', '09198008405', '09120723191'],
-                    email: ['soleimani-m@kavehglass.com','v-pashazadeh@kavehglass.com', 'j-vesali@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
             case'ابهر سیلیس':
                 return {
-                    phone: ['09191160065', '09121167210'],
-                    email: ['soleimani-m@kavehglass.com', 'ma-yasari@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
             case'مظروف یزد':
                 return {
-                    phone: ['09191160065', '09121167210'],
-                    email: ['soleimani-m@kavehglass.com', 'ma-yasari@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
             case'دفتر مرکزی':
                 return {
-                    phone: ['09191160065', '09121167210'],
-                    email: ['soleimani-m@kavehglass.com', 'ma-yasari@kavehglass.com', 'yasari-ma@kavehglass.com']
+                    phone: ['09381378120', '09370713134'],
+                    email: ['ar-rahimi@kavehglass.com', 'arashramy@gmail.com',]
                 };
         }
     }
 
 
     static run() {
-        const EVERY_DAY_AT_8_AM = '45 6 * * *'; // 6:45 AM every day
-        cron.schedule(EVERY_DAY_AT_8_AM, () => {
+        // const EVERY_DAY_AT_8_AM = '45 6 * * *'; // 6:45 AM every day
+        // cron.schedule(EVERY_DAY_AT_8_AM, () => {
+            (function(){
             DeviceCheckLastLocationDelayCron.checkLastLocationDelay()
-                .catch(e => logger.error(e));
-        });
+                .catch(e => console.log("something went wrong in DeviceCheckLastLocationDelayCron ",e));
+        // });
+    })(); 
     }
 }
 

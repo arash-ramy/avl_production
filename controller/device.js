@@ -212,7 +212,7 @@ async function getDeviceModels(req, res) {
   try {
     const foundedItem = await VehicleTypeModel.find().select({
       name: 1,
-      _id: 0,
+      _id: 1,
     });
 
     if (!foundedItem) {

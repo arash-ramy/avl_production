@@ -48,9 +48,14 @@ GPSSchema.post('save', async gpsData => {
 
     if (vehicle) {
         vehicle.lastLocation = gpsData.id;
+
+      console.log("******////////**************")
+
         vehicle.gpsDataCount = await mongoose.model('gpsdata').countDocuments({
             IMEI: gpsData.IMEI,
         });
+
+
         await vehicle.save();
         // console.log(vehicle,"ddd")
     } 

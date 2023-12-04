@@ -181,10 +181,10 @@ VehicleSchema.post('remove', async vehicle => {
 });
 
 VehicleSchema.pre('find', async function getUserAuthenticatedDevices() {
-    console.log("ky")
-    console.log(this.authUser,"this is authuser")
-    console.log(this.user)
-    console.log("ky*")
+    // console.log("ky")
+    // console.log(this.authUser,"this is authuser")
+    // console.log(this.user)
+    // console.log("ky*")
 
 
     if (this.authUser && !this.authUser.isAdmin()) {
@@ -218,6 +218,13 @@ VehicleSchema.pre('find', async function getUserAuthenticatedDevices() {
         }
     }
 });
+
+VehicleSchema.virtual('groups', {
+    ref: 'devicegroup',
+    localField: '_id',
+    foreignField: 'devices',
+});
+
 
 mongoose.Query.prototype.setAuthorizationUser = function setAuthorizationUser(
     user
