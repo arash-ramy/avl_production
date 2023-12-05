@@ -13,6 +13,7 @@ const multer = require("multer");
 const path = require("path");
 const PhoneBookModel = require("../model/User/phoneBookModel");
 const { text } = require("body-parser");
+const { EROFS } = require("constants");
 
 // DISABLE OTHER ACCOUNT
 const disableOtherAccounts = async (userId) => {
@@ -207,7 +208,7 @@ const signup = async (req, res) => {
 
 };
 
-function editUser(req, res) {
+const  editUser = async(req, res)=>{
   try {
     const {
       userId,
@@ -226,35 +227,27 @@ function editUser(req, res) {
         field: "userId",
       });
     }
-    UserModel.findOne({ _id: userId }, function (error, user) {
-      if (error) {
-        // logger.error(error);
-        return res.json({
-          error,
-          code: "500",
-        });
-      }
-      username && (user.username = username);
-      firstname && (user.firstname = firstname);
-      lastname && (user.lastname = lastname);
-      gender && (user.gender = gender);
-      email && (user.email = email);
-      mobileNumber && (user.mobileNumber = mobileNumber);
+    const user = await  UserModel.findOne({ _id: userId })
 
-      user.save(function (error) {
-        if (error) {
-          // logger.error(error);
-          return res.json({
-            code: "500",
-            error,
-          });
-        }
-        return res.json({
+    if(!user){
+      res.json({message:"user not founded ", code :404})
+    }
+    username && (user.username = username);
+    firstname && (user.firstname = firstname);
+    lastname && (user.lastname = lastname);
+    gender && (user.gender = gender);
+    email && (user.email = email);
+    mobileNumber && (user.mobileNumber = mobileNumber);
+      
+
+    await user.save();
+
+
+      return res.json({
           code: "200",
           user,
         });
-      });
-    });
+
   } catch (ex) {
     // logger.error(ex);
     return res.json({
@@ -643,19 +636,49 @@ const addRoleToUser = async (req, res) => {
     const { userId, roleName } = req.body;
     const user = await UserModel.findOne({ _id: userId });
     if (!user) {
-      return res({ msg: "User not found" }).code(404);
+      return res.json({ msg: "User not found" });
     }
-    if (!user.roles.find((role) => role.rolename === roleName)) {
-      user.roles.push({ rolename: roleName, roledesc: roleName });
+    console.log(user,"rm")
+    console.log(roleName,"roleName")
+
+    if (!user.roles.find(role => role.rolename === roleName)) {
+      console.log("comessss")
+
+      const   myFunction = async(item)=>{
+        console.log(item)
+        user.roles.push({ rolename: item, roledesc: item });
+       }
+
+      roleName.forEach(myFunction);
+
       await user.save();
-    }
-    return res({
+
+  }
+    //   // console.log("user.roles",user.roles)
+    //   console.log("pp",pp)
+    // // console.log(role.rolename,"role.rolename")
+    // // console.log(roleName,"roleName")
+    // // console.log(user,roleName,"ddddd")
+    
+    // // user.roles.({ "rolename" : roleNames});
+    // // await user.save();
+
+
+    // // if (!user.roles.find((role) => role.rolename === roleName)) {
+    // //   console.log(role.rolename,"role.rolename")
+    // //   console.log(roleName,"roleName")
+
+    // //   user.roles.push({ rolename: roleName, roledesc: roleName });
+    // //   await user.save();
+    // // }
+    return res.json({
       msg: "Role added to user successfully!",
-      data: user,
-    }).code(200);
-  } catch (ex) {
-    logger.error(ex);
-    return res({ msg: ex }).code(404);
+
+    })
+  } catch (error) {
+    // logger.error(ex);
+    console.log("error ",error)
+    return res.json({ msg: error ,code:404})
   }
 };
 
