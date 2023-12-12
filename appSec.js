@@ -16,8 +16,8 @@ var shell = require('shelljs');
 
 shell.exec('node --version');
 
-const connectDatabase = require("./DB/DbConnection");
-connectDatabase();
+ require("./DB/DbLocalhost");
+
 
 app.use(morgan(chalk` {hex('
 #fff200
@@ -44,19 +44,18 @@ const UserRouter = require("./router/user");
 const DeviceRouter = require("./router/device");
 const DeviceGroupRouter = require("./router/deviceGroupe");
 const GPSLocation = require("./router/gpslocation");
-const CronTest = require("./router/cronTest");
-
+// const something = require("./router/cronTest");
+// ServerCronJobs.run()
 
 
 app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/gpsdata", GPSLocation);
 app.use("/api/v1/device", DeviceRouter);
 app.use("/api/v1/devicegroup", DeviceGroupRouter);
-app.use("/api/v1/testcron", CronTest);
-
+// app.use("/api/v1/testcron", something)
 
 // create server
-const server = app.listen(3008, () => {
+const server = app.listen(8006, () => {
     console.log(
       `Server is running on http://localhost:${process.env.PORT}`
     );
@@ -65,7 +64,7 @@ const server = app.listen(3008, () => {
   // unhandled promise rejection
 process.on("unhandledRejection", (err) => {
     console.log(` 🔥🔥🔥shutting down the server for unhandle promise rejection`);
-  
+  console.log(err)
     server.close(() => {
       process.exit(1);
     });
@@ -78,4 +77,4 @@ process.on("unhandledRejection", (err) => {
 // cron.schedule('*/3 * * * * *', () => {
 //   console.log(new Date());
 // });
-// connect db
+// connect dbx

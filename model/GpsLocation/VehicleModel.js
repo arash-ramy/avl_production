@@ -180,44 +180,45 @@ VehicleSchema.post('remove', async vehicle => {
         });
 });
 
-VehicleSchema.pre('find', async function getUserAuthenticatedDevices() {
-    // console.log("ky")
-    // console.log(this.authUser,"this is authuser")
-    // console.log(this.user)
-    // console.log("ky*")
+    VehicleSchema.pre('find', async function getUserAuthenticatedDevices() {
+        // console.log("ky")
+        // console.log(this.authUser,"this is authuser")
+        // console.log(this.user)
+        console.log("pp*")
 
 
-    if (this.authUser && !this.authUser.isAdmin()) {
-        const { _id: userId, deviceModel } = this.authUser;
-        const [userResult] = await mongoose.model('devicegroup').aggregate([
-            {
-                $match: {
-                    $or: [{ user: userId }, { sharees: userId }],
-                },
-            },
-            { $unwind: '$devices' },
-            {
-                $group: {
-                    _id: null,
-                    devices: { $addToSet: '$devices' },
-                },
-            },
-        ]);
-        if (!userResult) return this.find({ _id: null });
-        if (deviceModel.length > 0) {
-            this.find({
-                $and: [
-                    { _id: { $in: userResult.devices } },
-                    {
-                        model: { $in: deviceModel },
+        if (this.authUser && !this.authUser.isAdmin()) {
+            const { _id: userId, deviceModel } = this.authUser;
+            console.log("rr")
+            const [userResult] = await mongoose.model('devicegroup').aggregate([
+                {
+                    $match: {
+                        $or: [{ user: userId }, { sharees: userId }],
                     },
-                ],
-            });
-        } else {
-            this.find({ _id: { $in: userResult.devices } });
+                },
+                { $unwind: '$devices' },
+                {
+                    $group: {
+                        _id: null,
+                        devices: { $addToSet: '$devices' },
+                    },
+                },
+            ]);
+            if (!userResult) return this.find({ _id: null });
+            if (deviceModel.length > 0) {
+                this.find({
+                    $and: [
+                        { _id: { $in: userResult.devices } },
+                        {
+                            model: { $in: deviceModel },
+                        },
+                    ],
+                });
+            } else {
+                this.find({ _id: { $in: userResult.devices } });
+            }
         }
-    }
-});
+    });
 
 VehicleSchema.virtual('groups', {
     ref: 'devicegroup',

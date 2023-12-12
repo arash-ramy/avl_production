@@ -61,7 +61,11 @@ router.post("/addpolygon",headerAuth, deviceController.setPolygon);
 router.delete("/polygon/:id",headerAuth, deviceController.deletePolygon);
 
 
+router.post("/lastlocationsinp",headerAuth, deviceController.getLastLocationsOfDeviceInP);
 
+
+
+router.post("/report/alarms",headerAuth, deviceController.reportDeviceAlarms);
 
 
 
@@ -79,3 +83,4 @@ router.post("/tests",headerAuth, deviceController.tests);
 
 
 module.exports = router;
+

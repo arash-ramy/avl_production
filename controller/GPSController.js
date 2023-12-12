@@ -1,12 +1,6 @@
-/* eslint-disable */
 const chalk = require("chalk");
-
+const mongoose = require('mongoose');
 var ObjectId = require("mongoose").Types.ObjectId;
-// const {
-//     GPSDataModel,
-//     VehicleModel,
-//     VehicleAlarmModel: AlarmModel,
-// } = require('../model/GpsLocation/');
 const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
 const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const GPSDataModel = require("../model/GpsLocation/GPSDataModel");
@@ -16,7 +10,7 @@ const { SMSGW } = require("../utils/smsgw");
 const { util } = require("../utils/util");
 // const { logger } = require("../utility/customlog");
 const { SpeedSMSText } = require("../template/sms/alarms");
-// const { ZoneSMSText } = require("../template/sms/alarms");
+const { ZoneSMSText } = require("../template/sms/alarms");
 // const { BackToZoneSMSText } = require("../template/sms/alarms");
 const moment = require("moment");
 const { ShortenerLink } = require("../utils/shortenerLink");
@@ -96,6 +90,7 @@ class GPSController {
 
   static async checkSpeed({ speed, IMEI, url }) {
     try {
+
       // console.log("happend")
       const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI })
         .select("_id lastLocation maxSpeed driverName driverPhoneNumber alarms simNumber plate")
@@ -297,8 +292,8 @@ class GPSController {
       const newMessage = { packet, socket };
       this.messageQueue.push(newMessage);
       if (!this.timerId) this.startTaskManager();
-    } catch (ex) {
-      logger.error(ex);
+    } catch (err) {
+     console.log(err)
     }
   }
 
@@ -319,14 +314,14 @@ class GPSController {
   }
 
   static async checkZone({ IMEI, lat, lng, address }) {
-    // console.log("checkZone ")
+    console.log("checkZone ")
 
     // console.log({ IMEI, lat, lng, address },"checkZone 2")
     try {
       const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI }).populate(
         "lastLocation"
       );
-      // console.log(vehicle,"vehicle-checkZone")
+      console.log(vehicle.permissibleZone,"vehicle-permissibleZone")
       if (vehicle && vehicle.permissibleZone) {
         // console.log( vehicle.permissibleZone," vehicle.permissibleZone")
 
@@ -336,104 +331,108 @@ class GPSController {
         var driverPhoneNumber = vehicle.driverPhoneNumber;
         var alarmInterval = permissibleZone.alarmInterval || "3";
         var status = "";
-        VehicleAlarmModel.findOne({
+       const alarm  = await   VehicleAlarmModel.findOne({
           $and: [
             {
-              vehicleId: ObjectId(vehicle._id),
+              vehicleId: vehicle._id,
               type: "Out of Zone",
             },
           ],
         })
           .sort({ _id: "desc" })
-          .exec(async (err, alarm) => {
-            if (err) {
-              logger.error(err);
-            } else {
-              let now = new Date().AsDateJs();
-              let lastAlarmDate = alarm ? new Date(alarm.date) : now;
-              let diffHour = Math.floor(Math.abs(lastAlarmDate - now) / 36e5); // Hour
+          
+          console.log(alarm,"dd")
 
-              // out of zone alarm
-              if (
-                vehicle &&
-                !GPSController.inside(point, permissibleZone.coordinates) &&
-                (diffHour >= alarmInterval ||
-                  vehicle.zoneStatus === "IN" ||
-                  vehicle.zoneStatus === undefined)
-              ) {
-                const newAlarm
+
+          // .exec(async (err, alarm) => {
+          //   if (err) {
+          //     console.log("this found vehicle 52548 ")
+          //   } else {
+          //     let now = new Date().AsDateJs();
+          //     let lastAlarmDate = alarm ? new Date(alarm.date) : now;
+          //     let diffHour = Math.floor(Math.abs(lastAlarmDate - now) / 36e5); // Hour
+          //     console.log("comes into zonnnne")
+          //     // out of zone alarm
+          //     if (
+          //       vehicle &&
+          //       !GPSController.inside(point, permissibleZone.coordinates) &&
+          //       (diffHour >= alarmInterval ||
+          //         vehicle.zoneStatus === "IN" ||
+          //         vehicle.zoneStatus === undefined)
+          //     ) {
+          //       const newAlarm
                 
                 
-                = new VehicleAlarmModel({
-                  type: "Out of Zone",
-                  date: new Date().AsDateJs(),
-                  vehicleId: vehicle._id,
-                  desc: `vehicle location [${point}] is out of permissible zone`,
-                });
-                await newAlarm.save();
-                vehicle.alarms.push(newAlarm._id);
-                vehicle.zoneStatus = "OUT";
-                vehicle.save();
+          //       = new VehicleAlarmModel({
+          //         type: "Out of Zone",
+          //         date: new Date().AsDateJs(),
+          //         vehicleId: vehicle._id,
+          //         desc: `vehicle location [${point}] is out of permissible zone`,
+          //       });
+          //       await newAlarm.save();
+          //       vehicle.alarms.push(newAlarm._id);
+          //       vehicle.zoneStatus = "OUT";
+          //       vehicle.save();
 
-                status = "OUT";
+          //       status = "OUT";
 
-                if (vehicle.zoneAlarm.sendSMS) {
-                  this.sendZoneSMS(
-                    vehicle,
-                    permissibleZone,
-                    point,
-                    IMEI,
-                    address,
-                    driverName,
-                    driverPhoneNumber,
-                    status
-                  );
-                }
-                if (vehicle.zoneAlarm.sendEmail) {
-                  this.sendZoneEmail(vehicle, permissibleZone, point, IMEI);
-                }
-              }
+          //       if (vehicle.zoneAlarm.sendSMS) {
+          //         this.sendZoneSMS(
+          //           vehicle,
+          //           permissibleZone,
+          //           point,
+          //           IMEI,
+          //           address,
+          //           driverName,
+          //           driverPhoneNumber,
+          //           status
+          //         );
+          //       }
+          //       if (vehicle.zoneAlarm.sendEmail) {
+          //         this.sendZoneEmail(vehicle, permissibleZone, point, IMEI);
+          //       }
+          //     }
 
-              // back to permissible zone alarm
-              else if (
-                vehicle &&
-                GPSController.inside(point, permissibleZone.coordinates) &&
-                vehicle.zoneStatus === "OUT"
-              ) {
-                const newAlarm = new VehicleAlarmModel({
-                  type: "Back to Zone",
-                  date: new Date().AsDateJs(),
-                  vehicleId: vehicle._id,
-                  desc: `vehicle Come Back to permissible zone`,
-                });
-                await newAlarm.save();
-                vehicle.alarms.push(newAlarm._id);
-                vehicle.zoneStatus = "IN";
-                vehicle.save();
+          //     // back to permissible zone alarm
+          //     else if (
+          //       vehicle &&
+          //       GPSController.inside(point, permissibleZone.coordinates) &&
+          //       vehicle.zoneStatus === "OUT"
+          //     ) {
+          //       const newAlarm = new VehicleAlarmModel({
+          //         type: "Back to Zone",
+          //         date: new Date().AsDateJs(),
+          //         vehicleId: vehicle._id,
+          //         desc: `vehicle Come Back to permissible zone`,
+          //       });
+          //       await newAlarm.save();
+          //       vehicle.alarms.push(newAlarm._id);
+          //       vehicle.zoneStatus = "IN";
+          //       vehicle.save();
 
-                status = "IN";
+          //       status = "IN";
 
-                if (vehicle.zoneAlarm.sendSMS) {
-                  this.sendZoneSMS(
-                    vehicle,
-                    permissibleZone,
-                    point,
-                    IMEI,
-                    address,
-                    driverName,
-                    driverPhoneNumber,
-                    status
-                  );
-                }
-                if (vehicle.zoneAlarm.sendEmail) {
-                  this.sendZoneEmail(vehicle, permissibleZone, point, IMEI);
-                }
-              }
-            }
-          });
+          //       if (vehicle.zoneAlarm.sendSMS) {
+          //         this.sendZoneSMS(
+          //           vehicle,
+          //           permissibleZone,
+          //           point,
+          //           IMEI,
+          //           address,
+          //           driverName,
+          //           driverPhoneNumber,
+          //           status
+          //         );
+          //       }
+          //       if (vehicle.zoneAlarm.sendEmail) {
+          //         this.sendZoneEmail(vehicle, permissibleZone, point, IMEI);
+          //       }
+          //     }
+          //   }
+          // });
       }
-    } catch (ex) {
-      logger.error(ex);
+    } catch (err) {
+      console.log(err)
     }
   }
   static sendZoneSMS(
@@ -446,6 +445,7 @@ class GPSController {
     driverPhoneNumber,
     status
   ) {
+    console.log("this comes until here 555")
     const smsgw = SMSGW();
     const { rcvSMSNumbers } = vehicle.zoneAlarm || {};
     const receivers = rcvSMSNumbers ? rcvSMSNumbers.split(";") : [];
@@ -458,7 +458,7 @@ class GPSController {
     }
     smsgw
       .sendSmsToNumber(message, [...new Set(receivers)])
-      .catch((e) => logger.error(e));
+      .catch((e) => console.log(e));
   }
 
   static sendZoneEmail(vehicle, permissibleZone, point, IMEI) {

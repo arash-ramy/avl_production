@@ -11,7 +11,6 @@ const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
 const cron = require("node-cron");
 const moment = require("moment");
 
-// const { SMSGW } = require('../utility/smsgw');
 const { SMSGW } = require("../utils/smsgw");
 
 const { util } = require("../utils/util");
@@ -38,12 +37,14 @@ class DeviceCheckLastLocationDelayCron {
         "مظروف یزد",
         "دفتر مرکزی",
       ].map((group) => {
+        console.log("+", group);
         delays.push({
           groupName: group,
           vehicles: [],
           receivers: this.getReceivers(group),
         });
       });
+      // console.log(delays,"delays")
 
       const vehicles = await VehicleModel.find()
         .select("_id deviceIMEI lastLocation driverName plate")
@@ -52,7 +53,7 @@ class DeviceCheckLastLocationDelayCron {
           path: "groups",
           select: "name",
         });
-      // console.log(vehicles)
+      // console.log(vehicles,"vehicles")
 
       const result = vehicles.map(async (vehicle) => {
         try {
@@ -61,6 +62,7 @@ class DeviceCheckLastLocationDelayCron {
                 .duration(today.getTime() - vehicle.lastLocation.date.getTime())
                 .asDays()
             : 0;
+          // console.log(lastLocationDurationDays,"lastLocationDurationDays")
           const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne(
             {
               vehicleId: vehicle._id,
@@ -68,13 +70,10 @@ class DeviceCheckLastLocationDelayCron {
             },
             "date"
           ).sort({ date: -1 });
-          console.log("8528522");
-          const ss = moment.duration(
-            today.getTime() - new Date(lastVehicleDelayAlarm?.date).getTime()
-          );
-          // console.log(ss)
+          // console.log(delays,"iiiiiiiiiiiiiiiiii");
+          // console.log(vehicle.groups[0], "9999999999999");
+          // console.log( delays.findIndex(delay => delay.groupName === vehicle?.groups[0]?.name),"0000000000000");
 
-          console.log( vehicle,"vehicle.groups[0]");
           if (
             lastLocationDurationDays > 5 &&
             (!lastVehicleDelayAlarm ||
@@ -87,114 +86,40 @@ class DeviceCheckLastLocationDelayCron {
                   .asDays() > 5)) &&
             vehicle.groups[0] !== undefined
           ) {
-            console.log("_____*  ");
-            console.log(vehicle, "gr");
+            // console.log(vehicle.groups[0].name,"ddddp")
+            if (vehicle.groups[0].name !== "اسقاطی") {
+              const newAlarm = new VehicleAlarmModel({
+                type: "Delay Alarm",
+                date: new Date().AsDateJs(),
+                vehicleId: vehicle._id,
+                desc:
+                  "location not received for " +
+                  Math.floor(lastLocationDurationDays) +
+                  " days",
+              });
+              await newAlarm.save();
+              const delayIndex = delays.findIndex(
+                (delay) => delay.groupName === vehicle?.groups[0]?.name
+              );
+              delays[delayIndex].vehicles.push({
+                IMEI: vehicle.deviceIMEI,
+                driverName: vehicle.driverName,
+                plate: vehicle.plate,
+                lastLocationDurationDays: Math.floor(lastLocationDurationDays),
+              });
+            }
           }
+          return delays;
 
-          // console.log("lastLocationDurationDays",lastLocationDurationDays)
-          // console.log("lastVehicleDelayAlarm",lastVehicleDelayAlarm)
-
-          // console.log(lastLocationDurationDays,"lastLocationDurationDays")
-          // console.log(vehicle.lastLocation,"vehicle.lastLocation")
-          // console.log(" moment.duration(today.getTime()", moment.duration(today.getTime()))
-          const dd = vehicle?.lastLocation?.date.getTime();
-          // const dd1 =vehicle?.lastLocation
-          // const dd =vehicle?.lastLocation?.date.getTime()
-          // const dd =vehicle?.lastLocation?.date.getTime()
-
-          // console.log("vehicle.lastLocation.date.getTime()",dd)
-          // console.log("lastLocationDurationDays",lastLocationDurationDays)
-
-          // console.log("vehicle?.lastLocation",dd1)
-          // console.log("vehicle.lastLocation.date.getTime()",dd)
-          // console.log("vehicle.lastLocation.date.getTime()",dd)
-
-          // const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne({
-          //     vehicleId: vehicle._id,
-          //     type: 'Delay Alarm'
-          // }, 'date')
-          //     .sort({ date: -1 });
-          // if (lastLocationDurationDays > 5 &&
-          //     (
-          //         !lastVehicleDelayAlarm ||
-          //         (lastVehicleDelayAlarm && moment.duration(today.getTime() - new Date(lastVehicleDelayAlarm.date).getTime())
-          //             .asDays() > 5)
-          //     ) &&
-          //     vehicle.groups[0] !== undefined
-          // ) {
-          //     if (vehicle.groups[0].name !== 'اسقاطی') {
-          //         const newAlarm = new VehicleAlarmModel({
-          //             type: 'Delay Alarm',
-          //             date: (new Date()).AsDateJs(),
-          //             vehicleId: vehicle._id,
-          //             desc: 'location not received for ' + Math.floor(lastLocationDurationDays) + ' days'
-          //         });
-          //         await newAlarm.save();
-          //         const delayIndex = delays.findIndex(delay => delay.groupName === vehicle.groups[0].name);
-          //         delays[delayIndex].vehicles.push({
-          //             IMEI: vehicle.deviceIMEI,
-          //             driverName: vehicle.driverName,
-          //             plate: vehicle.plate,
-          //             lastLocationDurationDays: Math.floor(lastLocationDurationDays),
-          //         });
-          //     }
-          // }
-          // return delays;
         } catch (e) {
           // logger.error(e);
           console.log("something went wrong in checkLastLocationDelay ", e);
         }
       });
-
-      // .exec((err, vehicles) => {
-      //     if (err) {
-      //         logger.error(err);
-      //         return;
-      //     }
-      //     const result = vehicles.map(async vehicle => {
-      //         try {
-      //             const lastLocationDurationDays = vehicle.lastLocation ? moment.duration(today.getTime() - vehicle.lastLocation.date.getTime())
-      //                 .asDays() : 0;
-      //             const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne({
-      //                 vehicleId: vehicle._id,
-      //                 type: 'Delay Alarm'
-      //             }, 'date')
-      //                 .sort({ date: -1 });
-      //             if (lastLocationDurationDays > 5 &&
-      //                 (
-      //                     !lastVehicleDelayAlarm ||
-      //                     (lastVehicleDelayAlarm && moment.duration(today.getTime() - new Date(lastVehicleDelayAlarm.date).getTime())
-      //                         .asDays() > 5)
-      //                 ) &&
-      //                 vehicle.groups[0] !== undefined
-      //             ) {
-      //                 if (vehicle.groups[0].name !== 'اسقاطی') {
-      //                     const newAlarm = new VehicleAlarmModel({
-      //                         type: 'Delay Alarm',
-      //                         date: (new Date()).AsDateJs(),
-      //                         vehicleId: vehicle._id,
-      //                         desc: 'location not received for ' + Math.floor(lastLocationDurationDays) + ' days'
-      //                     });
-      //                     await newAlarm.save();
-      //                     const delayIndex = delays.findIndex(delay => delay.groupName === vehicle.groups[0].name);
-      //                     delays[delayIndex].vehicles.push({
-      //                         IMEI: vehicle.deviceIMEI,
-      //                         driverName: vehicle.driverName,
-      //                         plate: vehicle.plate,
-      //                         lastLocationDurationDays: Math.floor(lastLocationDurationDays),
-      //                     });
-      //                 }
-      //             }
-      //             return delays;
-      //         } catch (e) {
-      //             logger.error(e);
-      //         }
-      //     });
-      //     Promise.all(result)
-      //         .then(async (values) => {
-      //             this.sendDelaySmsToAdmins(values, today);
-      //         });
-      // });
+      Promise.all(result)
+      .then(async (values) => {
+          this.sendDelaySmsToAdmins(values, today);
+      });  
     } catch (ex) {
       console.log(
         "something went wrong in DeviceCheckLastLocationDelayCron ",
@@ -204,13 +129,30 @@ class DeviceCheckLastLocationDelayCron {
   }
 
   static sendDelaySmsToAdmins(delays, today) {
+    // console.log(delays,"delays")
+    // console.log(today,"today")
+    const leeeet= {email:"arashramy@gmail.com"}
+    console.log(leeeet.email)
+    console.log(delays,'didiid')
+
+    util.send_email("mail/alarms/delay",leeeet, (e) => console.error(e));
+    smsgw
+    .sendSmsToNumber("كاوه گلس",["09381378120", "09370713134"])
+    .catch((e) => console.log(e));
+
+
+
     delays[0].map((delay) => {
+      console.log("///////////////////////// ")
+
       if (delay.vehicles.length > 0) {
         const { groupName, vehicles, receivers } = delay;
         let todayPersianDate = jalali_moment(
           today.toISOString().replace("T", " "),
           "YYYY-M-D"
         ).format("jYYYY/jM/jD");
+        console.log("/////////////////////////")
+
         const context = {
           groupName,
           vehicles,
@@ -281,7 +223,7 @@ class DeviceCheckLastLocationDelayCron {
         console.log(
           "something went wrong in DeviceCheckLastLocationDelayCron ",
           e
-        )
+        ) 
       );
       // });
     })();

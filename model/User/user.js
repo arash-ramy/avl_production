@@ -87,7 +87,7 @@ User.methods.getBrief = function() {
 };
 
 User.methods.isAdmin = function isAdmin() {
-    return this.username === 'admin';
+    return  this.username === 'admin';
 };
 
 User.methods.can = function hasRole(roleName) {

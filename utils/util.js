@@ -8,26 +8,29 @@ var util =
 {
 	send_email : function (templateName, locals, fn)
     {
-
+        console.log("this is log",locals.email)
         // console.log(locals,"localslocalslocals")
         if (!locals.email)
         {
             return fn(EmailAddressRequiredError);
         }
-        if (!locals.subject)
-        {
-            return fn(EmailAddressRequiredError);
-        }
+        // if (!locals.subject)
+        // {
+        //     return fn(EmailAddressRequiredError);
+        // }
 
-     new    emailTemplates(templatesDir, function (err, template)
+         emailTemplates(templatesDir, function (err, template)
         {
+            console.log("ss2")
             if (err)
             {
               return fn(err);
             }
 
             template(templateName, locals, function (err, html, text)
-            {
+            {        console.log("this is log2222222",locals.email)
+
+                console.log(locals,templateName,"ararar")
                 if (err)
                 {
                     return fn(err);
@@ -59,6 +62,7 @@ var util =
                 );
             });
         });
+
     },
 
 	add_parents_count : function(is_agent,first_parent_id) {

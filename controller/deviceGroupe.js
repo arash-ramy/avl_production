@@ -7,7 +7,8 @@ const getDeviceGroups = async (req, res) => {
     var userId = req.user._id;
     const populateUser = await DeviceGroupModel.find({
       $or: [{ user: userId }, { sharees: userId }],
-    }).populate({
+    })
+    .populate({
       path: "devices",
       select:
         "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
@@ -318,12 +319,15 @@ const getVehiclesofGroup = async (req, res) => {
   try {
     var groupId = req.params.groupId;
     var userId = req.user._id;
-    const vehiclesofGroup = await DeviceGroupModel.findOne({
-      $and: [
-        { $or: [{ user: userId }, { sharees: userId }] },
-        { _id: groupId },
-      ],
-    }).populate({
+    console.log(groupId,"groupId")
+    console.log(userId,"userId")
+
+    const vehiclesofGroup = await DeviceGroupModel.findOne(
+ 
+        { _id: groupId }
+      
+    )
+    .populate({
       path: "devices",
       select:
         "_id simNumber deviceIMEI vehicleName type plate driverName driverPhoneNumber model",
@@ -332,6 +336,7 @@ const getVehiclesofGroup = async (req, res) => {
         select: { name: 1, _id: 1 },
       },
     });
+    console.log(vehiclesofGroup,"dddd")
 
     if (!vehiclesofGroup) {
       return res.json({

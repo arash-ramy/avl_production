@@ -3,6 +3,7 @@ const request = require('request');
 
 function SMSService() {
     // for send sms
+    console.log("this is SMS RAMY")
     const smsServiceInfo = {
         username: 'AVL',
         password:'AVL123456',
