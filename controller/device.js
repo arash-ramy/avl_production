@@ -1132,146 +1132,13 @@ const getBachInfoViaIMEI = async (req, res) => {
 };
 
 const reportDeviceLocations = async (req, res) => {
-  // try {
-  //   const {
-  //     type,
-  //     dateFilter: { start: startDate, end: endDate },
-  //     speedFilter: { min: minSpeed, max: maxSpeed },
-  //     timeFilter: { start: startTime, end: endTime },
-  //   } = req.body;
-  //   if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-  //     throw new Error(
-  //       "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-  //     );
-  //   }
-  //   if (startTime && endTime && startTime > endTime) {
-  //     throw new Error(
-  //       "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-  //     );
-  //   }
-  //   if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
-  //     throw new Error(
-  //       "کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد."
-  //     );
-  //   }
-  //   const { reportDevices } = await reports.getReportDevices(req);
-  //   // reportDevices.select({ deviceIMEI: 1 });
-  //   const deviceIMEIs = (await reportDevices).map(
-  //     (vehicle) => vehicle.deviceIMEI
-  //   );
-  //   const deviceIds = (await reportDevices).map((vehicle) => vehicle._id);
-  //   const reportLocations = GPSDataModel.aggregate()
-  //     .match({ vehicleId: { $in: deviceIds } })
-  //     .addFields({
-  //       dateCreated: {
-  //         $dateFromString: { dateString: { $substr: ["$date", 0, 34] } },
-  //       },
-  //       dateCreatedHour: {
-  //         $hour: {
-  //           date: {
-  //             $dateFromString: {
-  //               dateString: { $substr: ["$date", 0, 34] },
-  //             },
-  //           },
-  //           timezone: "Asia/Tehran",
-  //         },
-  //       },
-  //     });
-  //   if (startDate) {
-  //     reportLocations.match({
-  //       dateCreated: { $gte: new Date(startDate) },
-  //     });
-  //   }
-  //   if (endDate) {
-  //     reportLocations.match({
-  //       dateCreated: { $lte: new Date(endDate) },
-  //     });
-  //   }
-  //   if (minSpeed) {
-  //     reportLocations.match({ speed: { $gte: +minSpeed } });
-  //   }
-  //   if (maxSpeed) {
-  //     reportLocations.match({ speed: { $lte: +maxSpeed } });
-  //   }
-  //   if (startTime) {
-  //     reportLocations.match({
-  //       dateCreatedHour: { $gte: startTime },
-  //     });
-  //   }
-  //   if (endTime) {
-  //     reportLocations.match({
-  //       dateCreatedHour: { $lt: endTime },
-  //     });
-  //   }
-  //   const vehiclesLocationData = await reportLocations
-  //     .group({
-  //       _id: "$vehicleId",
-  //       locations: {
-  //         $push: {
-  //           date: "$dateCreated",
-  //           latitude: "$lat",
-  //           longitude: "$lng",
-  //           address: "$address",
-  //           speed: "$speed",
-  //           url: "$url",
-  //         },
-  //       },
-  //       minSpeed: { $min: "$speed" },
-  //       maxSpeed: { $max: "$speed" },
-  //       avgSpeed: { $avg: "$speed" },
-  //       lastLocation: {
-  //         $last: { address: "$address", date: "$date" },
-  //       },
-  //     })
-  //     .lookup({
-  //       from: "vehicles",
-  //       localField: "_id",
-  //       foreignField: "_id",
-  //       as: "device",
-  //     })
-  //     .unwind("device")
-  //     .lookup({
-  //       from: "devicegroups",
-  //       localField: "device._id",
-  //       foreignField: "devices",
-  //       as: "device.groups",
-  //     })
-  //     .replaceRoot({
-  //       $mergeObjects: [
-  //         "$$ROOT",
-  //         {
-  //           groups: "$device.groups.name",
-  //           device: {
-  //             IMEI: "$device.deviceIMEI",
-  //             type: "$device.type",
-  //             simNumber: "$device.simNumber",
-  //             fuel: "$device.fuel",
-  //           },
-  //           driver: {
-  //             name: "$device.driverName",
-  //             phoneNumber: "$device.driverPhoneNumber",
-  //           },
-  //         },
-  //       ],
-  //     });
-  //   return res(vehiclesLocationData).code(200);
-  // } catch (ex) {
-  //   logger.error(ex);
-  //   return res({ msg: ex.message }).code(404);
-  // }
-};
-
-const reportDeviceAlarms = async (req, res) => {
   try {
     const {
+      type,
       dateFilter: { start: startDate, end: endDate },
+      speedFilter: { min: minSpeed, max: maxSpeed },
       timeFilter: { start: startTime, end: endTime },
-      deviceFilter,
-      groupFilter,
     } = req.body;
-
-    console.log(req.body, "body");
-
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       throw new Error(
         "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
@@ -1282,218 +1149,240 @@ const reportDeviceAlarms = async (req, res) => {
         "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
       );
     }
-    3;
-
-    console.log(req.user, "befor");
-    const reportDevices = await VehicleModel.find()
-      .setAuthorizationUser(req.user)
-
-      .select(" _id")
-
-        // console.log(reportDevices,"reportDevices22")
-        var slarr = []
-        reportDevices.map((item)=>{
-          // console.log(item._id,"=")
-          slarr.push(item._id )
-        })
-        // console.log(slarr,"slarr")
-
-      //   var arrrrr = []
-
-      //  let oooo= reportDevices.map((item)=>{
-
-      //     console.log(item._id,"this is id item ")
-      //     arrrrr.push(...item)
-      //     console.log(arrrrr)
-      //     return arrrrr
-
-      //   })
-      //   return res.json({oooo})
-
-  //   let rep = reportDevices.map(async (item) => {
-  //     console.log(item._id)
-  //     console.log(item._id,"comes until here")
-  //     let arr = [];
-  //     const reportAlarms = await VehicleAlarmModel.findOne({
-  //       vehicleId: item._id,
-  //     });
-  //     arr.push(reportAlarms);
-
-
-  // })
-  console.log(endDate,"endDate")
-  console.log(startDate,"startDate")
-  console.log(new Date(endDate) ,"new end")
-  console.log(new Date(startDate),"new start")
-
-  
-//   const reportAlarms =await VehicleAlarmModel.aggregate()
-//   .match({ 
-    
-//     // date: { $lte: new Date(endDate) } 
-//        $and: [
-    
-//    { vehicleId: { $in: ["653cb036313585c4bb731f82"] } },
-//         // { date: { $gte: new Date(startDate) } }
-//   ] 
-    
-    
-//       // $and: [
-//         // { vehicleId: { $in: slarr } },
-
-
-//       //  { $and: [
-//       //   { date: { $gte: new Date(startDate) } },
-//       //   { date: { $lte: new Date(endDate) } }]
-//       //  }
-   
-//       // ]
-  
-
-// })
-// .limit(90)
-const reportAlarms = await VehicleAlarmModel.findOne({
-        vehicleId: { $in: slarr } ,
+    if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
+      throw new Error(
+        "کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد."
+      );
+    }
+    const { reportDevices } = await reports.getReportDevices(req);
+    // reportDevices.select({ deviceIMEI: 1 });
+    const deviceIMEIs = (await reportDevices).map(
+      (vehicle) => vehicle.deviceIMEI
+    );
+    const deviceIds = (await reportDevices).map((vehicle) => vehicle._id);
+    const reportLocations = GPSDataModel.aggregate()
+      .match({ vehicleId: { $in: deviceIds } })
+      .addFields({
+        dateCreated: {
+          $dateFromString: { dateString: { $substr: ["$date", 0, 34] } },
+        },
+        dateCreatedHour: {
+          $hour: {
+            date: {
+              $dateFromString: {
+                dateString: { $substr: ["$date", 0, 34] },
+              },
+            },
+            timezone: "Asia/Tehran",
+          },
+        },
+      });
+    if (startDate) {
+      reportLocations.match({
+        dateCreated: { $gte: new Date(startDate) },
+      });
+    }
+    if (endDate) {
+      reportLocations.match({
+        dateCreated: { $lte: new Date(endDate) },
+      });
+    }
+    if (minSpeed) {
+      reportLocations.match({ speed: { $gte: +minSpeed } });
+    }
+    if (maxSpeed) {
+      reportLocations.match({ speed: { $lte: +maxSpeed } });
+    }
+    if (startTime) {
+      reportLocations.match({
+        dateCreatedHour: { $gte: startTime },
+      });
+    }
+    if (endTime) {
+      reportLocations.match({
+        dateCreatedHour: { $lt: endTime },
+      });
+    }
+    const vehiclesLocationData = await reportLocations
+      .group({
+        _id: "$vehicleId",
+        locations: {
+          $push: {
+            date: "$dateCreated",
+            latitude: "$lat",
+            longitude: "$lng",
+            address: "$address",
+            speed: "$speed",
+            url: "$url",
+          },
+        },
+        minSpeed: { $min: "$speed" },
+        maxSpeed: { $max: "$speed" },
+        avgSpeed: { $avg: "$speed" },
+        lastLocation: {
+          $last: { address: "$address", date: "$date" },
+        },
       })
-
-
-
-
-  // .addFields({
-  //     dateCreated: {
-  //         $dateFromString: {
-  //             dateString: { $substr : ['$date', 0, 34] },
-  //         },
-  //     },
-  //     dateCreatedHour: {
-  //         $hour: {
-  //             date: {
-  //                 $dateFromString: {
-  //                     dateString: {
-  //                         $substr : ['$date', 0, 34],
-  //                     },
-  //                 },
-  //             },
-  //             timezone: 'Asia/Tehran',
-  //         },
-  //     },
-  // })
-  
-  // console.log("comessss")
-  // if (startDate) {
-    //  match({
-    //     dateCreated: { $gte: new Date(startDate) },
-    // });
-// }
-// if (endDate) {
-//     reportAlarms.match({
-//         dateCreated: { $lte: new Date(endDate) },
-//     });
-// }
-// if (startTime) {
-//     reportAlarms.match({
-//         dateCreatedHour: { $gte: startTime },
-//     });
-// }
-// if (endTime) {
-//      reportAlarms.match({
-//         dateCreatedHour: { $lt: endTime },
-//     });
-// }
-// const vehiclesAlarmData = await reportAlarms
-//                     .group({
-//                         _id: '$vehicleId',
-//                         alarms: {
-//                             $push: {
-//                                 date: '$dateCreated',
-//                                 type: '$type',
-//                                 desc: '$desc',
-//                                 hour: '$dateCreatedHour',
-//                             },
-//                         },
-//                     })
-//                     .lookup({
-//                         from: 'vehicles',
-//                         localField: '_id',
-//                         foreignField: '_id',
-//                         as: 'device',
-//                     })
-//                     .unwind('device')
-//                     .lookup({
-//                         from: 'devicegroups',
-//                         localField: 'device._id',
-//                         foreignField: 'devices',
-//                         as: 'device.groups',
-//                     })
-//                     .replaceRoot({
-//                         $mergeObjects: [
-//                             '$$ROOT',
-//                             {
-//                                 groups: '$device.groups.name',
-//                                 device: {
-//                                     IMEI: '$device.deviceIMEI',
-//                                     type: '$device.type',
-//                                     simNumber: '$device.simNumber',
-//                                 },
-//                                 driver: {
-//                                     name: '$device.driverName',
-//                                     phoneNumber: '$device.driverPhoneNumber',
-//                                 },
-//                             },
-//                         ],
-//                     });
-
-      // console.log(reportAlarms);
-
-      // return arr;
-    // });
-    console.log(reportAlarms,"++++++++++++++++++++++++++++++++++++")
-            // arr.push(reportAlarms);
-           return res.json({ reportAlarms });
-    // console.log(reportDevices, "after");
-    let arr = [];
-
-    // res.json({ reportAlarms });
-
-    // console.log("----------------------------");
-    // // console.log(req.user,"after")
-    // console.log(reportDevices,"reportDevices")
-
-    //   console.log("comes in reportDeviceAlarms");
-    //   const {
-    //     dateFilter: { start: startDate, end: endDate },
-    //     timeFilter: { start: startTime, end: endTime },
-    //   } = req.body;
-
-    //   if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-    //     throw new Error(
-    //       "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-    //     );
-    //   }
-    //   if (startTime && endTime && startTime > endTime) {
-    //     throw new Error(
-    //       "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-    //     );
-    //   }
-    //   console.log("arashramyyyyy55");
-
-    //   const { reportDevices } = await reports.getReportDevices(req);
-    //   // console.log("arashramyyyyy", reportDevices);
-
-    //   // reportDevices.select({ _id: 1 });
-    //   const deviceIds = (await reportDevices).map(
-    //     ({ _id: vehicleId }) => vehicleId,
-    //     console.log(vehicleId, "ooo")
-    //   );
-  } catch (err) {
-    // console.log(err )
-    return res.json({
-      message: "something went wrong in  reportDeviceAlarms",
-      msgSys: err.message,
-      code: 400,
-    });
+      .lookup({
+        from: "vehicles",
+        localField: "_id",
+        foreignField: "_id",
+        as: "device",
+      })
+      .unwind("device")
+      .lookup({
+        from: "devicegroups",
+        localField: "device._id",
+        foreignField: "devices",
+        as: "device.groups",
+      })
+      .replaceRoot({
+        $mergeObjects: [
+          "$$ROOT",
+          {
+            groups: "$device.groups.name",
+            device: {
+              IMEI: "$device.deviceIMEI",
+              type: "$device.type",
+              simNumber: "$device.simNumber",
+              fuel: "$device.fuel",
+            },
+            driver: {
+              name: "$device.driverName",
+              phoneNumber: "$device.driverPhoneNumber",
+            },
+          },
+        ],
+      });
+    return res.json ({vehiclesLocationData,code :200})
+  } catch (ex) {
+    console.log(ex)
+    return res.json({ msg: ex.message ,code :500})
   }
 };
+
+
+const reportDeviceAlarms = async (req, res) => {
+  try {
+      const {
+          dateFilter: { start: startDate, end: endDate },
+          timeFilter: { start: startTime, end: endTime },
+      } = req.body;
+      if (
+          startDate &&
+          endDate &&
+          new Date(startDate) > new Date(endDate)
+      ) {
+          throw new Error(
+              'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
+          );
+      }
+      if (startTime && endTime && startTime > endTime) {
+          throw new Error(
+              'ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.'
+          );
+      }
+      const { reportDevices } = await reports.getReportDevices(req);
+      reportDevices.select({ _id: 1 });
+      const deviceIds = (await reportDevices).map(
+          ({ _id: vehicleId }) => vehicleId
+      );
+
+      const reportAlarms = VehicleAlarmModel.aggregate()
+          .match({ vehicleId: { $in: deviceIds } })
+          .addFields({
+              dateCreated: {
+                  $dateFromString: {
+                      dateString: { $substr: ['$date', 0, 34] },
+                  },
+              },
+              dateCreatedHour: {
+                  $hour: {
+                      date: {
+                          $dateFromString: {
+                              dateString: {
+                                  $substr: ['$date', 0, 34],
+                              },
+                          },
+                      },
+                      timezone: 'Asia/Tehran',
+                  },
+              },
+          });
+      if (startDate) {
+          reportAlarms.match({
+              dateCreated: { $gte: new Date(startDate) },
+          });
+      }
+      if (endDate) {
+          reportAlarms.match({
+              dateCreated: { $lte: new Date(endDate) },
+          });
+      }
+      if (startTime) {
+          reportAlarms.match({
+              dateCreatedHour: { $gte: startTime },
+          });
+      }
+      if (endTime) {
+          reportAlarms.match({
+              dateCreatedHour: { $lt: endTime },
+          });
+      }
+      const vehiclesAlarmData = await reportAlarms
+          .group({
+              _id: '$vehicleId',
+              alarms: {
+                  $push: {
+                      date: '$dateCreated',
+                      type: '$type',
+                      desc: '$desc',
+                      hour: '$dateCreatedHour',
+                  },
+              },
+          })
+          .lookup({
+              from: 'vehicles',
+              localField: '_id',
+              foreignField: '_id',
+              as: 'device',
+          })
+          .unwind('device')
+          .lookup({
+              from: 'devicegroups',
+              localField: 'device._id',
+              foreignField: 'devices',
+              as: 'device.groups',
+          })
+          .replaceRoot({
+              $mergeObjects: [
+                  '$$ROOT',
+                  {
+                      groups: '$device.groups.name',
+                      device: {
+                          IMEI: '$device.deviceIMEI',
+                          type: '$device.type',
+                          simNumber: '$device.simNumber',
+                      },
+                      driver: {
+                          name: '$device.driverName',
+                          phoneNumber: '$device.driverPhoneNumber',
+                      },
+                  },
+              ],
+          });
+
+      return res.json({vehiclesAlarmData,code :"200"})
+  } catch (ex) {
+    console.log(ex)
+    return res.json({ msg: ex.message }).code(404);
+  }
+}
+
+
+
+
+
 const getLastLocationsOfDeviceInP = async (req, res) => {
   try {
     var devices = req.body.devices;
@@ -1569,37 +1458,64 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
   }
 };
 const reports = {
-  getReportDevices: async (req) => {
+  getReportDevices: async req => {
     const { groupFilter, deviceFilter } = req.body;
-    console.log(req.user, "befor");
-    const reportDevices = await VehicleModel.find().setAuthorizationUser(
-      req.user
-    );
-    console.log("----------------------------");
-    // console.log(req.user,"after")
-    console.log(reportDevices, "reportDevices");
-    console.log(groupFilter.length, "groupFilter");
-    console.log(groupFilter, "groupFilter2");
+    const reportDevices = VehicleModel.find().setAuthorizationUser(
+        req.user
+    )
+    if (groupFilter.length) {
+        const groupDevices = await DeviceGroupModel.aggregate()
+            .match({
+                _id: {
+                    $in: groupFilter.map((item=>{return item })),
+                },
+            })
+            .unwind('devices')
+            .group({ _id: null, devices: { $addToSet: '$devices' } });
+        if (groupDevices && groupDevices.length)
+            reportDevices.find({
+                _id: { $in: groupDevices[0].devices },
+            });
+    }
+    
+    if (deviceFilter.length) {
+        reportDevices.find({
+            deviceIMEI: { $in: deviceFilter },
+        });
+    }
+    return { reportDevices };
+},
+  // getReportDevices: async (req) => {
+  //   const { groupFilter, deviceFilter } = req.body;
+  //   console.log(req.user, "befor");
+  //   const reportDevices = await VehicleModel.find().setAuthorizationUser(
+  //     req.user
+  //   );
+  //   console.log("----------------------------");
+  //   // console.log(req.user,"after")
+  //   console.log(reportDevices, "reportDevices");
+  //   console.log(groupFilter.length, "groupFilter");
+  //   console.log(groupFilter, "groupFilter2");
 
-    console.log("----------------------------");
+  //   console.log("----------------------------");
 
-    let groupfounded = groupFilter.map(async (item) => {
-      let arrayGr = [];
-      let foundedGroupp = await DeviceGroupModel.findById(item);
-      console.log(foundedGroupp, "this is iiiii");
+  //   let groupfounded = groupFilter.map(async (item) => {
+  //     let arrayGr = [];
+  //     let foundedGroupp = await DeviceGroupModel.findById(item);
+  //     console.log(foundedGroupp, "this is iiiii");
 
-      foundedGroupp.devices.map((item) => {
-        console.log(item, "this is devices of group");
-        arrayGr.push(item);
-      });
-      console.log(arrayGr, "arrayGrw");
-      return arrayGr;
-    });
-    console.log(groupfounded.arrayGr, "groupfoundedgroupfounded");
-    console.log("groupfoundedgroupfounded");
+  //     foundedGroupp.devices.map((item) => {  
+  //       console.log(item, "this is devices of group");
+  //       arrayGr.push(item);
+  //     });
+  //     console.log(arrayGr, "arrayGrw");
+  //     return arrayGr;
+  //   });
+  //   console.log(groupfounded.arrayGr, "groupfoundedgroupfounded");
+  //   console.log("groupfoundedgroupfounded");
 
-    // return { reportDevices };
-  },
+  //   // return { reportDevices };
+  // },
 };
 var helpers = {};
 
@@ -1627,3 +1543,249 @@ module.exports = {
   getLastLocationsOfDeviceInP,
   reportDeviceAlarms,
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const reportDeviceAlarms = async (req, res) => {
+//   try {
+//     const {
+//       dateFilter: { start: startDate, end: endDate },
+//       timeFilter: { start: startTime, end: endTime },
+//       deviceFilter,
+//       groupFilter,
+//     } = req.body;
+
+//     console.log(req.body, "body");
+
+//     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+//       throw new Error(
+//         "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
+//       );
+//     }
+//     if (startTime && endTime && startTime > endTime) {
+//       throw new Error(
+//         "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
+//       );
+//     }
+//     3;
+
+//     console.log(req.user, "befor");
+//     const reportDevices = await VehicleModel.find()
+//       .setAuthorizationUser()
+//     return res.json({reportDevices})
+//         // console.log(reportDevices,"reportDevices22")
+//         var slarr = []
+//         reportDevices.map((item)=>{
+//           // console.log(item._id,"=")
+//           slarr.push(item._id )
+//         })
+//         // console.log(slarr,"slarr")
+
+//       //   var arrrrr = []
+
+//       //  let oooo= reportDevices.map((item)=>{
+
+//       //     console.log(item._id,"this is id item ")
+//       //     arrrrr.push(...item)
+//       //     console.log(arrrrr)
+//       //     return arrrrr
+
+//       //   })
+//       //   return res.json({oooo})
+
+//   //   let rep = reportDevices.map(async (item) => {
+//   //     console.log(item._id)
+//   //     console.log(item._id,"comes until here")
+//   //     let arr = [];
+//   //     const reportAlarms = await VehicleAlarmModel.findOne({
+//   //       vehicleId: item._id,
+//   //     });
+//   //     arr.push(reportAlarms);
+
+
+//   // })
+//   console.log(endDate,"endDate")
+//   console.log(startDate,"startDate")
+//   console.log(new Date(endDate) ,"new end")
+//   console.log(new Date(startDate),"new start")
+
+  
+// //   const reportAlarms =await VehicleAlarmModel.aggregate()
+// //   .match({ 
+    
+// //     // date: { $lte: new Date(endDate) } 
+// //        $and: [
+    
+// //    { vehicleId: { $in: ["653cb036313585c4bb731f82"] } },
+// //         // { date: { $gte: new Date(startDate) } }
+// //   ] 
+    
+    
+// //       // $and: [
+// //         // { vehicleId: { $in: slarr } },
+
+
+// //       //  { $and: [
+// //       //   { date: { $gte: new Date(startDate) } },
+// //       //   { date: { $lte: new Date(endDate) } }]
+// //       //  }
+   
+// //       // ]
+  
+
+// // })
+// // .limit(90)
+// const reportAlarms = await VehicleAlarmModel.findOne({
+//         vehicleId: { $in: slarr } ,
+//       })
+
+
+
+
+//   // .addFields({
+//   //     dateCreated: {
+//   //         $dateFromString: {
+//   //             dateString: { $substr : ['$date', 0, 34] },
+//   //         },
+//   //     },
+//   //     dateCreatedHour: {
+//   //         $hour: {
+//   //             date: {
+//   //                 $dateFromString: {
+//   //                     dateString: {
+//   //                         $substr : ['$date', 0, 34],
+//   //                     },
+//   //                 },
+//   //             },
+//   //             timezone: 'Asia/Tehran',
+//   //         },
+//   //     },
+//   // })
+  
+//   // console.log("comessss")
+//   // if (startDate) {
+//     //  match({
+//     //     dateCreated: { $gte: new Date(startDate) },
+//     // });
+// // }
+// // if (endDate) {
+// //     reportAlarms.match({
+// //         dateCreated: { $lte: new Date(endDate) },
+// //     });
+// // }
+// // if (startTime) {
+// //     reportAlarms.match({
+// //         dateCreatedHour: { $gte: startTime },
+// //     });
+// // }
+// // if (endTime) {
+// //      reportAlarms.match({
+// //         dateCreatedHour: { $lt: endTime },
+// //     });
+// // }
+// // const vehiclesAlarmData = await reportAlarms
+// //                     .group({
+// //                         _id: '$vehicleId',
+// //                         alarms: {
+// //                             $push: {
+// //                                 date: '$dateCreated',
+// //                                 type: '$type',
+// //                                 desc: '$desc',
+// //                                 hour: '$dateCreatedHour',
+// //                             },
+// //                         },
+// //                     })
+// //                     .lookup({
+// //                         from: 'vehicles',
+// //                         localField: '_id',
+// //                         foreignField: '_id',
+// //                         as: 'device',
+// //                     })
+// //                     .unwind('device')
+// //                     .lookup({
+// //                         from: 'devicegroups',
+// //                         localField: 'device._id',
+// //                         foreignField: 'devices',
+// //                         as: 'device.groups',
+// //                     })
+// //                     .replaceRoot({
+// //                         $mergeObjects: [
+// //                             '$$ROOT',
+// //                             {
+// //                                 groups: '$device.groups.name',
+// //                                 device: {
+// //                                     IMEI: '$device.deviceIMEI',
+// //                                     type: '$device.type',
+// //                                     simNumber: '$device.simNumber',
+// //                                 },
+// //                                 driver: {
+// //                                     name: '$device.driverName',
+// //                                     phoneNumber: '$device.driverPhoneNumber',
+// //                                 },
+// //                             },
+// //                         ],
+// //                     });
+
+//       // console.log(reportAlarms);
+
+//       // return arr;
+//     // });
+//     console.log(reportAlarms,"++++++++++++++++++++++++++++++++++++")
+//             // arr.push(reportAlarms);
+//            return res.json({ reportAlarms });
+//     // console.log(reportDevices, "after");
+//     let arr = [];
+
+//     // res.json({ reportAlarms });
+
+//     // console.log("----------------------------");
+//     // // console.log(req.user,"after")
+//     // console.log(reportDevices,"reportDevices")
+
+//     //   console.log("comes in reportDeviceAlarms");
+//     //   const {
+//     //     dateFilter: { start: startDate, end: endDate },
+//     //     timeFilter: { start: startTime, end: endTime },
+//     //   } = req.body;
+
+//     //   if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+//     //     throw new Error(
+//     //       "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
+//     //     );
+//     //   }
+//     //   if (startTime && endTime && startTime > endTime) {
+//     //     throw new Error(
+//     //       "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
+//     //     );
+//     //   }
+//     //   console.log("arashramyyyyy55");
+
+//     //   const { reportDevices } = await reports.getReportDevices(req);
+//     //   // console.log("arashramyyyyy", reportDevices);
+
+//     //   // reportDevices.select({ _id: 1 });
+//     //   const deviceIds = (await reportDevices).map(
+//     //     ({ _id: vehicleId }) => vehicleId,
+//     //     console.log(vehicleId, "ooo")
+//     //   );
+//   } catch (err) {
+//     // console.log(err )
+//     return res.json({
+//       message: "something went wrong in  reportDeviceAlarms",
+//       msgSys: err.message,
+//       code: 400,
+//     });
+//   }
+// };
