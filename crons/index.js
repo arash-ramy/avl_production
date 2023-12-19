@@ -7,7 +7,7 @@ const DeviceCronJobs = require('./DeviceCronJobs').CronJob;
 
 
 const something = async () => {
-    // ServerCronJobs.run()
+    ServerCronJobs.run()
     DeviceCronJobs()
 }
 

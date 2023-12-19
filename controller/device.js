@@ -6,6 +6,10 @@ const PhoneBookModel = require("../model/User/phoneBookModel");
 const { FMXXXXController } = require("./FMXXXXController");
 const { GT06Controller } = require("./GT06Controller");
 const DeviceGroupModel = require("../model/GpsLocation/DeviceGroupeModel");
+const moment = require("moment")
+const jade = require("jade")
+const path = require("path")
+var pdf = require('html-pdf');
 
 const { NotifyUtility } = require("./NotifyUtility");
 const morgan = require("morgan");
@@ -13,6 +17,7 @@ const ActionEventModel = require("../model/GpsLocation/ActionEventModel");
 const mongoose = require("mongoose");
 const GPSDataModel = require("../model/GpsLocation/GPSDataModel");
 const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
+const REPORT_TEMPLATE_DIR = path.resolve(__dirname, '..', 'template', 'report');
 
 // RESET DEVICE =>   THIS API IS NOT VERIFIED
 async function resetDevice(req, res) {
@@ -1131,6 +1136,432 @@ const getBachInfoViaIMEI = async (req, res) => {
   }
 };
 
+const reportDeviceStatus = async (req, res) => {
+  try {
+      const {
+          dateFilter: { start: startDate, end: endDate },
+      } = req.body;
+      if (
+          startDate &&
+          endDate &&
+          new Date(startDate) > new Date(endDate)
+      ) {
+          throw new Error(
+              'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
+          );
+      }
+
+      const { reportDevices } = await reports.getReportDevices(req);
+
+      reportDevices.select({
+          deviceIMEI: 1,
+          _id: 1,
+      });
+      const deviceIMEI = (await reportDevices).map(
+          ({ deviceIMEI: vehicleIMEI }) => vehicleIMEI
+      );
+
+     const vehicleStatus =await   VehicleStatusModel.aggregate()
+          .match({
+              $and: [
+                  { vehicleIMEI: { $in: deviceIMEI } },
+                  {
+                      $or: [
+                          { date: { $gte: new Date(startDate) } },
+                          { date: { $lte: new Date(endDate) } },
+                      ],
+                  },
+              ],
+          })
+          .group({
+              _id: '$vehicleIMEI',
+              status: {
+                  $push: {
+                      _id: '$_id',
+                      date: '$date',
+                      status: '$status',
+                      desc: '$desc',
+                  },
+              },
+          })
+          .lookup({
+              from: 'vehicles',
+              localField: '_id',
+              foreignField: 'deviceIMEI',
+              as: 'device',
+          })
+          .unwind('device')
+          .lookup({
+              from: 'devicegroups',
+              localField: 'device._id',
+              foreignField: 'devices',
+              as: 'device.groups',
+          })
+          .replaceRoot({
+              $mergeObjects: [
+                  '$$ROOT',
+                  {
+                      groups: '$device.groups.name',
+                      device: {
+                          IMEI: '$device.deviceIMEI',
+                          type: '$device.type',
+                          simNumber: '$device.simNumber',
+                      },
+                      driver: {
+                          name: '$device.driverName',
+                          phoneNumber: '$device.driverPhoneNumber',
+                      },
+                  },
+              ],
+          })
+          .sort({ _id: -1 })
+       return res.json({ vehicleStatus,code:200})
+  } catch (err) {
+      console.error(err);
+      return res.json({ msg: err.message,code:500 });
+  }
+}
+
+
+
+const exportDeviceStatusReportToPdf = async (req, res) => {
+  try {
+    const {
+        reportData: vehiclesStatusData,
+        dateFilter: { start: startDate, end: endDate },
+    } = req.body;
+    const round = (floatingPoint, fractionDigits = 2) =>
+        parseFloat(floatingPoint).toFixed(fractionDigits);
+    const persianDate = dateString =>
+        dateString
+            ? moment(new Date(dateString)).format(
+                  'jYYYY/jM/jD HH:mm:ss'
+              )
+            : null;
+
+    const reportContext = {
+        title: 'Statuses of Devices',
+        date: new Date(),
+        reporter: req.user,
+        header: `گزارش وضعیت ها (از ${
+            startDate ? persianDate(startDate) : 'ابتدا'
+        } تا ${endDate ? persianDate(endDate) : 'کنون'})`,
+        startDate,
+        endDate,
+        vehiclesStatusData,
+        round,
+        persianDate,
+    };
+    // console.log(vehiclesStatusData,"vehiclesStatusData")
+    const filePath = await reports.getPdfReport(
+        'devicestatuses.jade',
+        reportContext
+    );
+  
+    return res.download(filePath);
+} catch (err) {
+    console.log(err);
+    return res.json({ msg: err.message,code:500 })
+}}
+
+
+const reportDeviceChanges = async (req, res) => {
+  try {
+    const {
+        dateFilter: { start: startDate, end: endDate },
+    } = req.body;
+    if (
+        startDate &&
+        endDate &&
+        new Date(startDate) > new Date(endDate)
+    ) {
+        throw new Error(
+            'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
+        );
+    }
+
+    const { reportDevices } = await reports.getReportDevices(req);
+
+    reportDevices.select({
+        deviceIMEI: 1,
+        _id: 1,
+    });
+    const deviceId = (await reportDevices).map(
+        ({ _id: vehicleId }) => vehicleId
+    );
+
+ const vehiclesChangesData= await ActionEventModel.aggregate()
+        .match({
+            $and: [
+                { objectId: { $in: deviceId } },
+                {
+                    $or: [
+                        { date: { $gte: new Date(startDate) } },
+                        { date: { $lte: new Date(endDate) } },
+                    ],
+                },
+            ],
+        })
+        .lookup({
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'user',
+        })
+        .unwind('$user')
+        .group({
+            _id: '$objectId',
+            changes: {
+                $push: {
+                    _id: '$_id',
+                    user: '$user',
+                    date: '$date',
+                    objectModel: '$objectModel',
+                    objectId: '$objectId',
+                    actionType: '$actionType',
+                    fieldName: '$fieldName',
+                    oldValue: '$oldValue',
+                    newValue: '$newValue',
+                },
+            },
+        })
+        .lookup({
+            from: 'vehicles',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'device',
+        })
+        .unwind('device')
+        .lookup({
+            from: 'devicegroups',
+            localField: 'device._id',
+            foreignField: 'devices',
+            as: 'device.groups',
+        })
+        .replaceRoot({
+            $mergeObjects: [
+                '$$ROOT',
+                {
+                    groups: '$device.groups.name',
+                    device: {
+                        IMEI: '$device.deviceIMEI',
+                        type: '$device.type',
+                        simNumber: '$device.simNumber',
+                    },
+                    driver: {
+                        name: '$device.driverName',
+                        phoneNumber: '$device.driverPhoneNumber',
+                    },
+                },
+            ],
+        })
+return res.json({vehiclesChangesData,code:200})
+       
+} catch (err) {
+    console.log(err);
+    return res.json({ msg:err.message })
+}
+}
+
+const exportDeviceChangesReportToPdf = async (req, res) => {
+  try {
+    const {
+        reportData: vehiclesChangesData,
+        dateFilter: { start: startDate, end: endDate },
+    } = req.body;
+    const round = (floatingPoint, fractionDigits = 2) =>
+        parseFloat(floatingPoint).toFixed(fractionDigits);
+    const persianDate = dateString =>
+        dateString
+            ? moment(new Date(dateString)).format(
+                  'jYYYY/jM/jD HH:mm:ss'
+              )
+            : null;
+
+    const reportContext = {
+        title: 'تغییرات دستگاه',
+        date: new Date(),
+        reporter: req.user,
+        header: `گزارش تغییرات (از ${
+            startDate ? persianDate(startDate) : 'ابتدا'
+        } تا ${endDate ? persianDate(endDate) : 'کنون'})`,
+        startDate,
+        endDate,
+        vehiclesChangesData,
+        round,
+        persianDate,
+    };
+    const filePath = await reports.getPdfReport(
+        'devicechanges.jade',
+        reportContext
+    );
+    return res.download(filePath);
+} catch (error) {
+    console.log(error)
+    return res({ msg: error.message, })
+}
+}
+
+
+
+const reportDriverVehicles = async (req, res) => {
+
+  try {
+    const {
+        dateFilter: { start: startDate, end: endDate },
+    } = req.body;
+    if (
+        startDate &&
+        endDate &&
+        new Date(startDate) > new Date(endDate)
+    ) {
+        throw new Error(
+            'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
+        );
+    }
+
+    const { reportDevices } = await reports.getReportDevices(req);
+
+    reportDevices.select({
+        deviceIMEI: 1,
+        driverName: 1,
+        _id: 1,
+    });
+    const driverName = (await reportDevices).map(
+        ({ driverName: driverFullName }) => driverFullName
+    );
+
+     const driverVehiclesData = await ActionEventModel.aggregate([
+        {
+            $match: {
+                $and: [
+                    { oldValue: { $in: driverName } },
+                    {
+                        $or: [
+                            { date: { $gte: new Date(startDate) } },
+                            { date: { $lte: new Date(endDate) } },
+                        ],
+                    },
+                ],
+            },
+        },
+        {
+            $lookup: {
+                from: 'vehicles',
+                localField: 'objectId',
+                foreignField: '_id',
+                as: 'vehicle',
+            },
+        },
+        { $unwind: '$vehicle' },
+        { $unset: 'vehicle.alarms' },
+        {
+            $lookup: {
+                from: 'devicegroups',
+                localField: 'vehicle._id',
+                foreignField: 'devices',
+                as: 'group',
+            },
+        },
+        { $unwind: '$group' },
+        { $unset: 'group.devices' },
+        { $unset: 'group.sharees' },
+        { $set: { 'vehicle.groups': '$group' } },
+        {
+            $group: {
+                _id: '$oldValue',
+                vehicles: {
+                    $push: {
+                        plate: '$vehicle.plate',
+                        date: '$date',
+                        type: '$vehicle.type',
+                        group: '$vehicle.groups.name',
+                    },
+                },
+            },
+        },
+        {
+            $lookup: {
+                from: 'vehicles',
+                localField: '_id',
+                foreignField: 'driverName',
+                as: 'currentVehicle',
+            },
+        },
+
+        { $unwind: '$currentVehicle' },
+        { $unset: 'currentVehicle.alarms' },
+        {
+            $lookup: {
+                from: 'devicegroups',
+                localField: 'currentVehicle._id',
+                foreignField: 'devices',
+                as: 'group',
+            },
+        },
+        { $unwind: '$group' },
+        { $unset: 'group.devices' },
+        { $unset: 'group.sharees' },
+        { $set: { 'currentVehicle.groups': '$group.name' } },
+        { $unset: 'group' },
+    ])
+    return res.json({ driverVehiclesData,code:200})
+} catch (err) {
+console.log(err)  
+
+return res.json({ msg: err.message ,code:500});
+}
+}
+
+const exportDriverVehiclesReportToPdf = async (req, res) => {
+  try {
+    const {
+        reportData: driverVehiclesData,
+        dateFilter: { start: startDate, end: endDate },
+    } = req.body;
+
+if(!driverVehiclesData || driverVehiclesData===undefined || driverVehiclesData=== null ){
+  return res.json({ message : "please enter  *reportDate* ", code :400})
+}
+
+
+    const round = (floatingPoint, fractionDigits = 2) =>
+        parseFloat(floatingPoint).toFixed(fractionDigits);
+    const persianDate = dateString =>
+        dateString
+            ? moment(new Date(dateString)).format(
+                  'YYYY/M/D HH:mm:ss'
+              )
+            : null;
+
+    const reportContext = {
+        title: 'تغییر ماشین‌ها',
+        date: new Date(),
+        reporter: req.user,
+        header: `گزارش تغییرات (از ${
+            startDate ? persianDate(startDate) : 'ابتدا'
+        } تا ${endDate ? persianDate(endDate) : 'کنون'})`,
+        startDate,
+        endDate,
+        driverVehiclesData,
+        round,
+        persianDate,
+    };
+    const filePath = await reports.getPdfReport(
+        'driverVehicles.jade',
+        reportContext
+    );
+    console.log(filePath,'this is pdffile*****^&')
+    return res.download(filePath);
+} catch (err) {
+console.log(err) 
+  return res.json({ msg: err.message,code :500 })
+}
+}
+
+
+
+
 const reportDeviceLocations = async (req, res) => {
   try {
     const {
@@ -1154,56 +1585,94 @@ const reportDeviceLocations = async (req, res) => {
         "کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد."
       );
     }
-    const { reportDevices } = await reports.getReportDevices(req);
+    console.log("until here 220");
+    const reportDevices = await VehicleModel.find().setAuthorizationUser(req.user).select('_id')
+
+    // const { reportDevices } =  reports.getReportDevices2(req,res);
+
+     console.log(reportDevices,"66636636")
+    console.log(reportDevices, "reportDevices33");
+
     // reportDevices.select({ deviceIMEI: 1 });
-    const deviceIMEIs = (await reportDevices).map(
-      (vehicle) => vehicle.deviceIMEI
+    const devices = ( reportDevices).map(
+      (vehicle) => vehicle._id
     );
-    const deviceIds = (await reportDevices).map((vehicle) => vehicle._id);
-    const reportLocations = GPSDataModel.aggregate()
-      .match({ vehicleId: { $in: deviceIds } })
+
+    console.log(devices,"devices");
+// return res.json(devices)
+
+    // const deviceIds = ( reportDevices).map((vehicle) => vehicle._id);
+    // console.log("until here 222");
+    //   console.log(deviceIds,"deviceIdss")
+
+
+      // const reportLocations2= await GPSDataModel.find({ 
+      //   vehicleId:"59990df419dcdc351b267e65"
+      // }).limit
+// return res.json(devices)
+
+
+
+
+
+
+    const reportLocations =  await GPSDataModel.aggregate()
+      .match({ vehicleId: { $in:devices} })
       .addFields({
         dateCreated: {
-          $dateFromString: { dateString: { $substr: ["$date", 0, 34] } },
+          $dateFromString: {
+            dateString: { $substr: ["$date", 0, 34] },
+          },
         },
         dateCreatedHour: {
           $hour: {
             date: {
               $dateFromString: {
-                dateString: { $substr: ["$date", 0, 34] },
+                dateString: {
+                  $substr: ["$date", 0, 34],
+                },
               },
             },
             timezone: "Asia/Tehran",
           },
         },
-      });
-    if (startDate) {
-      reportLocations.match({
+      })
+      // return res.json({reportLocations})
+
+      // console.log("until here 333");
+      // console.log(reportLocations,"/*/*/*");
+
+
+    if (await startDate) {
+           reportLocations.match ({
         dateCreated: { $gte: new Date(startDate) },
       });
     }
-    if (endDate) {
-      reportLocations.match({
+    if (await endDate) {
+        reportLocations.match({
         dateCreated: { $lte: new Date(endDate) },
       });
     }
-    if (minSpeed) {
-      reportLocations.match({ speed: { $gte: +minSpeed } });
+    if ( await minSpeed) {
+   reportLocations.match({ speed: { $gte: +minSpeed } });
     }
-    if (maxSpeed) {
-      reportLocations.match({ speed: { $lte: +maxSpeed } });
+    if ( await maxSpeed) {
+          reportLocations.match({ speed: { $lte: +maxSpeed } });
     }
-    if (startTime) {
-      reportLocations.match({
+    if ( await startTime) {
+        reportLocations.match({
         dateCreatedHour: { $gte: startTime },
       });
     }
-    if (endTime) {
-      reportLocations.match({
+    if ( await  endTime) {
+        reportLocations.match({
         dateCreatedHour: { $lt: endTime },
       });
     }
-    const vehiclesLocationData = await reportLocations
+    return res.json({reportLocations})
+
+    console.log("iiiii")
+    const vehiclesLocationData =  reportLocations
       .group({
         _id: "$vehicleId",
         locations: {
@@ -1254,19 +1723,23 @@ const reportDeviceLocations = async (req, res) => {
           },
         ],
       });
-    return res.json ({vehiclesLocationData,code :200})
-  } catch (ex) {
-    console.log(ex)
-    return res.json({ msg: ex.message ,code :500})
+
+    return res.json({ vehiclesLocationData, code: 400 });
+  } catch (err) {
+    console.log(err);
+    return res.json({ msg: err.message, code: 500 });
   }
 };
 
-
-const reportDeviceAlarms = async (req, res) => {
+const reportDeviceLocations2=  async(req, res) => {
   try {
       const {
+          type,
           dateFilter: { start: startDate, end: endDate },
+          speedFilter: { min: minSpeed, max: maxSpeed },
           timeFilter: { start: startTime, end: endTime },
+          groupFilter,
+          deviceFilter
       } = req.body;
       if (
           startDate &&
@@ -1282,14 +1755,53 @@ const reportDeviceAlarms = async (req, res) => {
               'ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.'
           );
       }
-      const { reportDevices } = await reports.getReportDevices(req);
-      reportDevices.select({ _id: 1 });
-      const deviceIds = (await reportDevices).map(
-          ({ _id: vehicleId }) => vehicleId
-      );
+      if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
+          throw new Error(
+              'کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد.'
+          );
+      }
+      // const { reportDevices } = await reports.getReportDevices3(req);
+      const reportDevices = await VehicleModel.find().setAuthorizationUser(req.user).select('_id')
+      console.log("__________________________________________")
 
-      const reportAlarms = VehicleAlarmModel.aggregate()
-          .match({ vehicleId: { $in: deviceIds } })
+      console.log(reportDevices,"reportDevices88888888888888")
+      console.log("__________________________________________")
+
+      console.log(groupFilter,"5555555555555555555")
+
+   if (groupFilter.length) {
+        const groupDevices = await DeviceGroupModel.aggregate()
+            .match({
+                _id: {
+                    $in: groupFilter,
+                },
+            })
+            .unwind('devices')
+            // .group({ _id: null, devices: { $addToSet: '$devices' } });
+            console.log(groupDevices,"line 66666")
+
+        if (groupDevices && groupDevices.length)
+            reportDevices.find({
+                _id: { $in: groupDevices[0].devices },
+            });
+    }
+      console.log(deviceFilter,"*********8/////")
+    if (deviceFilter.length) {
+        reportDevices.find({
+            deviceIMEI: { $in: deviceFilter },
+        });
+    }
+      // reportDevices.select({ deviceIMEI: 1 });
+      const deviceId = ( reportDevices).map(
+          vehicle => vehicle._id
+      );
+      console.log(deviceId,"deviceIMEIsdeviceIMEIsdeviceIMEIsdeviceIMEIsdeviceIMEIs")
+      // const deviceIds = (await reportDevices).map(
+      //     vehicle => vehicle._id
+      // );
+      // console.log(deviceIds,"55555555555555555555555555555555555555555555555555")
+      const reportLocations =  GPSDataModel.aggregate()
+          .match({ vehicleId: { $in: deviceId } })
           .addFields({
               dateCreated: {
                   $dateFromString: {
@@ -1308,37 +1820,59 @@ const reportDeviceAlarms = async (req, res) => {
                       timezone: 'Asia/Tehran',
                   },
               },
-          });
+          })
+          .limit(10)
+          console.log(reportLocations,"12121212")
+
+
+
+
+          
+        //  return  res.json({reportLocations})
       if (startDate) {
-          reportAlarms.match({
+          reportLocations.match({
               dateCreated: { $gte: new Date(startDate) },
           });
       }
       if (endDate) {
-          reportAlarms.match({
+          reportLocations.match({
               dateCreated: { $lte: new Date(endDate) },
           });
       }
+      if (minSpeed) {
+          reportLocations.match({ speed: { $gte: +minSpeed } });
+      }
+      if (maxSpeed) {
+          reportLocations.match({ speed: { $lte: +maxSpeed } });
+      }
       if (startTime) {
-          reportAlarms.match({
+          reportLocations.match({
               dateCreatedHour: { $gte: startTime },
           });
       }
       if (endTime) {
-          reportAlarms.match({
+          reportLocations.match({
               dateCreatedHour: { $lt: endTime },
           });
       }
-      const vehiclesAlarmData = await reportAlarms
+      const vehiclesLocationData =  reportLocations
           .group({
               _id: '$vehicleId',
-              alarms: {
+              locations: {
                   $push: {
                       date: '$dateCreated',
-                      type: '$type',
-                      desc: '$desc',
-                      hour: '$dateCreatedHour',
+                      latitude: '$lat',
+                      longitude: '$lng',
+                      address: '$address',
+                      speed: '$speed',
+                      url: '$url',
                   },
+              },
+              minSpeed: { $min: '$speed' },
+              maxSpeed: { $max: '$speed' },
+              avgSpeed: { $avg: '$speed' },
+              lastLocation: {
+                  $last: { address: '$address', date: '$date' },
               },
           })
           .lookup({
@@ -1363,6 +1897,7 @@ const reportDeviceAlarms = async (req, res) => {
                           IMEI: '$device.deviceIMEI',
                           type: '$device.type',
                           simNumber: '$device.simNumber',
+                          fuel: '$device.fuel',
                       },
                       driver: {
                           name: '$device.driverName',
@@ -1371,15 +1906,166 @@ const reportDeviceAlarms = async (req, res) => {
                   },
               ],
           });
-
-      return res.json({vehiclesAlarmData,code :"200"})
+          console.log(vehiclesLocationData)
+    return res.json(vehiclesLocationData);
   } catch (ex) {
     console.log(ex)
+    return res.json ({ msg: ex.message });
+  }
+};
+const reportDeviceAlarms = async (req, res) => {
+  try {
+    const {
+      dateFilter: { start: startDate, end: endDate },
+      timeFilter: { start: startTime, end: endTime },
+    } = req.body;
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      throw new Error(
+        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
+      );
+    }
+    if (startTime && endTime && startTime > endTime) {
+      throw new Error(
+        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
+      );
+    }
+    const { reportDevices } = await reports.getReportDevices(req);
+    reportDevices.select({ _id: 1 });
+    const deviceIds = (await reportDevices).map(
+      ({ _id: vehicleId }) => vehicleId
+    );
+
+    const reportAlarms = VehicleAlarmModel.aggregate()
+      .match({ vehicleId: { $in: deviceIds } })
+      .addFields({
+        dateCreated: {
+          $dateFromString: {
+            dateString: { $substr: ["$date", 0, 34] },
+          },
+        },
+        dateCreatedHour: {
+          $hour: {
+            date: {
+              $dateFromString: {
+                dateString: {
+                  $substr: ["$date", 0, 34],
+                },
+              },
+            },
+            timezone: "Asia/Tehran",
+          },
+        },
+      });
+    if (startDate) {
+      reportAlarms.match({
+        dateCreated: { $gte: new Date(startDate) },
+      });
+    }
+    if (endDate) {
+      reportAlarms.match({
+        dateCreated: { $lte: new Date(endDate) },
+      });
+    }
+    if (startTime) {
+      reportAlarms.match({
+        dateCreatedHour: { $gte: startTime },
+      });
+    }
+    if (endTime) {
+      reportAlarms.match({
+        dateCreatedHour: { $lt: endTime },
+      });
+    }
+    const vehiclesAlarmData = await reportAlarms
+      .group({
+        _id: "$vehicleId",
+        alarms: {
+          $push: {
+            date: "$dateCreated",
+            type: "$type",
+            desc: "$desc",
+            hour: "$dateCreatedHour",
+          },
+        },
+      })
+      .lookup({
+        from: "vehicles",
+        localField: "_id",
+        foreignField: "_id",
+        as: "device",
+      })
+      .unwind("device")
+      .lookup({
+        from: "devicegroups",
+        localField: "device._id",
+        foreignField: "devices",
+        as: "device.groups",
+      })
+      .replaceRoot({
+        $mergeObjects: [
+          "$$ROOT",
+          {
+            groups: "$device.groups.name",
+            device: {
+              IMEI: "$device.deviceIMEI",
+              type: "$device.type",
+              simNumber: "$device.simNumber",
+            },
+            driver: {
+              name: "$device.driverName",
+              phoneNumber: "$device.driverPhoneNumber",
+            },
+          },
+        ],
+      });
+
+    return res.json({ vehiclesAlarmData, code: "200" });
+  } catch (ex) {
+    console.log(ex);
     return res.json({ msg: ex.message }).code(404);
   }
+};
+
+
+const exportDeviceAlarmsReportToPdf = async (req, res) => {
+
+  try {
+    const {
+        reportData: vehiclesAlarmData,
+        dateFilter: { start: startDate, end: endDate },
+    } = req.body;
+    const round = (floatingPoint, fractionDigits = 2) =>
+        parseFloat(floatingPoint).toFixed(fractionDigits);
+    const persianDate = dateString =>
+        dateString
+            ? moment(new Date(dateString)).format(
+                  'jYYYY/jM/jD HH:mm:ss'
+              )
+            : null;
+
+    const reportContext = {
+        title: 'Alarms of Devices',
+        date: new Date(),
+        reporter: req.user,
+        header: `گزارش هشدارها (از ${
+            startDate ? persianDate(startDate) : 'ابتدا'
+        } تا ${endDate ? persianDate(endDate) : 'کنون'})`,
+        startDate,
+        endDate,
+        vehiclesAlarmData,
+        round,
+        persianDate,
+    };
+    const filePath = await reports.getPdfReport(
+        'devicealarms.jade',
+        reportContext
+    );
+    return res.download(filePath);
+} catch (err) {
+    console.log(err)
+    return res.json({ msg: err.message }).code(404);
 }
-
-
+}
 
 
 
@@ -1458,20 +2144,158 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
   }
 };
 const reports = {
-  getReportDevices: async req => {
+  getPdfReport: (template, context) => {
+    return new Promise((resolve, reject) => {
+        const html = jade.renderFile(
+            path.resolve(REPORT_TEMPLATE_DIR, template),
+            context
+        );
+        const reportConfig = {
+            header: {
+                height: '15mm',
+                contents: `
+                        <div style="text-align: center; font-size: 10px;">
+                            ${context.header} 
+                        </div>
+                        <hr/>
+                    `,
+            },
+            footer: {
+                height: '15mm',
+                contents: `
+                        <hr/>
+                        <span style="color: #444;font-size: 10px;">{{page}}</span>
+                        /<span>{{pages}}</span>
+                    `,
+            },
+            orientation: 'portrait',
+            border: '1',
+            timeout: 100000,
+        };
+        const fileName = `${context.title
+            .toLowerCase()
+            .replace(/ /g, '-')}-${moment(context.date).format(
+            'jYYYY-jM-jD-HH-mm-ss'
+        )}.pdf`;
+        pdf.create(html, reportConfig).toFile(
+            `reports/${fileName}`,
+            (error, stream) => {
+                if (error) {
+                    reject(error);
+                }
+                resolve(stream.filename);
+            }
+        );
+    });
+},
+
+  getReportDevices: async (req) => {
+    const { groupFilter, deviceFilter } = req.body;
+    console.log(groupFilter, "groupFilter", deviceFilter, "deviceFilter");
+    const reportDevices = VehicleModel.find().setAuthorizationUser(req.user);
+    console.log("commmmmmes222");
+    if (groupFilter.length) {
+      console.log("commmmmmes3333");
+      const groupDevices = await DeviceGroupModel.aggregate()
+        .match({
+          _id: {
+            $in: groupFilter.map((item) => {
+              return item;
+            }),
+          },
+        })
+        .unwind("devices")
+        .group({ _id: null, devices: { $addToSet: "$devices" } });
+      if (groupDevices && groupDevices.length)
+        reportDevices.find({
+          _id: { $in: groupDevices[0].devices },
+        });
+    }
+
+    console.log("commmmmmes");
+    console.log(reportDevices, "reportDevices2");
+
+    if (deviceFilter.length) {
+      reportDevices.find({
+        deviceIMEI: { $in: deviceFilter },
+      });
+    }
+    return { reportDevices };
+  },
+  getReportDevices2: async (req,res) => {
+    console.log("xozzzz")
+    const { groupFilter, deviceFilter } = req.body;
+    console.log(groupFilter, "groupFilter", deviceFilter, "deviceFilter");
+    const reportDevices =await  VehicleModel.find().setAuthorizationUser(req.user).select('_id')
+    // const reportDevices =await  VehicleModel.aggregate()
+    // .unwind("_id")
+    // .setAuthorizationUser(req.user)
+    console.log(reportDevices,"2xozzzz")
+
+
+    // console.log(reportDevices,"reportDevices**********");
+
+    // if (groupFilter.length) {
+
+      // const groupDevices = await DeviceGroupModel.aggregate()
+      //   .match({
+      //     _id: {
+      //       $in: groupFilter.map((item) => {
+      //         return item;
+      //       }),
+      //     },
+      //   })
+      //   .unwind("devices")
+      //   // .unwind("_id")
+      //   .group({ _id: null, devices: { $addToSet: "$devices" } })
+      //   // .unwind("_id")
+
+      // if (groupDevices && groupDevices.length)
+      //   reportDevices.find({
+      //     _id: { $in: groupDevices[0].devices },
+      //   })
+
+      //   console.log(groupDevices,"groupDevices"); 
+    // }
+    
+
+    // console.log(deviceFilter,"deviceFilter");
+
+    // console.log(reportDevices, "reportDevices222222*");
+
+    // return res.json({reportDevices})
+    
+    // if (deviceFilter.length) {
+    //         reportDevices.map((item) => {
+    //           return item;
+    //         });
+    // }
+    // reportDevices.select({ deviceIMEI: 1 });
+
+    return { reportDevices };
+  },
+  getReportDevices3: async req => {
     const { groupFilter, deviceFilter } = req.body;
     const reportDevices = VehicleModel.find().setAuthorizationUser(
         req.user
-    )
+    );
+
+    console.log(reportDevices,"userrrrr555555")
     if (groupFilter.length) {
+
+
+      const dd = await DeviceGroupModel.find({id:{$in:["5b740879365e010646bc70e9"]}})
+      console.log(dd,"88888888888889")
         const groupDevices = await DeviceGroupModel.aggregate()
             .match({
                 _id: {
-                    $in: groupFilter.map((item=>{return item })),
+                    $in: ["5b740879365e010646bc70e9"],
                 },
             })
-            .unwind('devices')
-            .group({ _id: null, devices: { $addToSet: '$devices' } });
+            // .unwind('devices')
+            // .group({ _id: null, devices: { $addToSet: '$devices' } });
+            console.log(groupDevices,"line 66666")
+
         if (groupDevices && groupDevices.length)
             reportDevices.find({
                 _id: { $in: groupDevices[0].devices },
@@ -1483,8 +2307,14 @@ const reports = {
             deviceIMEI: { $in: deviceFilter },
         });
     }
+    console.log(reportDevices,"8525")
     return { reportDevices };
 },
+
+
+
+  
+
   // getReportDevices: async (req) => {
   //   const { groupFilter, deviceFilter } = req.body;
   //   console.log(req.user, "befor");
@@ -1504,7 +2334,7 @@ const reports = {
   //     let foundedGroupp = await DeviceGroupModel.findById(item);
   //     console.log(foundedGroupp, "this is iiiii");
 
-  //     foundedGroupp.devices.map((item) => {  
+  //     foundedGroupp.devices.map((item) => {
   //       console.log(item, "this is devices of group");
   //       arrayGr.push(item);
   //     });
@@ -1517,6 +2347,7 @@ const reports = {
   //   // return { reportDevices };
   // },
 };
+
 var helpers = {};
 
 module.exports = {
@@ -1542,21 +2373,15 @@ module.exports = {
   reportDeviceLocations,
   getLastLocationsOfDeviceInP,
   reportDeviceAlarms,
+  reportDeviceLocations2,
+  reportDeviceStatus,
+  exportDeviceStatusReportToPdf,
+  reportDeviceChanges,
+  exportDeviceChangesReportToPdf,
+  reportDriverVehicles,
+  exportDriverVehiclesReportToPdf,
+  exportDeviceAlarmsReportToPdf
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // const reportDeviceAlarms = async (req, res) => {
 //   try {
@@ -1614,45 +2439,37 @@ module.exports = {
 //   //     });
 //   //     arr.push(reportAlarms);
 
-
 //   // })
 //   console.log(endDate,"endDate")
 //   console.log(startDate,"startDate")
 //   console.log(new Date(endDate) ,"new end")
 //   console.log(new Date(startDate),"new start")
 
-  
 // //   const reportAlarms =await VehicleAlarmModel.aggregate()
-// //   .match({ 
-    
-// //     // date: { $lte: new Date(endDate) } 
+// //   .match({
+
+// //     // date: { $lte: new Date(endDate) }
 // //        $and: [
-    
+
 // //    { vehicleId: { $in: ["653cb036313585c4bb731f82"] } },
 // //         // { date: { $gte: new Date(startDate) } }
-// //   ] 
-    
-    
+// //   ]
+
 // //       // $and: [
 // //         // { vehicleId: { $in: slarr } },
-
 
 // //       //  { $and: [
 // //       //   { date: { $gte: new Date(startDate) } },
 // //       //   { date: { $lte: new Date(endDate) } }]
 // //       //  }
-   
+
 // //       // ]
-  
 
 // // })
 // // .limit(90)
 // const reportAlarms = await VehicleAlarmModel.findOne({
 //         vehicleId: { $in: slarr } ,
 //       })
-
-
-
 
 //   // .addFields({
 //   //     dateCreated: {
@@ -1673,7 +2490,7 @@ module.exports = {
 //   //         },
 //   //     },
 //   // })
-  
+
 //   // console.log("comessss")
 //   // if (startDate) {
 //     //  match({

@@ -43,7 +43,7 @@ router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatu
 
 router.post("/getinfo",headerAuth, deviceController.getBachInfoViaIMEI);
 
-router.post("/report/locations",headerAuth, deviceController.reportDeviceLocations);
+router.post("/report/locations",headerAuth, deviceController.reportDeviceLocations2);
 
 
 
@@ -66,14 +66,20 @@ router.post("/lastlocationsinp",headerAuth, deviceController.getLastLocationsOfD
 
 
 router.post("/report/alarms",headerAuth, deviceController.reportDeviceAlarms);
+router.post("/report/alarms/pdf",headerAuth, deviceController.exportDeviceAlarmsReportToPdf);
+
+
+router.post("/report/status",headerAuth, deviceController.reportDeviceStatus);
+router.post("/report/status/pdf",headerAuth, deviceController.exportDeviceStatusReportToPdf);
+
+
+router.post("/report/changes",headerAuth, deviceController.reportDeviceChanges);
+router.post("/report/changes/pdf",headerAuth, deviceController.exportDeviceChangesReportToPdf);
 
 
 
-
-
-
-
-
+router.post("/report/vehicles",headerAuth, deviceController.reportDriverVehicles);
+router.post("/report/vehicles/pdf",headerAuth, deviceController.exportDriverVehiclesReportToPdf);
 
 
 

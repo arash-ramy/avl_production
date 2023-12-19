@@ -6,9 +6,9 @@ console.log("comes until here 3")
 class ServerCronJobs {
     static run() {
         DatabaseBackupCron.run();
-        DeviceStatusCron.run();
-        DeviceMonthlyDistanceCron.run();
-        DeviceCheckLastLocationDelayCron.run();
+        // DeviceStatusCron.run();
+        // DeviceMonthlyDistanceCron.run();
+        // DeviceCheckLastLocationDelayCron.run();
     }
 }
 

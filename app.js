@@ -4,15 +4,21 @@ const bodyParser = require("body-parser");
 const controller =require("./controller/userController")
 const cors = require('cors')
 const morgan = require('morgan');
+const net = require('net');
 
 const app = express();
 const chalk = require ('chalk');
 var path = require("path");
 const { headerAuth } = require("./utils/authHeader");
 var http = require("http");
-const { GT06Controller } = require("./controller/GT06Controller");
 var cron = require('node-cron');
 var shell = require('shelljs');
+
+
+
+var http = require("http");
+const { GT06Controller  } = require("./controller/GT06Controller");
+const { FMXXXXController } = require("./controller/FMXXXXController");
 
 shell.exec('node --version');
 
@@ -60,6 +66,27 @@ const server = app.listen(process.env.PORT, () => {
       `Server is running on http://localhost:${process.env.PORT}`
     );
   });
+
+
+
+
+
+  const createServer = Controller => {
+    const controller = new Controller();
+    return net.createServer(socket => {
+        socket.on('data', data => {
+            console.log("socket on")
+            controller.insertNewMessage(data, socket);
+            console.log(data)
+        });
+        socket.on('error', error => console.log("something went wrong in app io"));
+    });
+};
+
+
+
+createServer(GT06Controller).listen(10000);
+createServer(FMXXXXController).listen(4000);
   
   // unhandled promise rejection
 process.on("unhandledRejection", (err) => {
