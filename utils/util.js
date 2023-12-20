@@ -8,16 +8,19 @@ var util =
 {
 	send_email : function (templateName, locals, fn)
     {
-        console.log("this is log",locals.email)
+        console.log("*****locals ",locals)
+        console.log("*****templateName",templateName)
+
+
         // console.log(locals,"localslocalslocals")
         if (!locals.email)
         {
             return fn(EmailAddressRequiredError);
         }
-        // if (!locals.subject)
-        // {
-        //     return fn(EmailAddressRequiredError);
-        // }
+        if (!locals.subject)
+        {
+            return fn(EmailAddressRequiredError);
+        }
 
          emailTemplates(templatesDir, function (err, template)
         {
@@ -87,3 +90,4 @@ var util =
 }
 
 module.exports.util = util;
+    

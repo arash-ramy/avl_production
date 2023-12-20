@@ -18,6 +18,7 @@ const { util } = require("../utils/util");
 
 const { DelayLocation } = require("../template/sms/alarms");
 const smsgw = SMSGW();
+
 const jalali_moment = require("moment-jalaali");
 console.log("object 888");
 
@@ -54,8 +55,8 @@ class DeviceCheckLastLocationDelayCron {
         .populate("lastLocation")
         .populate({
           path: "groups",
-          // select: "name",
-        })
+          select: "name",
+        }).limit(30)
         console.log("___________________________________________________________________________")
 
       console.log(vehicles,"vehicles")
@@ -167,6 +168,10 @@ class DeviceCheckLastLocationDelayCron {
                 'YYYY-M-D'
             )
                 .format('jYYYY/jM/jD');
+                console.log("||||",vehicles)
+                console.log("||||++++",groupName)
+                console.log("||||____",receivers)
+
             const context = {
                 groupName,
                 vehicles,
@@ -175,10 +180,11 @@ class DeviceCheckLastLocationDelayCron {
                 alarmType: 'Delay Alarm',
                 email: receivers.email,
             };
+
             util.send_email('mail/alarms/delay', context, e => console.error(e));
             const message = DelayLocation(groupName, vehicles.length);
             smsgw.sendSmsToNumber(message, receivers.phone)
-                .catch(e => logger.error(e));
+                .catch(e => console.log(e));
         }
     });
 

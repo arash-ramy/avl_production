@@ -23,9 +23,8 @@ exports.headerAuth = async (req, res, next) => {
       code: 403,
     });
   }
-
-
   const foundedUser = await  UserModel.findById({ _id: decoded.id._id });
+
   if (!foundedUser) {
     return res.json({
       message: "Please make sure your request has an Authorization header lv2",

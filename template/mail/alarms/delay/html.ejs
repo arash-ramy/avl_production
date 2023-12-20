@@ -62,9 +62,9 @@
     <div id="content">
         <br>
         <br>
-        <h5 style="text-align: right; direction: rtl"> تاریخ: <%= this.today %></h5>
+        <h5 style="text-align: right; direction: rtl"> تاریخ: <%= today %></h5>
 
-<p style="text-align: right">لیست ماشین‌ها در دسته‌بندی <%= this.groupName %> که بیشتر از ۵ روز از آخرین ارسال موقعیت مکانی آن‌ها می‌گذرد</p>
+<p style="text-align: right">لیست ماشین‌ها در دسته‌بندی <%= groupName %> که بیشتر از ۵ روز از آخرین ارسال موقعیت مکانی آن‌ها می‌گذرد</p>
 
         <table>
             <tr>
@@ -73,7 +73,7 @@
                 <th>پلاک</th>
                 <th>تعداد روزهای عدم دریافت موقیت مکانی</th>
             </tr>
-            <% if ( this.vehicles) { %>
+            <% if ( vehicles) { %>
             <% for(var i = 0; i < vehicles.length; i++) { %>
                 <tr class="<% (i%2 === 0) ? 'odd': '' %> ">
                     <td><%= vehicles[i].IMEI %></td>
@@ -91,6 +91,9 @@
             <br>
             <br>
             <br>
+            <% vehicles[1].driverName %>
+            <%  vehicles[0].IMEI %>
+
             <hr>
             شرکت بلور کاوه | تلفن تماس: 84400 | نشانی: تهران- انتهای اتوبان امام علی شمال- بلوار اوشان (مژدی)-پلاک 4
             ساختمان کاوه <br/>
