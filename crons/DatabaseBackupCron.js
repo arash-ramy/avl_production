@@ -168,9 +168,9 @@ class DatabaseBackupCron {
     static run() {
         // console.log("654123" )
 
-        // const EVERY_WEEK_ON_FRIDAY_3_AM = '1 * * * *'; // 3 AM every week on Thursday
-        // cron.schedule(EVERY_WEEK_ON_FRIDAY_3_AM, () => {
-            (() => {
+        const EVERY_WEEK_ON_FRIDAY_3_AM = '1 * * * *'; // 3 AM every week on Thursday
+        cron.schedule(EVERY_WEEK_ON_FRIDAY_3_AM, () => {
+            // (() => {
                 try{
 
                     console.log(DatabaseBackupCron,"DatabaseBackupCron")
@@ -191,9 +191,9 @@ class DatabaseBackupCron {
             console.log(err)
         }
 
-        })();
+        // })();
 
-        // });
+        });
     }
 }
 

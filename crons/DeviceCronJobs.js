@@ -21,9 +21,6 @@ console.log("DeviceCronJob")
 
 var CronJob= ()=>{
     console.log("ruuunnnn")
-
-
-
 }
 
 

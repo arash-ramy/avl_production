@@ -2022,7 +2022,7 @@ const reportDeviceAlarms = async (req, res) => {
     return res.json({ vehiclesAlarmData, code: "200" });
   } catch (ex) {
     console.log(ex);
-    return res.json({ msg: ex.message }).code(404);
+    return res.json({ msg: ex.message , code :500})
   }
 };
 

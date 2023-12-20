@@ -22,7 +22,7 @@ router.get("/last",headerAuth, deviceController.getLastLocationOfAllDevice);
 
 
 
-router.get("/",headerAuth, deviceController.getDevices);
+router.get("/", deviceController.getDevices);
 
 router.get("/tests",headerAuth, deviceController.tests);
 

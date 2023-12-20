@@ -7,7 +7,7 @@ const UserModel = require("../model/User/user");
 
 exports.headerAuth = async (req, res, next) => {
   try{
-    console.log("midleware runned")
+    console.log("midleware runned auth ")
   if (!req.headers.authorization) {
     return res.json({
       message: "Please make sure your request has an Authorization header lv1",

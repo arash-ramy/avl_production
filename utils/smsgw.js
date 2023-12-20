@@ -28,9 +28,9 @@ function SMSService() {
         endPoint: 'https://rest.payamak-panel.com/api/SendSMS/GetDeliveries2',
     }
 
-    async function sendSmsToNumber(message, receivers, checkStatus = false) {
+    async function sendSmsToNumber(message, receivers, checkStatus = true) {
         const { username, password, numbers, endPoint } = smsServiceInfo;
-
+console.log(smsServiceInfo,"cestramyyyyyy")
         let options = {
             url: endPoint,
             form: {
@@ -43,16 +43,24 @@ function SMSService() {
             },
             timeout: 10000
         };
+        console.log("comes in sms ramy***55")
+        console.log(options,"cestoptions")
 
         return new Promise((resolve, reject) => {
             request.post(options, async function (err, res) {
                 if (err) {
+                    console.log("kkkkkkkkkkkkkkkkkkk")
                     resolve('پیام ارسال نشد')
                 } else if (checkStatus === true) {
                     let body = JSON.parse(res.body);
                     let recID = body.Value;
+                    console.log(recID,"jjjjjjj")
+                    console.log(receivers,"pppppppppppp")
+
                     setTimeout(()=>{resolve(SMSStatus(recID, receivers))}, 10000);
                 } else {
+                    console.log("2222222222222222")
+
                     resolve()
                 }
             });
@@ -60,6 +68,7 @@ function SMSService() {
     }
 
     async function SMSStatus(recID, simNumber) {
+        console.log("comes in sms status ")
         const { username, password, endPoint } = smsStatus;
         let options = {
             url: endPoint,
@@ -69,16 +78,30 @@ function SMSService() {
                 recID: recID
             }
         };
+        console.log(options,"options5555")
+
         return new Promise((resolve, reject) => {
              request.post(options, async function (err, res) {
                  if (err) {
+                    console.log("f111111111111")
+
                      reject()
                  } else {
+                    console.log("f22222222222")
+
                      let body = JSON.parse(res.body)
+                     console.log(body,"body")
+
                      let value = body.Value
+                     console.log(value,"value987456")
+
                      if (["1", "8"].includes(value)) {
+                        console.log("f333333333333")
+
                          setTimeout(()=>{resolve(ReceiveSMSFromNumber(simNumber))}, 10000);
                      } else {
+                        console.log("f444444444444")
+
                          resolve("مشکلی در دلیور شدن پیام وجود دارد")
                      }
                  }

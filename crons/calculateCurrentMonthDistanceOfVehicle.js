@@ -1,4 +1,4 @@
-console.log("object");
+console.log("rrrr");
 const  VehicleModel  = require("../model/GpsLocation/VehicleModel");
 const  GPSDataModel  = require("../model/GpsLocation/GPSDataModel");
 
@@ -12,6 +12,7 @@ const {
 console.log("populateVehicleGPSDataRelatedValues --------")
 class DeviceMonthlyDistanceCron {
   static async setDeviceDistance() {
+
     try {
 
       const now = new Date();
@@ -38,7 +39,7 @@ class DeviceMonthlyDistanceCron {
         console.log("there is no vehicle  (DeviceMonthlyDistanceCron)")
       }
       vehicles.map(async (vehicle) => {
-        // console.log(vehicle,"vehicle")
+        console.log(vehicle,"vehicle")
               const locations = await GPSDataModel.aggregate()
                 .match({ 
                   $and: [
@@ -73,7 +74,7 @@ class DeviceMonthlyDistanceCron {
             vehicle.save();
 
 
-            console.log("currentMonthDistance field successfully inserted .")
+            console.log("currentMonthDistance items successfully inserted .")
 
               })
     } catch (ex) {
@@ -83,15 +84,15 @@ class DeviceMonthlyDistanceCron {
   }
 
   static run() {
-    // const EVERY_DAY_AT_1_AM = "0 2 * * *"; // 2 AM every day
-    // cron.schedule(EVERY_DAY_AT_1_AM, () => {
-        (function(){
+    const EVERY_DAY_AT_1_AM = "0 2 * * *"; // 2 AM every day
+    cron.schedule(EVERY_DAY_AT_1_AM, () => {
+        // (function(){
       DeviceMonthlyDistanceCron.setDeviceDistance().catch((e) =>
         // logger.error(e)
         console.log("something went wrong",e)
       );
-    })();   
-    // });
+    // })();   
+    });
   }
 }
 

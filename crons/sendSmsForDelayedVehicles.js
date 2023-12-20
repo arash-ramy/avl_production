@@ -3,6 +3,7 @@
 //     VehicleModel,
 //     VehicleAlarmModel
 // } = require('../models/gpslocation');
+const { Request, Response, Application } =require( 'express');
 
 const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
@@ -21,9 +22,11 @@ const jalali_moment = require("moment-jalaali");
 console.log("object 888");
 
 class DeviceCheckLastLocationDelayCron {
+
   static async checkLastLocationDelay() {
+    console.log("comes until here checkLastLocationDelay*")
     try {
-      console.log("comes here 001");
+      // console.log("comes here 001");
       const today = new Date();
       let delays = [];
 
@@ -44,16 +47,18 @@ class DeviceCheckLastLocationDelayCron {
           receivers: this.getReceivers(group),
         });
       });
-      // console.log(delays,"delays")
+      console.log(delays,"delaysssssssss")
 
       const vehicles = await VehicleModel.find()
         .select("_id deviceIMEI lastLocation driverName plate")
         .populate("lastLocation")
         .populate({
           path: "groups",
-          select: "name",
-        });
-      // console.log(vehicles,"vehicles")
+          // select: "name",
+        })
+        console.log("___________________________________________________________________________")
+
+      console.log(vehicles,"vehicles")
 
       const result = vehicles.map(async (vehicle) => {
         try {
@@ -62,7 +67,9 @@ class DeviceCheckLastLocationDelayCron {
                 .duration(today.getTime() - vehicle.lastLocation.date.getTime())
                 .asDays()
             : 0;
-          // console.log(lastLocationDurationDays,"lastLocationDurationDays")
+          console.log(lastLocationDurationDays,"lastLocationDurationDays")
+          console.log(vehicle._id,"___id")
+
           const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne(
             {
               vehicleId: vehicle._id,
@@ -70,8 +77,8 @@ class DeviceCheckLastLocationDelayCron {
             },
             "date"
           ).sort({ date: -1 });
-          // console.log(delays,"iiiiiiiiiiiiiiiiii");
-          // console.log(vehicle.groups[0], "9999999999999");
+          console.log(lastVehicleDelayAlarm,"iiiiiiiiiiiiiiiiii");
+          console.log(vehicle.groups[0], "9999999999999");
           // console.log( delays.findIndex(delay => delay.groupName === vehicle?.groups[0]?.name),"0000000000000");
 
           if (
@@ -86,21 +93,26 @@ class DeviceCheckLastLocationDelayCron {
                   .asDays() > 5)) &&
             vehicle.groups[0] !== undefined
           ) {
-            // console.log(vehicle.groups[0].name,"ddddp")
+            console.log(vehicle.groups[0].name,"ddddp")
             if (vehicle.groups[0].name !== "اسقاطی") {
+              console.log("comes in ESGHATI ")
               const newAlarm = new VehicleAlarmModel({
                 type: "Delay Alarm",
-                date: new Date().AsDateJs(),
+                date: new Date(),
                 vehicleId: vehicle._id,
                 desc:
                   "location not received for " +
                   Math.floor(lastLocationDurationDays) +
                   " days",
               });
-              await newAlarm.save();
+               const saveProcess = await newAlarm.save();
+              console.log(saveProcess,"saveProcess*")
               const delayIndex = delays.findIndex(
                 (delay) => delay.groupName === vehicle?.groups[0]?.name
               );
+
+              console.log("delayIndex" ,delayIndex)
+
               delays[delayIndex].vehicles.push({
                 IMEI: vehicle.deviceIMEI,
                 driverName: vehicle.driverName,
@@ -109,15 +121,26 @@ class DeviceCheckLastLocationDelayCron {
               });
             }
           }
+          console.log("ramy this is  delays" ,delays[0].vehicles)
           return delays;
-
+          
         } catch (e) {
           // logger.error(e);
           console.log("something went wrong in checkLastLocationDelay ", e);
         }
       });
+      // return Response.json({
+      //   result,
+      //   message:"this is result ramy"
+      // })
+
       Promise.all(result)
       .then(async (values) => {
+        console.log("____________________________________________________")
+        console.log(values,"result***")
+
+
+        // this service is not wroking ******
           this.sendDelaySmsToAdmins(values, today);
       });  
     } catch (ex) {
@@ -129,46 +152,37 @@ class DeviceCheckLastLocationDelayCron {
   }
 
   static sendDelaySmsToAdmins(delays, today) {
-    // console.log(delays,"delays")
-    // console.log(today,"today")
-    const leeeet= {email:"arashramy@gmail.com"}
-    console.log(leeeet.email)
-    console.log(delays,'didiid')
-
-    util.send_email("mail/alarms/delay",leeeet, (e) => console.error(e));
-    smsgw
-    .sendSmsToNumber("كاوه گلس",["09381378120", "09370713134"])
-    .catch((e) => console.log(e));
-
-
-
-    delays[0].map((delay) => {
-      console.log("///////////////////////// ")
-
-      if (delay.vehicles.length > 0) {
-        const { groupName, vehicles, receivers } = delay;
-        let todayPersianDate = jalali_moment(
-          today.toISOString().replace("T", " "),
-          "YYYY-M-D"
-        ).format("jYYYY/jM/jD");
-        console.log("/////////////////////////")
-
-        const context = {
-          groupName,
-          vehicles,
-          today: todayPersianDate,
-          subject: "Kaveh AVL Delay Alarm",
-          alarmType: "Delay Alarm",
-          email: receivers.email,
-        };
-        util.send_email("mail/alarms/delay", context, (e) => console.error(e));
-        const message = DelayLocation(groupName, vehicles.length);
-        smsgw
-          .sendSmsToNumber(message, receivers.phone)
-          .catch((e) => logger.error(e));
-      }
+    console.log(delays,"thisislenght*")
+    delays[0].map(delay => {
+      console.log(delay.vehicles,"vehicles****----")
+        if (delay.vehicles.length > 0) {
+            const {
+                groupName,
+                vehicles,
+                receivers
+            } = delay;
+            let todayPersianDate = jalali_moment(
+                today.toISOString()
+                    .replace('T', ' '),
+                'YYYY-M-D'
+            )
+                .format('jYYYY/jM/jD');
+            const context = {
+                groupName,
+                vehicles,
+                today: todayPersianDate,
+                subject: 'Kaveh AVL Delay Alarm',
+                alarmType: 'Delay Alarm',
+                email: receivers.email,
+            };
+            util.send_email('mail/alarms/delay', context, e => console.error(e));
+            const message = DelayLocation(groupName, vehicles.length);
+            smsgw.sendSmsToNumber(message, receivers.phone)
+                .catch(e => logger.error(e));
+        }
     });
-  }
+
+}
 
   static getReceivers(groupName) {
     switch (groupName) {
