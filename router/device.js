@@ -63,26 +63,30 @@ router.delete("/polygon/:id",headerAuth, deviceController.deletePolygon);
 router.post("/lastlocationsinp",headerAuth, deviceController.getLastLocationsOfDeviceInP);
 
 
-
+// report pdf status alarms
 router.post("/report/alarms",headerAuth, deviceController.reportDeviceAlarms);
 router.post("/report/alarms/pdf",headerAuth, deviceController.exportDeviceAlarmsReportToPdf);
 
-
+// report pdf status 
 router.post("/report/status",headerAuth, deviceController.reportDeviceStatus);
 router.post("/report/status/pdf",headerAuth, deviceController.exportDeviceStatusReportToPdf);
 
 
+// report pdf changes  
 router.post("/report/changes",headerAuth, deviceController.reportDeviceChanges);
 router.post("/report/changes/pdf",headerAuth, deviceController.exportDeviceChangesReportToPdf);
 
 
-
+// report pdf of devices and vehicle 
 router.post("/report/vehicles",headerAuth, deviceController.reportDriverVehicles);
 router.post("/report/vehicles/pdf",headerAuth, deviceController.exportDriverVehiclesReportToPdf);
 
 
-
+// report pdf location 
 router.post("/report/locations",headerAuth, deviceController.reportDeviceLocations);
+router.post("/report/locations/pdf",headerAuth, deviceController.exportDeviceLocationsReportToPdf);
+
+
 
 
 router.post("/tests",headerAuth, deviceController.tests);

@@ -11,7 +11,7 @@ exports.headerAuth = async (req, res, next) => {
   if (!req.headers.authorization) {
     return res.json({
       message: "Please make sure your request has an Authorization header lv1",
-      code: 403,
+      code: 401,
     });
   }
   var token = req.headers.authorization.split(" ")[1];
@@ -20,7 +20,7 @@ exports.headerAuth = async (req, res, next) => {
   if(!decoded){
     return res.json({
       message: "Please make sure your Authorization header is valid",
-      code: 403,
+      code: 401,
     });
   }
   const foundedUser = await  UserModel.findById({ _id: decoded.id._id });
@@ -28,7 +28,7 @@ exports.headerAuth = async (req, res, next) => {
   if (!foundedUser) {
     return res.json({
       message: "Please make sure your request has an Authorization header lv2",
-      code: 403,
+      code: 401,
     });
   }
   const tokenExist =  TokenModel.exists(

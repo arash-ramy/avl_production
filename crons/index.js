@@ -6,13 +6,14 @@ const DeviceCronJobs = require('./DeviceCronJobs').CronJob;
 // console.log("comes until here 2")
 
 
-const something = async () => {
+const scheduleCron = async () => {
+    console.log("this runnnnnnn 852147896")
     ServerCronJobs.run()
     DeviceCronJobs()
 }
 
 
 module.exports = {
-    // DeviceCronJobs,
-    something,
+    DeviceCronJobs,
+    scheduleCron,
 };

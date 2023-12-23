@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 console.log("cron test")
-const something = require("../crons/index");
+const scheduleCron = require("../crons/index");
 
-router.post("/", something.something);
+router.post("/", scheduleCron.scheduleCron);
 
 module.exports = router;
