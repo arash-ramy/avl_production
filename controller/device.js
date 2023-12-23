@@ -1562,318 +1562,301 @@ console.log(err)
 
 
 
-
-const reportDeviceLocations = async (req, res) => {
+const reportDeviceLocations =  async (req, res) => {
   try {
-    const {
-      type,
-      dateFilter: { start: startDate, end: endDate },
-      speedFilter: { min: minSpeed, max: maxSpeed },
-      timeFilter: { start: startTime, end: endTime },
-    } = req.body;
-    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
+      const {
+          type,
+          dateFilter: { start: startDate, end: endDate },
+          speedFilter: { min: minSpeed, max: maxSpeed },
+          timeFilter: { start: startTime, end: endTime },
+      } = req.body;
+      if (
+          startDate &&
+          endDate &&
+          new Date(startDate) > new Date(endDate)
+      ) {
+          throw new Error(
+              'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
+          );
+      }
+      if (startTime && endTime && startTime > endTime) {
+          throw new Error(
+              'ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.'
+          );
+      }
+      if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
+          throw new Error(
+              'کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد.'
+          );
+      }
+      const { reportDevices } = await reports.getReportDevices(req);
+      console.log("cmosd255")
+      console.log("this is reportDevice121s ",reportDevices)
+      // await reportDevices.select({ deviceIMEI: 1 });
+      // // const deviceIMEIs = (await reportDevices).map=>{
+      // //     return vehicle => vehicle.deviceIMEI}
+      // // ;
+      
+      console.log("_______________________________________")
+        console.log("iiiii23",reportDevices)
+        console.log("_______________________________________")
+
+      const deviceIds = (await reportDevices).map(
+          vehicle => vehicle._id
       );
-    }
-    if (startTime && endTime && startTime > endTime) {
-      throw new Error(
-        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-      );
-    }
-    if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
-      throw new Error(
-        "کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد."
-      );
-    }
-    console.log("until here 220");
-    const reportDevices = await VehicleModel.find().setAuthorizationUser(req.user).select('_id')
+      console.log("deviceIds211",deviceIds)
 
-    // const { reportDevices } =  reports.getReportDevices2(req,res);
-
-     console.log(reportDevices,"66636636")
-    console.log(reportDevices, "reportDevices33");
-
-    // reportDevices.select({ deviceIMEI: 1 });
-    const devices = ( reportDevices).map(
-      (vehicle) => vehicle._id
-    );
-
-    console.log(devices,"devices");
-// return res.json(devices)
-
-    // const deviceIds = ( reportDevices).map((vehicle) => vehicle._id);
-    // console.log("until here 222");
-    //   console.log(deviceIds,"deviceIdss")
-
-
-      // const reportLocations2= await GPSDataModel.find({ 
-      //   vehicleId:"59990df419dcdc351b267e65"
-      // }).limit
-// return res.json(devices)
-
-
-
-
-
-
-    const reportLocations =  await GPSDataModel.aggregate()
-      .match({ vehicleId: { $in:devices} })
-      .addFields({
-        dateCreated: {
-          $dateFromString: {
-            dateString: { $substr: ["$date", 0, 34] },
-          },
-        },
-        dateCreatedHour: {
-          $hour: {
-            date: {
-              $dateFromString: {
-                dateString: {
-                  $substr: ["$date", 0, 34],
-                },
+      const reportLocations = GPSDataModel.aggregate()
+          .match({ vehicleId: { $in: deviceIds } })
+          .addFields({
+              dateCreated: {
+                  $dateFromString: {
+                      dateString: { $substr: ['$date', 0, 34] },
+                  },
               },
-            },
-            timezone: "Asia/Tehran",
-          },
-        },
-      })
-      // return res.json({reportLocations})
+              dateCreatedHour: {
+                  $hour: {
+                      date: {
+                          $dateFromString: {
+                              dateString: {
+                                  $substr: ['$date', 0, 34],
+                              },
+                          },
+                      },
+                      timezone: 'Asia/Tehran',
+                  },
+              },
+          });
+          console.log("reportLocations8888",reportLocations)
 
-      // console.log("until here 333");
-      // console.log(reportLocations,"/*/*/*");
-
-
-    if (await startDate) {
-           reportLocations.match ({
-        dateCreated: { $gte: new Date(startDate) },
-      });
-    }
-    if (await endDate) {
-        reportLocations.match({
-        dateCreated: { $lte: new Date(endDate) },
-      });
-    }
-    if ( await minSpeed) {
-   reportLocations.match({ speed: { $gte: +minSpeed } });
-    }
-    if ( await maxSpeed) {
+      if (startDate) {
+          reportLocations.match({
+              dateCreated: { $gte: new Date(startDate) },
+          });
+      }
+      if (endDate) {
+          reportLocations.match({
+              dateCreated: { $lte: new Date(endDate) },
+          });
+      }
+      if (minSpeed) {
+          reportLocations.match({ speed: { $gte: +minSpeed } });
+      }
+      if (maxSpeed) {
           reportLocations.match({ speed: { $lte: +maxSpeed } });
-    }
-    if ( await startTime) {
-        reportLocations.match({
-        dateCreatedHour: { $gte: startTime },
-      });
-    }
-    if ( await  endTime) {
-        reportLocations.match({
-        dateCreatedHour: { $lt: endTime },
-      });
-    }
-    return res.json({reportLocations})
+      }
+      if (startTime) {
+          reportLocations.match({
+              dateCreatedHour: { $gte: startTime },
+          });
+      }
+      if (endTime) {
+          reportLocations.match({
+              dateCreatedHour: { $lt: endTime },
+          });
+      }
+      const vehiclesLocationData = await reportLocations
+          .group({
+              _id: '$vehicleId',
+              locations: {
+                  $push: {
+                      date: '$dateCreated',
+                      latitude: '$lat',
+                      longitude: '$lng',
+                      address: '$address',
+                      speed: '$speed',
+                      url: '$url',
+                  },
+              },
+              minSpeed: { $min: '$speed' },
+              maxSpeed: { $max: '$speed' },
+              avgSpeed: { $avg: '$speed' },
+              lastLocation: {
+                  $last: { address: '$address', date: '$date' },
+              },
+          })
+          .lookup({
+              from: 'vehicles',
+              localField: '_id',
+              foreignField: '_id',
+              as: 'device',
+          })
+          .unwind('device')
+          .lookup({
+              from: 'devicegroups',
+              localField: 'device._id',
+              foreignField: 'devices',
+              as: 'device.groups',
+          })
+          .replaceRoot({
+              $mergeObjects: [
+                  '$$ROOT',
+                  {
+                      groups: '$device.groups.name',
+                      device: {
+                          IMEI: '$device.deviceIMEI',
+                          type: '$device.type',
+                          simNumber: '$device.simNumber',
+                          fuel: '$device.fuel',
+                      },
+                      driver: {
+                          name: '$device.driverName',
+                          phoneNumber: '$device.driverPhoneNumber',
+                      },
+                  },
+              ],
+          });
 
-    console.log("iiiii")
-    const vehiclesLocationData =  reportLocations
-      .group({
-        _id: "$vehicleId",
-        locations: {
-          $push: {
-            date: "$dateCreated",
-            latitude: "$lat",
-            longitude: "$lng",
-            address: "$address",
-            speed: "$speed",
-            url: "$url",
-          },
-        },
-        minSpeed: { $min: "$speed" },
-        maxSpeed: { $max: "$speed" },
-        avgSpeed: { $avg: "$speed" },
-        lastLocation: {
-          $last: { address: "$address", date: "$date" },
-        },
-      })
-      .lookup({
-        from: "vehicles",
-        localField: "_id",
-        foreignField: "_id",
-        as: "device",
-      })
-      .unwind("device")
-      .lookup({
-        from: "devicegroups",
-        localField: "device._id",
-        foreignField: "devices",
-        as: "device.groups",
-      })
-      .replaceRoot({
-        $mergeObjects: [
-          "$$ROOT",
-          {
-            groups: "$device.groups.name",
-            device: {
-              IMEI: "$device.deviceIMEI",
-              type: "$device.type",
-              simNumber: "$device.simNumber",
-              fuel: "$device.fuel",
-            },
-            driver: {
-              name: "$device.driverName",
-              phoneNumber: "$device.driverPhoneNumber",
-            },
-          },
-        ],
-      });
-
-    return res.json({ vehiclesLocationData, code: 400 });
-  } catch (err) {
-    console.log(err);
-    return res.json({ msg: err.message, code: 500 });
+      return res.json(vehiclesLocationData)
+  } catch (ex) {
+      console.log(ex)
+      return res.json({ msg: ex.message })
   }
 };
 
-const reportDeviceLocations2=  async(req, res) => {
-  try {
-    const {
-        type,
-        dateFilter: { start: startDate, end: endDate },
-        speedFilter: { min: minSpeed, max: maxSpeed },
-        timeFilter: { start: startTime, end: endTime },
-    } = req.body;
-    if (
-        startDate &&
-        endDate &&
-        new Date(startDate) > new Date(endDate)
-    ) {
-        throw new Error(
-            'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
-        );
-    }
-    if (startTime && endTime && startTime > endTime) {
-        throw new Error(
-            'ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.'
-        );
-    }
-    if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
-        throw new Error(
-            'کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد.'
-        );
-    }
-    const { reportDevices } = await reports.getReportDevices(req);
-    reportDevices.select({ deviceIMEI: 1 });
-    const deviceIMEIs = (await reportDevices).map(
-        vehicle => vehicle.deviceIMEI
-    );
-    const deviceIds = (await reportDevices).map(
-        vehicle => vehicle._id
-    );
-    console.log("e[so")
+// const reportDeviceLocations2=  async(req, res) => {
+//   try {
+//     const {
+//         type,
+//         dateFilter: { start: startDate, end: endDate },
+//         speedFilter: { min: minSpeed, max: maxSpeed },
+//         timeFilter: { start: startTime, end: endTime },
+//     } = req.body;
+//     if (
+//         startDate &&
+//         endDate &&
+//         new Date(startDate) > new Date(endDate)
+//     ) {
+//         throw new Error(
+//             'تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.'
+//         );
+//     }
+//     if (startTime && endTime && startTime > endTime) {
+//         throw new Error(
+//             'ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.'
+//         );
+//     }
+//     if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
+//         throw new Error(
+//             'کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد.'
+//         );
+//     }
+//     const { reportDevices } = await reports.getReportDevices(req);
+//     reportDevices.select({ deviceIMEI: 1 });
+//     const deviceIMEIs = (await reportDevices).map(
+//         vehicle => vehicle.deviceIMEI
+//     );
+//     const deviceIds = (await reportDevices).map(
+//         vehicle => vehicle._id
+//     );
+//     console.log("e[so")
 
-    const reportLocations = GPSDataModel.aggregate()
-        .match({ vehicleId: { $in: deviceIds } })
-        .addFields({
-            dateCreated: {
-                $dateFromString: {
-                    dateString: { $substr: ['$date', 0, 34] },
-                },
-            },
-            dateCreatedHour: {
-                $hour: {
-                    date: {
-                        $dateFromString: {
-                            dateString: {
-                                $substr: ['$date', 0, 34],
-                            },
-                        },
-                    },
-                    timezone: 'Asia/Tehran',
-                },
-            },
-        });
-    if (startDate) {
-        reportLocations.match({
-            dateCreated: { $gte: new Date(startDate) },
-        });
-    }
-    if (endDate) {
-        reportLocations.match({
-            dateCreated: { $lte: new Date(endDate) },
-        });
-    }
-    if (minSpeed) {
-        reportLocations.match({ speed: { $gte: +minSpeed } });
-    }
-    if (maxSpeed) {
-        reportLocations.match({ speed: { $lte: +maxSpeed } });
-    }
-    if (startTime) {
-        reportLocations.match({
-            dateCreatedHour: { $gte: startTime },
-        });
-    }
-    if (endTime) {
-        reportLocations.match({
-            dateCreatedHour: { $lt: endTime },
-        });
-    }
-    const vehiclesLocationData = await reportLocations
-        .group({
-            _id: '$vehicleId',
-            locations: {
-                $push: {
-                    date: '$dateCreated',
-                    latitude: '$lat',
-                    longitude: '$lng',
-                    address: '$address',
-                    speed: '$speed',
-                    url: '$url',
-                },
-            },
-            minSpeed: { $min: '$speed' },
-            maxSpeed: { $max: '$speed' },
-            avgSpeed: { $avg: '$speed' },
-            lastLocation: {
-                $last: { address: '$address', date: '$date' },
-            },
-        })
-        .lookup({
-            from: 'vehicles',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'device',
-        })
-        .unwind('device')
-        .lookup({
-            from: 'devicegroups',
-            localField: 'device._id',
-            foreignField: 'devices',
-            as: 'device.groups',
-        })
-        .replaceRoot({
-            $mergeObjects: [
-                '$$ROOT',
-                {
-                    groups: '$device.groups.name',
-                    device: {
-                        IMEI: '$device.deviceIMEI',
-                        type: '$device.type',
-                        simNumber: '$device.simNumber',
-                        fuel: '$device.fuel',
-                    },
-                    driver: {
-                        name: '$device.driverName',
-                        phoneNumber: '$device.driverPhoneNumber',
-                    },
-                },
-            ],
-        });
+//     const reportLocations = GPSDataModel.aggregate()
+//         .match({ vehicleId: { $in: deviceIds } })
+//         .addFields({
+//             dateCreated: {
+//                 $dateFromString: {
+//                     dateString: { $substr: ['$date', 0, 34] },
+//                 },
+//             },
+//             dateCreatedHour: {
+//                 $hour: {
+//                     date: {
+//                         $dateFromString: {
+//                             dateString: {
+//                                 $substr: ['$date', 0, 34],
+//                             },
+//                         },
+//                     },
+//                     timezone: 'Asia/Tehran',
+//                 },
+//             },
+//         });
+//     if (startDate) {
+//         reportLocations.match({
+//             dateCreated: { $gte: new Date(startDate) },
+//         });
+//     }
+//     if (endDate) {
+//         reportLocations.match({
+//             dateCreated: { $lte: new Date(endDate) },
+//         });
+//     }
+//     if (minSpeed) {
+//         reportLocations.match({ speed: { $gte: +minSpeed } });
+//     }
+//     if (maxSpeed) {
+//         reportLocations.match({ speed: { $lte: +maxSpeed } });
+//     }
+//     if (startTime) {
+//         reportLocations.match({
+//             dateCreatedHour: { $gte: startTime },
+//         });
+//     }
+//     if (endTime) {
+//         reportLocations.match({
+//             dateCreatedHour: { $lt: endTime },
+//         });
+//     }
+//     const vehiclesLocationData = await reportLocations
+//         .group({
+//             _id: '$vehicleId',
+//             locations: {
+//                 $push: {
+//                     date: '$dateCreated',
+//                     latitude: '$lat',
+//                     longitude: '$lng',
+//                     address: '$address',
+//                     speed: '$speed',
+//                     url: '$url',
+//                 },
+//             },
+//             minSpeed: { $min: '$speed' },
+//             maxSpeed: { $max: '$speed' },
+//             avgSpeed: { $avg: '$speed' },
+//             lastLocation: {
+//                 $last: { address: '$address', date: '$date' },
+//             },
+//         })
+//         .lookup({
+//             from: 'vehicles',
+//             localField: '_id',
+//             foreignField: '_id',
+//             as: 'device',
+//         })
+//         .unwind('device')
+//         .lookup({
+//             from: 'devicegroups',
+//             localField: 'device._id',
+//             foreignField: 'devices',
+//             as: 'device.groups',
+//         })
+//         .replaceRoot({
+//             $mergeObjects: [
+//                 '$$ROOT',
+//                 {
+//                     groups: '$device.groups.name',
+//                     device: {
+//                         IMEI: '$device.deviceIMEI',
+//                         type: '$device.type',
+//                         simNumber: '$device.simNumber',
+//                         fuel: '$device.fuel',
+//                     },
+//                     driver: {
+//                         name: '$device.driverName',
+//                         phoneNumber: '$device.driverPhoneNumber',
+//                     },
+//                 },
+//             ],
+//         });
 
-    return res.json({vehiclesLocationData , code :500})
-} catch (ex) {
-    console.log(ex)
-    return res.json({ msg: ex.message,code :500 })
-}
-};
+//     return res.json({vehiclesLocationData , code :500})
+// } catch (ex) {
+//     console.log(ex)
+//     return res.json({ msg: ex.message,code :500 })
+// }
+// }
+
 const reportDeviceAlarms = async (req, res) => {
   try {
     const {
@@ -2178,10 +2161,11 @@ const reports = {
     console.log(reportDevices, "reportDevices2");
 
     if (deviceFilter.length) {
-      reportDevices.find({
+        reportDevices.find({
         deviceIMEI: { $in: deviceFilter },
       });
     }
+    console.log(reportDevices,"arash ramyyyyyyy")
     return { reportDevices };
   },
   getReportDevices2: async (req,res) => {
@@ -2335,7 +2319,7 @@ module.exports = {
   reportDeviceLocations,
   getLastLocationsOfDeviceInP,
   reportDeviceAlarms,
-  reportDeviceLocations2,
+  
   reportDeviceStatus,
   exportDeviceStatusReportToPdf,
   reportDeviceChanges,

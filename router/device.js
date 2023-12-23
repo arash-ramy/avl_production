@@ -43,7 +43,6 @@ router.delete("/deleteStatus/:id",headerAuth, deviceController.deleteDeviceStatu
 
 router.post("/getinfo",headerAuth, deviceController.getBachInfoViaIMEI);
 
-router.post("/report/locations",headerAuth, deviceController.reportDeviceLocations2);
 
 
 
@@ -83,6 +82,7 @@ router.post("/report/vehicles/pdf",headerAuth, deviceController.exportDriverVehi
 
 
 
+router.post("/report/locations",headerAuth, deviceController.reportDeviceLocations);
 
 
 router.post("/tests",headerAuth, deviceController.tests);
