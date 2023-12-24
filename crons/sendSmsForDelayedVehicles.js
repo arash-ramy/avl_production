@@ -178,7 +178,7 @@ class DeviceCheckLastLocationDelayCron {
                 today: todayPersianDate,
                 subject: 'Kaveh AVL Delay Alarm',
                 alarmType: 'Delay Alarm',
-                email: receivers.email,
+                email: receivers.email
             };
 
             util.send_email('mail/alarms/delay', context, e => console.error(e));
@@ -195,58 +195,58 @@ class DeviceCheckLastLocationDelayCron {
       case "کاوه سودا":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
       case "کاوه سیلیس":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
       case "فلوت کاویان":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
       case "متانول کاوه":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
       case "کربنات کاوه":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
       case "ابهر سیلیس":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
       case "مظروف یزد":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
       case "دفتر مرکزی":
         return {
           phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"],
+          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
         };
     }
   }
 
   static run() {
     const EVERY_DAY_AT_8_AM = '45 6 * * *'; // 6:45 AM every day
-    cron.schedule(EVERY_DAY_AT_8_AM, () => {
-    // (function () {
+    // cron.schedule(EVERY_DAY_AT_8_AM, () => {
+    (function () {
       DeviceCheckLastLocationDelayCron.checkLastLocationDelay().catch((e) =>
         console.log(
           "something went wrong in DeviceCheckLastLocationDelayCron ",
           e
         ) 
       );
-      });
-    // })();
+      // });
+    })();
   }
 }
 

@@ -1689,13 +1689,11 @@ const reportDeviceLocations = async (req, res) => {
 
 const exportDeviceLocationsReportToPdf = async (req, res) => {
   try {
-
-    if( !req.body.dateFilter && !req.body.eportData ){
+    if (!req.body.dateFilter && !req.body.eportData) {
       return res.json({
-       messag: "reportData is required ",
-        code : 400
-      })
-      
+        messag: "reportData is required ",
+        code: 400,
+      });
     }
     const {
       reportData: vehiclesLocationData,
@@ -1731,16 +1729,15 @@ const exportDeviceLocationsReportToPdf = async (req, res) => {
       "devicelocations.jade",
       reportContext
     );
-    console.log(filePath,"5871452")
+    console.log(filePath, "5871452");
     return res.download(filePath);
   } catch (error) {
-    console.log(error )
-    return res.json ({ messageSys:error.message,
-      message: "something went wrong in exportDeviceLocationsReportToPdf "
-      ,code :500
-    
-    
-    })
+    console.log(error);
+    return res.json({
+      messageSys: error.message,
+      message: "something went wrong in exportDeviceLocationsReportToPdf ",
+      code: 500,
+    });
   }
 };
 
@@ -2042,6 +2039,8 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
     var devices = req.body.devices;
     var bTime = req.body.bTime;
     var eTime = req.body.eTime;
+    // var limit = req.body.limit;
+
     // console.log(bTime, eTime, "9999");
 
     var hexSeconds = Math.floor(bTime).toString(16);
@@ -2073,15 +2072,138 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
       ],
     };
 
-    // console.log("this comes until here !");
-    const gpsfounded = await GPSDataModel.find(findCondition).select(
-      "lat lng IMEI"
-    );
+    console.log("this comes until here8888887!", findCondition);
+    console.log("this comes until here8888887!", findCondition);
+    // const { page, limit} = req.body;
+    const page = parseInt(req.body.page) - 1 || 0;
+    //  ?limit=
+    const limit = parseInt(req.body.limit) || 5;
+    //  ?search
+    var arrrr =[]
 
+//     const gpsfounded = await GPSDataModel.find({
+// $and:[
+//   {
+//                   $or: deviceCond,
+//   },
+//   {
+//     _id :{
+//       $gte: new mongoose.Types.ObjectId(bId),
+//       $lte: new mongoose.Types.ObjectId(eId),
+//     }
+//   },
+  
+// ]
+
+// })  
+//     // .$group({ _id: null, devices: { location: ["$lat", "$lng"] } })
+
+
+// // .unwind("$IMEI")
+// .select(" IMEI").limit(100)
+
+// .then((resp)=>{
+
+//  resp.map(async(item)=>{
+//   let iii=  await  GPSDataModel.find({IMEI:item.IMEI}).select ("lat lng IMEI").project( {IMEI:1, location: ["$lat","$lng"] })
+//     // console.log(iii)
+
+   
+
+// })
+// })
+// return res.json({arrrr})
+
+
+
+// .then((resp)=>{
+// return resp.
+// }
+// )
+
+    const gpsfounded = await GPSDataModel.aggregate([
+      {
+        $match: {
+          $and: [
+            {
+              $or: deviceCond,
+            },
+            {
+              _id: {
+                $gte: new mongoose.Types.ObjectId(bId),
+                $lte: new mongoose.Types.ObjectId(eId),
+              },
+            },
+          ],
+        },
+      },    
+    // { 
+      //  $project: {IMEI:1, location: ["$lat","$lng"] }}
+
+   
+    // {  $project: {IMEI:1, location: ["$lat","$lng"] }}
+
+   
+      
+    ]).unwind("$IMEI").limit(10)
+
+    // {
+    //   $group: {
+    //     _id: "$_id",
+    //     IMEI: " $IMEI",
+
+    //     data: {
+    //       $push: { location: ["$lat", "$lng"] },
+    //     },
+    //   },
+    // },
+
+
+
+
+      // .project({
+      //           lat: 1,
+      //           lng: 1,
+      //           date: 1,
+      //         });
+    //   const [userResult] = await mongoose.model('devicegroup').aggregate([
+    //     {
+    //         $match: {
+    //             $or: [{ user: userId }, { sharees: userId }],
+    //         },
+    //     },
+    //     { $unwind: '$devices' },
+    //     {
+    //         $group: {
+    //             _id: null,
+    //             devices: { $addToSet: '$devices' },
+    //         },
+    //     },
+    // ]);
+
+    // .skip(page * limit)
+    // .limit(limit);
+
+    // .limit(limit * 1)
+    // .skip((page - 1) * limit)
+
+    // .project({ })
+
+    // const gpsfounded = await GPSDataModel.find(findCondition).select(
+    //   "lat lng "
+    // )
+
+    // .limit(limit * 1)
+    // .skip((page - 1) * limit)
+    // const gpsfounded2 = await GPSDataModel.find(findCondition).select(
+    //   "address"
+    // )  .limit(1)
+
+    // console.log(gpsfounded[0]._id.getTimestamp(),"llsosooso")
     // console.log(gpsfounded);
 
     return res.json({
-      location: gpsfounded,
+      gpsfounded,
       code: 200,
     });
 

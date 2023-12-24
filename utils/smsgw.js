@@ -98,9 +98,9 @@ console.log(smsServiceInfo,"cestramyyyyyy")
                      if (["1", "8"].includes(value)) {
                         console.log("f333333333333")
 
-                         setTimeout(()=>{resolve(ReceiveSMSFromNumber(simNumber))}, 10000);
+                        //  setTimeout(()=>{resolve(ReceiveSMSFromNumber(simNumber))}, 10000);
                      } else {
-                        console.log("f444444444444")
+                        console.log(err,"f444444444444")
 
                          resolve("مشکلی در دلیور شدن پیام وجود دارد")
                      }
@@ -142,6 +142,7 @@ console.log(smsServiceInfo,"cestramyyyyyy")
         })
     }
 
+    
     return { sendSmsToNumber };
 }
 

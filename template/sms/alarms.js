@@ -16,7 +16,8 @@ const BackToZoneSMSText = (IMEI, driverName) => `Kaveh AVL
 IMEI: ${IMEI}`;
 
 const DelayLocation = (group, number) => `Kaveh AVL
-در گروه ${group} تعداد ${number} دستگاه موقعیتشان بیشتر از ۵ روز است که دریافت نشده است. برای اطلاعات بیشتر ایمیل خود را چک کنید.`;
+در گروه ${group} تعداد ${number} دستگاه موقعیتشان بیشتر از ۵ روز است که دریافت نشده است. برای اطلاعات بیشتر ایمیل خود را چک کنید.
+لغو11 `;
 
 module.exports = {
     SpeedSMSText,
