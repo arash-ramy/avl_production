@@ -2053,42 +2053,47 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
 
     var eId = new mongoose.Types.ObjectId(hexSeconds2 + "0000000000000000");
 
-
-
-    const gpsfounded2 = await GPSDataModel.aggregate(
+        const gpsfounded = await GPSDataModel.aggregate({
+          $match:{
+    $and:[
       {
-        $match: {
-          $and: [
-            {
-              $in:devices
-            },
-            {
-              _id: {
-                $gte: new mongoose.Types.ObjectId(bId),
-                $lte: new mongoose.Types.ObjectId(eId),
-              },
-            }
-           
+                    // "IMEI" : ($in : devices)
+                    IMEI: { $in: devices } 
 
-          ],
-        },
-  
-      }
-      
+      },
+      {
+        _id :{
+          $gte: new mongoose.Types.ObjectId(bId),
+          $lte: new mongoose.Types.ObjectId(eId),
+        }
+      },
+     
+    ]
+  },
     
-       )
-       .group({ _id: "$IMEI", "location" :["$lat","$lng"] }).
-       limit(10)
-
-
-      //  $group:{
-      //   "_id":"$IMEI",
-      //   "data":{"lat":"$lat"}
-      // },
-
+      
+    }).group ({
+          _id: "$_id",
+  
+          data: {
+            $push: { location: ["$lat", "$lng"] },
+          }}
+        )
+        // .$group({ _id: null, devices:{ $push:{ location: ["$lat", "$lng"] } }})
+   
+    // .unwind("$IMEI")
+    .limit(1)
+    
+            
+    //       $push: { location: ["$lat", "$lng"] }
+    //     },
+    // //  $group:{
+    //   "_id":"$IMEI",
+    //   "data":{"lat":"$lat"}
+    // },
 
     return res.json({
-      gpsfounded2,
+      gpsfounded,
       code: 200,
     });
 
@@ -2122,7 +2127,7 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
     //       },
     //     ],
     //   }
-      
+
     //   ).limit(20)
     //   var cordinationfounded = gpsfounded.map(async (item) => {
     //     var ii = [];
@@ -2135,11 +2140,11 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
     //     // console.log("this is cordinate ", cordinate)
     //   });
 
-      // console.log(gpsfounded);
-      // foundedDevice.push(gpsfounded);
+    // console.log(gpsfounded);
+    // foundedDevice.push(gpsfounded);
 
-      // foundedDevice.push({imei:gpsfounded[i].IMEI,location:[gpsfounded[i].lat,gpsfounded[i].lng]})
-      // console.log('ramythisisfounddevice88',gpsfounded)
+    // foundedDevice.push({imei:gpsfounded[i].IMEI,location:[gpsfounded[i].lat,gpsfounded[i].lng]})
+    // console.log('ramythisisfounddevice88',gpsfounded)
     // }
 
     // return res.json({ cordinateAG });
@@ -2200,27 +2205,27 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
     // .then((resp)=>{
     // return resp.
     // }
-//     // )
-// console.log(devices)
-//     const gpsfounded = await GPSDataModel.aggregate(
-//       {
-//         $match: {
-//           $and: [
-//             {
-//               $or: devices,
-//             },
-//             {
-//               _id: {
-//                 $gte: new mongoose.Types.ObjectId(bId),
-//                 $lte: new mongoose.Types.ObjectId(eId),
-//               },
-//             },
-//           ],
-//         },
-//       },
-//     {
-//        $project: {IMEI:1, location: ["$lat","$lng"] }}
-//        ).limit(10)
+    //     // )
+    // console.log(devices)
+    //     const gpsfounded = await GPSDataModel.aggregate(
+    //       {
+    //         $match: {
+    //           $and: [
+    //             {
+    //               $or: devices,
+    //             },
+    //             {
+    //               _id: {
+    //                 $gte: new mongoose.Types.ObjectId(bId),
+    //                 $lte: new mongoose.Types.ObjectId(eId),
+    //               },
+    //             },
+    //           ],
+    //         },
+    //       },
+    //     {
+    //        $project: {IMEI:1, location: ["$lat","$lng"] }}
+    //        ).limit(10)
 
     // {
     //       $group: {
@@ -2229,7 +2234,6 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
 
     //     }}
     // {  $project: {IMEI:1,     $push: { location: ["$lat", "$lng"] } }}
-
 
     // {
     //   $group: {
