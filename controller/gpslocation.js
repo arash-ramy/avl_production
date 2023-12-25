@@ -16,6 +16,7 @@ const { AddressCache } = require("../utils/addresscache");
 const { relativeTimeRounding } = require("moment");
 
 const getGPSData = async (req, res) => {
+return res.json({"message":'dsf'})
   try {
     const foundedGpsData = await GPSDataModel.find({});
 
@@ -37,7 +38,6 @@ const getGPSData = async (req, res) => {
   }
 };
 const getGPSDataIMEI = async (req, res) => {
-  console.log("hello");
   try {
     const vehicleId = req.params.id;
     let { count } = req.params;

@@ -2036,6 +2036,7 @@ const exportDeviceAlarmsReportToPdf = async (req, res) => {
 
 const getLastLocationsOfDeviceInP = async (req, res) => {
   try {
+    //[1,2,3]
     var devices = req.body.devices;
     var bTime = req.body.bTime;
     var eTime = req.body.eTime;
@@ -2052,100 +2053,183 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
 
     var eId = new mongoose.Types.ObjectId(hexSeconds2 + "0000000000000000");
 
-    // console.log(eId, bId, "uuuuuuuuuuu");
-
-    var deviceCond = new Array();
-    for (var i = 0; i < devices.length; i++) {
-      deviceCond.push({ IMEI: devices[i] });
-    }
-    var findCondition = {
-      $and: [
-        {
-          $or: deviceCond,
-        },
-        {
-          _id: {
-            $gte: new mongoose.Types.ObjectId(bId),
-            $lte: new mongoose.Types.ObjectId(eId),
-          },
-        },
-      ],
-    };
-
-    console.log("this comes until here8888887!", findCondition);
-    console.log("this comes until here8888887!", findCondition);
-    // const { page, limit} = req.body;
-    const page = parseInt(req.body.page) - 1 || 0;
-    //  ?limit=
-    const limit = parseInt(req.body.limit) || 5;
-    //  ?search
-    var arrrr =[]
-
-//     const gpsfounded = await GPSDataModel.find({
-// $and:[
-//   {
-//                   $or: deviceCond,
-//   },
-//   {
-//     _id :{
-//       $gte: new mongoose.Types.ObjectId(bId),
-//       $lte: new mongoose.Types.ObjectId(eId),
-//     }
-//   },
-  
-// ]
-
-// })  
-//     // .$group({ _id: null, devices: { location: ["$lat", "$lng"] } })
 
 
-// // .unwind("$IMEI")
-// .select(" IMEI").limit(100)
-
-// .then((resp)=>{
-
-//  resp.map(async(item)=>{
-//   let iii=  await  GPSDataModel.find({IMEI:item.IMEI}).select ("lat lng IMEI").project( {IMEI:1, location: ["$lat","$lng"] })
-//     // console.log(iii)
-
-   
-
-// })
-// })
-// return res.json({arrrr})
-
-
-
-// .then((resp)=>{
-// return resp.
-// }
-// )
-
-    const gpsfounded = await GPSDataModel.aggregate([
+    const gpsfounded2 = await GPSDataModel.aggregate(
       {
         $match: {
           $and: [
             {
-              $or: deviceCond,
+              $in:devices
             },
             {
               _id: {
                 $gte: new mongoose.Types.ObjectId(bId),
                 $lte: new mongoose.Types.ObjectId(eId),
               },
-            },
+            }
+           
+
           ],
         },
-      },    
-    // { 
-      //  $project: {IMEI:1, location: ["$lat","$lng"] }}
-
-   
-    // {  $project: {IMEI:1, location: ["$lat","$lng"] }}
-
-   
+  
+      }
       
-    ]).unwind("$IMEI").limit(10)
+    
+       )
+       .group({ _id: "$IMEI", "location" :["$lat","$lng"] }).
+       limit(10)
+
+
+      //  $group:{
+      //   "_id":"$IMEI",
+      //   "data":{"lat":"$lat"}
+      // },
+
+
+    return res.json({
+      gpsfounded2,
+      code: 200,
+    });
+
+    // console.log(eId, bId, "uuuuuuuuuuu");
+
+    // var deviceCond = new Array();
+    // var deviceCond2 = new Array();
+    // var foundedDevice = new Array();
+    // var cordinate = new Array();
+    // var cordinateAG= new Array();
+
+    // for (var i = 0; i < devices.length; i++) {
+    //   deviceCond.push({ IMEI: devices[i] });
+    //   deviceCond2.push(devices[i]);
+    // }
+    // console.log(deviceCond);
+    // console.log(deviceCond2);
+
+    // for (var i = 0; i < devices.length; i++) {
+    //   var gpsfounded = await GPSDataModel.find (
+    //     {
+    //     $and: [
+    //       {
+    //         IMEI: deviceCond2[i],
+    //       },
+    //       {
+    //         _id: {
+    //           $gte: new mongoose.Types.ObjectId(bId),
+    //           $lte: new mongoose.Types.ObjectId(eId),
+    //         },
+    //       },
+    //     ],
+    //   }
+      
+    //   ).limit(20)
+    //   var cordinationfounded = gpsfounded.map(async (item) => {
+    //     var ii = [];
+    //     let pp = [item.lat, item.lng];
+    //     // console.log("item", item.IMEI);
+    //     i
+    //     ii.push(pp);
+    //     cordinate.push(...ii);
+    //     cordinateAG.push({"IMEI":item.IMEI , location :cordinate})
+    //     // console.log("this is cordinate ", cordinate)
+    //   });
+
+      // console.log(gpsfounded);
+      // foundedDevice.push(gpsfounded);
+
+      // foundedDevice.push({imei:gpsfounded[i].IMEI,location:[gpsfounded[i].lat,gpsfounded[i].lng]})
+      // console.log('ramythisisfounddevice88',gpsfounded)
+    // }
+
+    // return res.json({ cordinateAG });
+    // cordinateAG
+    // var findCondition = {
+    //   $and: [
+    //     {
+    //       $or: deviceCond,
+    //     },
+    //     {
+    //       _id: {
+    //         $gte: new mongoose.Types.ObjectId(bId),
+    //         $lte: new mongoose.Types.ObjectId(eId),
+    //       },
+    //     },
+    //   ],
+    // };
+
+    // console.log("this comes until here8888887!", findCondition);
+    // console.log("this comes until here8888887!", findCondition);
+    // const { page, limit} = req.body;
+    const page = parseInt(req.body.page) - 1 || 0;
+    //  ?limit=
+    const limit = parseInt(req.body.limit) || 5;
+    //  ?search
+    var arrrr = [];
+
+    //     const gpsfounded = await GPSDataModel.find({
+    // $and:[
+    //   {
+    //                   $or: deviceCond,
+    //   },
+    //   {
+    //     _id :{
+    //       $gte: new mongoose.Types.ObjectId(bId),
+    //       $lte: new mongoose.Types.ObjectId(eId),
+    //     }
+    //   },
+
+    // ]
+
+    // })
+    //     // .$group({ _id: null, devices: { location: ["$lat", "$lng"] } })
+
+    // // .unwind("$IMEI")
+    // .select(" IMEI").limit(100)
+
+    // .then((resp)=>{
+
+    //  resp.map(async(item)=>{
+    //   let iii=  await  GPSDataModel.find({IMEI:item.IMEI}).select ("lat lng IMEI").project( {IMEI:1, location: ["$lat","$lng"] })
+    //     // console.log(iii)
+
+    // })
+    // })
+    // return res.json({arrrr})
+
+    // .then((resp)=>{
+    // return resp.
+    // }
+//     // )
+// console.log(devices)
+//     const gpsfounded = await GPSDataModel.aggregate(
+//       {
+//         $match: {
+//           $and: [
+//             {
+//               $or: devices,
+//             },
+//             {
+//               _id: {
+//                 $gte: new mongoose.Types.ObjectId(bId),
+//                 $lte: new mongoose.Types.ObjectId(eId),
+//               },
+//             },
+//           ],
+//         },
+//       },
+//     {
+//        $project: {IMEI:1, location: ["$lat","$lng"] }}
+//        ).limit(10)
+
+    // {
+    //       $group: {
+    //         _id: "$IMEI",
+    //         location:[]
+
+    //     }}
+    // {  $project: {IMEI:1,     $push: { location: ["$lat", "$lng"] } }}
+
 
     // {
     //   $group: {
@@ -2158,14 +2242,11 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
     //   },
     // },
 
-
-
-
-      // .project({
-      //           lat: 1,
-      //           lng: 1,
-      //           date: 1,
-      //         });
+    // .project({
+    //           lat: 1,
+    //           lng: 1,
+    //           date: 1,
+    //         });
     //   const [userResult] = await mongoose.model('devicegroup').aggregate([
     //     {
     //         $match: {
@@ -2201,11 +2282,6 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
 
     // console.log(gpsfounded[0]._id.getTimestamp(),"llsosooso")
     // console.log(gpsfounded);
-
-    return res.json({
-      gpsfounded,
-      code: 200,
-    });
 
     // exec(function (err, locations) {
     //       if (err) {

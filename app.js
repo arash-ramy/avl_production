@@ -53,13 +53,20 @@ const GPSLocation = require("./router/gpslocation");
 const scheduleCron = require("./router/cronTest");
 // const scheduleCron = require("./crons/index");
 // scheduleCron.scheduleCron()
+    
+
+
 
 
 app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/gpsdata", GPSLocation);
 app.use("/api/v1/device", DeviceRouter);
 app.use("/api/v1/devicegroup", DeviceGroupRouter);
-app.use("/api/v1/testcron", scheduleCron)
+app.get('*', function(req, res){
+  res.status(404).send('what???')
+});
+
+// app.use("/api/v1/testcron", scheduleCron)
 
 // create server
 const server = app.listen(process.env.PORT, () => {
