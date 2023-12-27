@@ -44,7 +44,7 @@ app.use('/media',headerAuth,express.static(path.resolve('./public')));
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1000mb" }));
 
 const UserRouter = require("./router/user");
 const DeviceRouter = require("./router/device");

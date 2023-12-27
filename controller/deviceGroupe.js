@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const DeviceGroupModel = require("../model/GpsLocation/DeviceGroupeModel");
 const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const UserModel = require("../model/User/user");
@@ -5,56 +6,343 @@ const UserModel = require("../model/User/user");
 const getDeviceGroups = async (req, res) => {
   try {
     var userId = req.user._id;
-    const populateUser = await DeviceGroupModel.find({
-      $or: [{ user: userId }, { sharees: userId }],
-    })
-    .populate({
-      path: "devices",
-      select:
-        "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
-      populate: {
-        path: "model",
-        select: { name: 1, _id: 0 },
-      },
-    });
-    if (!populateUser) {
-      return res.json({
-        code: 400,
-        message: "There is no device group",
-      });
-    }
+    // const populateUser = await DeviceGroupModel.find({
+    //         $or: [{ user: userId }, { sharees: userId }],
+    //       })
+    //       .populate({
+    //         path: "devices",
+    //         select:
+    //           "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+    //         populate: {
+    //           path: "model",
+    //           select: { name: 1, _id: 0 },
+    //         },
+    //       })
+  
+    //       if (!populateUser) {
+    //         return res.json({
+    //           code: 400,
+    //           message: "There is no device group",
+    //         });
+    //       }
+    // const populateUser = await DeviceGroupModel.find({
+    //   $or: [{ user: userId }, { sharees: userId }],
+    // })
+    // .populate({
+    //   path: "devices",
+    //   select:
+    //     "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+    //   populate: {
+    //     path: "model",
+    //     select: { name: 1, _id: 0 },
+    //   },
+    // })
 
+    // if (!populateUser) {
+    //   return res.json({
+    //     code: 400,
+    //     message: "There is no device group",
+    //   });
+    // }
+
+    // r
+    const populateUser = await DeviceGroupModel.aggregate([
+      {
+        $match: {
+          $or: [{ user: userId }, { sharees: userId }],
+        },
+      },
+      {
+        $unwind: "$devices",
+      },
+      {
+        $lookup: {
+          from: "vehicles",
+          localField: "devices",
+          foreignField: "_id",
+          as: "deviceCustome",
+        },
+      },
+      {
+        $group :{
+          _id: "$IMEI",
+          devicegr: { $push: {deviceIMEI: "$deviceCustome.deviceIMEI",driverName: "$deviceCustome.driverName",} 
+        }
+        }
+      },
+    //  { $project:{
+    //    ee: devicegr.imei
+    //   }}
+      // {
+      //   $project: {
+      //     _id: 0,
+      //     IMEI: "$IMEI",
+      //     devicegr: {
+      //       $map: {
+      //         input: "$devicegr",
+      //         as: "ddd",
+      //         in: ["$$ddd.imei", "$$ddd.imei2"]
+      //       }
+      //     }
+      //   }
+      // }
+      //  {
+      //   $unwind: "$deviceCustome"
+      // },
+      // {
+      //   $project: {
+      //     // _id: 0,
+      //     // label: "$deviceCustome.deviceIMEI"+' '+"$deviceCustome.driverName",
+      //     // // label_2: "$deviceCustome.driverName",
+      //     $push:{
+      //       label: "$$deviceCustome.deviceIMEI"
+      //     }
+
+      //   // {  "itemDescription": { $concat: [ "$item", " - ", "$description" ] } }
+      //   }
+      // }
+      // { $project: { itemDescription: { $concat: [ "$item", " - ", "$description" ] } } }
+
+      // {
+        
+      //   $group :{
+      //     _id: "$deviceCustome",
+      //     locations: { $push: {lat: "$lat", lng: "$lng" } }
+      //   }
+      // },
+      // {
+      //   $project: {
+      //     id: "$_id",
+      //     values: {
+      //       $map: {
+      //         input: "$devices",
+      //         as: "device",
+      //         in:  ["$$device"] 
+      //       },
+      //       // ss:"$devices"
+      //     },
+      //   },
+      // },
+    
+      // {
+      //   $group :{
+      //     "_id": "$_id",
+      //     "devices": "$devices"}
+      //   }
+
+      // { $concat: [ "$user", " - ", "$status" ] },
+      //   {$project: {
+      //     _id: 0,
+
+      //   $map: {
+      //     input: "$devices",
+      //     as: "device",
+      //     in: { $add: [ "$$device"] }
+      //   }
+      // }}
+   
+      // },
+      // { "$unwind": "$device88" },
+      // { "$group": {
+      //       "_id": "$_id",
+      //       "devices": { "$push": "$devices" },
+      //       "device88": { "$push": "$device88" }
+      //   }}
+      //   $project:{"device":"$device"}
+      // }
+    ]).limit(10)
     return res.json({
       code: 200,
       populateUser,
     });
 
-    console.log(populateUser);
-    //     .populate('sharees').exec(function (error, dgs) {
-    //     if (error) {
-    //         // logger.error(error);
-    //         return res({
-    //             messageSys: error.message,
-    //             code: 500
-    //         });
-    //     }
-    //     else if (!dgs) {
-    //         return res({
-    //             messageSys: error.message,
-    //             message:"there is no device group",
-    //             code: 400
-    //         });
-    //     }
-    //     else {
-    //         return res.json({dgs,
-    //         code:200,
+    // return res.json({
+    //   code: 200,
+    //   populateUser,
+    // });
 
-    //         });
+    //label: driverName + " " + deviceIMEI
+    // const getDeviceGroups = async (req, res) => {
+    //   try {
+    //     var userId = req.user._id;
+    //     const populateUser = await DeviceGroupModel.find({
+    //       $or: [{ user: userId }, { sharees: userId }],
+    //     })
+    //     .populate({
+    //       path: "devices",
+    //       select:
+    //         "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+    //       populate: {
+    //         path: "model",
+    //         select: { name: 1, _id: 0 },
+    //       },
+    //     })
 
+    //     if (!populateUser) {
+    //       return res.json({
+    //         code: 400,
+    //         message: "There is no device group",
+    //       });
     //     }
-    // })
+
+    //     return res.json({
+    //       code: 200,
+    //       populateUser,
+    //     })
   } catch (error) {
     // logger.error(error);
+    console.log(error);
+    return res.json({
+      messageSys: error.message,
+      message: "somthing went wrong in getDeviceGroups",
+      code: 400,
+    });
+  }
+};
+
+const getDeviceGroups2 = async (req, res) => {
+  try {
+    var userId = req.user._id;
+    const populateUser = await DeviceGroupModel.find({
+            $or: [{ user: userId }, { sharees: userId }],
+          })
+          .populate({
+            path: "devices",
+            select:
+              "_id  deviceIMEI   driverName   ",
+            populate: {
+              path: "model",
+              select: { name: 1, _id: 0 },
+              co
+            },
+          })
+  
+          if (!populateUser) {
+            return res.json({
+              code: 400,
+              message: "There is no device group",
+            });
+          }
+    // const populateUser = await DeviceGroupModel.find({
+    //   $or: [{ user: userId }, { sharees: userId }],
+    // })
+    // .populate({
+    //   path: "devices",
+    //   select:
+    //     "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+    //   populate: {
+    //     path: "model",
+    //     select: { name: 1, _id: 0 },
+    //   },
+    // })
+
+    // if (!populateUser) {
+    //   return res.json({
+    //     code: 400,
+    //     message: "There is no device group",
+    //   });
+    // }
+
+    // r
+    // const populateUser = await DeviceGroupModel.aggregate([
+      // {
+      //   $match: {
+      //     $or: [{ user: userId }, { sharees: userId }],
+      //   },
+      // },
+      // {
+      //   $unwind: "$devices",
+      // },
+      // {
+      //   $lookup: {
+      //     from: "vehicles",
+      //     localField: "devices",
+      //     foreignField: "_id",
+      //     as: "deviceCustome",
+      //   },
+      // }
+      // {
+      //   $project: {
+      //     id: "$_id",
+      //     values: {
+      //       $map: {
+      //         input: "$devices",
+      //         as: "device",
+      //         in:  ["$$device"] 
+      //       },
+      //       // ss:"$devices"
+      //     },
+      //   },
+      // },
+    
+      // {
+      //   $group :{
+      //     "_id": "$_id",
+      //     "devices": "$devices"}
+      //   }
+
+      // { $concat: [ "$user", " - ", "$status" ] },
+      //   {$project: {
+      //     _id: 0,
+
+      //   $map: {
+      //     input: "$devices",
+      //     as: "device",
+      //     in: { $add: [ "$$device"] }
+      //   }
+      // }}
+   
+      // },
+      // { "$unwind": "$device88" },
+      // { "$group": {
+      //       "_id": "$_id",
+      //       "devices": { "$push": "$devices" },
+      //       "device88": { "$push": "$device88" }
+      //   }}
+      //   $project:{"device":"$device"}
+      // }
+    // ]).limit(10);
+    return res.json({
+      code: 200,
+      populateUser,
+    });
+
+    // return res.json({
+    //   code: 200,
+    //   populateUser,
+    // });
+
+    //label: driverName + " " + deviceIMEI
+    // const getDeviceGroups = async (req, res) => {
+    //   try {
+    //     var userId = req.user._id;
+    //     const populateUser = await DeviceGroupModel.find({
+    //       $or: [{ user: userId }, { sharees: userId }],
+    //     })
+    //     .populate({
+    //       path: "devices",
+    //       select:
+    //         "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+    //       populate: {
+    //         path: "model",
+    //         select: { name: 1, _id: 0 },
+    //       },
+    //     })
+
+    //     if (!populateUser) {
+    //       return res.json({
+    //         code: 400,
+    //         message: "There is no device group",
+    //       });
+    //     }
+
+    //     return res.json({
+    //       code: 200,
+    //       populateUser,
+    //     })
+  } catch (error) {
+    // logger.error(error);
+    console.log(error);
     return res.json({
       messageSys: error.message,
       message: "somthing went wrong in getDeviceGroups",
@@ -319,15 +607,12 @@ const getVehiclesofGroup = async (req, res) => {
   try {
     var groupId = req.params.groupId;
     var userId = req.user._id;
-    console.log(groupId,"groupId")
-    console.log(userId,"userId")
+    console.log(groupId, "groupId");
+    console.log(userId, "userId");
 
-    const vehiclesofGroup = await DeviceGroupModel.findOne(
- 
-        { _id: groupId }
-      
-    )
-    .populate({
+    const vehiclesofGroup = await DeviceGroupModel.findOne({
+      _id: groupId,
+    }).populate({
       path: "devices",
       select:
         "_id simNumber deviceIMEI vehicleName type plate driverName driverPhoneNumber model",
@@ -336,7 +621,7 @@ const getVehiclesofGroup = async (req, res) => {
         select: { name: 1, _id: 1 },
       },
     });
-    console.log(vehiclesofGroup,"dddd")
+    console.log(vehiclesofGroup, "dddd");
 
     if (!vehiclesofGroup) {
       return res.json({
@@ -347,7 +632,8 @@ const getVehiclesofGroup = async (req, res) => {
     var vehicles = vehiclesofGroup.devices;
     var result = new Array();
 
-    for (var i = 0; i < vehicles.length; i++) {00
+    for (var i = 0; i < vehicles.length; i++) {
+      00;
       var tmpVehicle = {};
       var remainingDate = -1;
       tmpVehicle.deviceInfo = vehicles[i];
@@ -511,27 +797,28 @@ const getVehiclesofMultiGroup = async (req, res) => {
       });
     }
     var result = new Array();
-    for(var ii = 0 ; ii < foundItem.length ; ii++) {
-    var vehicles = foundItem[ii].devices;
-    for (var i = 0; i < vehicles.length; i++) {
+    for (var ii = 0; ii < foundItem.length; ii++) {
+      var vehicles = foundItem[ii].devices;
+      for (var i = 0; i < vehicles.length; i++) {
         var tmpVehicle = {};
         var remainingDate = -1;
         tmpVehicle.deviceInfo = vehicles[i];
         if (vehicles[i].lastLocation) {
-            var oneDay = 24 * 60 * 60 * 1000;
-            var startDate = new Date(vehicles[i].lastLocation.date);
-            var endDate = new Date();
-            remainingDate = Math.round(Math.abs((endDate.getTime() - startDate.getTime()) / (oneDay)));
-  
+          var oneDay = 24 * 60 * 60 * 1000;
+          var startDate = new Date(vehicles[i].lastLocation.date);
+          var endDate = new Date();
+          remainingDate = Math.round(
+            Math.abs((endDate.getTime() - startDate.getTime()) / oneDay)
+          );
         }
         tmpVehicle.lastLocationDiff = remainingDate;
         result.push(tmpVehicle);
+      }
     }
-  }
-  return res.json({
-    result
-    ,"code":200
-  })
+    return res.json({
+      result,
+      code: 200,
+    });
     // .populate('devices').exec(function (err, dgs) {
     //     if (err) {
     //         logger.error(err);
@@ -581,80 +868,72 @@ const reportVehicleOfGroups = async (req, res) => {
   var groupId = req.params.groupId;
   var userId = req.params.userId;
 
-  const foundedUser = await UserModel.findOne({'_id': userId})
+  const foundedUser = await UserModel.findOne({ _id: userId });
   // console.log(data)
-  if(!foundedUser){
+  if (!foundedUser) {
+    return res.json({
+      msg: "There is no user data",
+      code: 400,
+    });
+  }
+  req.user = userId;
+
+  console.log(req.user);
+  const foundedDevice = await DeviceGroupModel.findOne({
+    $and: [{ $or: [{ user: userId }, { sharees: userId }] }, { _id: groupId }],
+  })
+    .populate("devices")
+    .populate("devices.gpsdata");
   return res.json({
-    msg: 'There is no user data'
-    ,"code":400
-  });}
-req.user = userId
-
-console.log(req.user)
- const foundedDevice=  await  DeviceGroupModel.findOne({
-    $and: [
-        { $or: [{user: userId}, {sharees: userId}] },
-        {'_id': groupId}
-    ]
-}).populate('devices')
-.populate('devices.gpsdata')
-return res.json({
-  "foundedUser": foundedUser
-  ,"foundedDevice":foundedDevice
-});
-
-}
+    foundedUser: foundedUser,
+    foundedDevice: foundedDevice,
+  });
+};
 // GETING BACH FROM IMEI DEVICE GROUP
 const getBachInfoViaIMEI = async (req, res) => {
   try {
-
-    var requiredFields = ['IMEIs'];
-    var arrayOfIMEIS = new Array;
+    var requiredFields = ["IMEIs"];
+    var arrayOfIMEIS = new Array();
     for (var i = 0; i < requiredFields.length; i++) {
-        if ((requiredFields[i] in req.body) == false) {
-            return res.json({
-                message: requiredFields[i] + ' doesn\'t exist',
-                code: '400',
-                validate: false,
-                field: requiredFields[i]
-            })
-                
-        }
+      if (requiredFields[i] in req.body == false) {
+        return res.json({
+          message: requiredFields[i] + " doesn't exist",
+          code: "400",
+          validate: false,
+          field: requiredFields[i],
+        });
+      }
     }
 
     for (var i = 0; i < req.payload.IMEIs.length; i++) {
-        arrayOfIMEIS.push({ 'deviceIMEI': req.payload.IMEIs[i] });
+      arrayOfIMEIS.push({ deviceIMEI: req.payload.IMEIs[i] });
     }
 
     var condition = { $or: arrayOfIMEIS };
 
-    VehicleModel.find(condition)
-        .exec(function (err, vehicles) {
-            if (err) {
-                return res({
-                    msg: err
-                })
-                    .code(500);
-            } else {
-                return res({
-                    msg: 'fetched successfully',
-                    vehicles: vehicles,
-                    code: 200
-                })
-                    .code(200);
-            }
-        });
-
-} catch (ex) {
+    VehicleModel.find(condition).exec(function (err, vehicles) {
+      if (err) {
+        return res({
+          msg: err,
+        }).code(500);
+      } else {
+        return res({
+          msg: "fetched successfully",
+          vehicles: vehicles,
+          code: 200,
+        }).code(200);
+      }
+    });
+  } catch (ex) {
     logger.error(ex);
     return res({
-        msg: ex
-    })
-        .code(500);
-}
-}
+      msg: ex,
+    }).code(500);
+  }
+};
 module.exports = {
   getDeviceGroups,
+  getDeviceGroups2,
   addDeviceGroup,
   getDeviceGroupById,
   editDeviceGroup,
@@ -667,5 +946,4 @@ module.exports = {
   getUserDeviceGroups,
   getVehiclesofMultiGroup,
   reportVehicleOfGroups,
-  
-}
+};

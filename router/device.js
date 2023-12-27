@@ -94,3 +94,6 @@ router.post("/tests",headerAuth, deviceController.tests);
 
 module.exports = router;
 
+
+
+// BSONObj size: 34076258 (0x207F662) is invalid. Siz…lement: _id: ObjectId('5992786811dc0505f290f86b

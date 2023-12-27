@@ -5,6 +5,7 @@ const DeviceGroups = require("../controller/deviceGroupe");
 
 
 router.get("/", headerAuth,DeviceGroups.getDeviceGroups);
+router.get("/li", headerAuth,DeviceGroups.getDeviceGroups2);
 
 router.put("/", headerAuth,DeviceGroups.editGroup);
 
@@ -24,7 +25,7 @@ router.get("/vehicleofgroup/:groupId", headerAuth,DeviceGroups.getVehiclesofGrou
 
 router.delete("/device/:vehicleId/:groupId", headerAuth,DeviceGroups.removeVehicleFromGroup);
 
-router.get("/user/:id", headerAuth,DeviceGroups.getUserDeviceGroups);
+router.get("/vehicleofgroup/:id",DeviceGroups.getUserDeviceGroups);
 
 router.post("/vehicleofgroup", headerAuth,DeviceGroups.getVehiclesofMultiGroup);
 
