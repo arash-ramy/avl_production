@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { headerAuth } = require("../utils/authHeader");
 const deviceController = require("../controller/device");
+const testcontroller = require("../controller/test");
 
 // RESET DEVICE =>   THIS API IS NOT VERIFIED
 router.get("/cmd/reset/:IMEI",headerAuth, deviceController.resetDevice);
@@ -64,7 +65,7 @@ router.post("/lastlocationsinp",headerAuth, deviceController.getLastLocationsOfD
 
 
 // report pdf status alarms
-router.post("/report/alarms",headerAuth, deviceController.reportDeviceAlarms);
+router.post("/report/alarms",headerAuth, testcontroller.reportDeviceAlarms);
 router.post("/report/alarms/pdf",headerAuth, deviceController.exportDeviceAlarmsReportToPdf);
 
 // report pdf status 

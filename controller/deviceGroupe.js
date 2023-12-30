@@ -68,8 +68,12 @@ const getDeviceGroups = async (req, res) => {
           _id: "$IMEI",
           devicegr: { $push: {deviceIMEI: "$deviceCustome.deviceIMEI",driverName: "$deviceCustome.driverName",} 
         }
-        }
+        },
+       
       },
+      // {$addFields:{
+      //   ss:""
+      // }
     //  { $project:{
     //    ee: devicegr.imei
     //   }}
