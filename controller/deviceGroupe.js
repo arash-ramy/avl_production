@@ -2,10 +2,21 @@ const { default: mongoose } = require("mongoose");
 const DeviceGroupModel = require("../model/GpsLocation/DeviceGroupeModel");
 const VehicleModel = require("../model/GpsLocation/VehicleModel");
 const UserModel = require("../model/User/user");
+// const getDeviceGroups = async (req, res) => {
+//   var userId = req.user._id;
 
+// }
 const getDeviceGroups = async (req, res) => {
   try {
+    var { deviceGroup } = req.params;
+    var deviceGroupArr = [];
+    deviceGroupArr.push(deviceGroup);
+    console.log(deviceGroupArr, "deviceGroup");
     var userId = req.user._id;
+    //  const populatedUser = await VehicleModel.aggregate({
+    //   $match:{ }
+    //  })
+
     // const populateUser = await DeviceGroupModel.find({
     //         $or: [{ user: userId }, { sharees: userId }],
     //       })
@@ -18,7 +29,7 @@ const getDeviceGroups = async (req, res) => {
     //           select: { name: 1, _id: 0 },
     //         },
     //       })
-  
+
     //       if (!populateUser) {
     //         return res.json({
     //           code: 400,
@@ -46,119 +57,196 @@ const getDeviceGroups = async (req, res) => {
     // }
 
     // r
-    const populateUser = await DeviceGroupModel.aggregate([
-      {
-        $match: {
-          $or: [{ user: userId }, { sharees: userId }],
-        },
-      },
-      {
-        $unwind: "$devices",
-      },
+    console.log(userId._id);
+    const populateUser = await VehicleModel.aggregate([
+      // {
+      //   $match: { $and:[
+      //    { $or: [{ user: userId }, { sharees: userId }]}
+      //    ,{
+      //     devices :{$in : deviceGroupArr.map((item)=>{
+      //       return  new mongoose.Types.ObjectId(item);
+      //     })}
+      //    },
       {
         $lookup: {
-          from: "vehicles",
-          localField: "devices",
-          foreignField: "_id",
-          as: "deviceCustome",
+          from: "devicegroups",
+          let: { "idN": "$_id" },
+          // as: "vehicle_q",
+
+          pipeline: [
+            {
+              $match: {
+                // $and: [
+                   $or: [{ "user": "$$idN" }, { "sharees": "$$idN" }] ,
+                  // {
+                  //   devices: {
+                  //     $in: deviceGroupArr
+                  //   },
+                  // },
+                // ],
+              },
+            },
+          ],
+          as: "giiiii",
+
         },
       },
-      {
-        $group :{
-          _id: "$IMEI",
-          devicegr: { $push: {deviceIMEI: "$deviceCustome.deviceIMEI",driverName: "$deviceCustome.driverName",} 
-        }
-        },
-       
-      },
-      // {$addFields:{
-      //   ss:""
-      // }
-    //  { $project:{
-    //    ee: devicegr.imei
-    //   }}
-      // {
-      //   $project: {
-      //     _id: 0,
-      //     IMEI: "$IMEI",
-      //     devicegr: {
-      //       $map: {
-      //         input: "$devicegr",
-      //         as: "ddd",
-      //         in: ["$$ddd.imei", "$$ddd.imei2"]
-      //       }
-      //     }
-      //   }
-      // }
-      //  {
-      //   $unwind: "$deviceCustome"
-      // },
-      // {
-      //   $project: {
-      //     // _id: 0,
-      //     // label: "$deviceCustome.deviceIMEI"+' '+"$deviceCustome.driverName",
-      //     // // label_2: "$deviceCustome.driverName",
-      //     $push:{
-      //       label: "$$deviceCustome.deviceIMEI"
-      //     }
-
-      //   // {  "itemDescription": { $concat: [ "$item", " - ", "$description" ] } }
-      //   }
-      // }
-      // { $project: { itemDescription: { $concat: [ "$item", " - ", "$description" ] } } }
-
-      // {
-        
-      //   $group :{
-      //     _id: "$deviceCustome",
-      //     locations: { $push: {lat: "$lat", lng: "$lng" } }
-      //   }
-      // },
-      // {
-      //   $project: {
-      //     id: "$_id",
-      //     values: {
-      //       $map: {
-      //         input: "$devices",
-      //         as: "device",
-      //         in:  ["$$device"] 
-      //       },
-      //       // ss:"$devices"
-      //     },
-      //   },
-      // },
-    
-      // {
-      //   $group :{
-      //     "_id": "$_id",
-      //     "devices": "$devices"}
-      //   }
-
-      // { $concat: [ "$user", " - ", "$status" ] },
-      //   {$project: {
-      //     _id: 0,
-
-      //   $map: {
-      //     input: "$devices",
-      //     as: "device",
-      //     in: { $add: [ "$$device"] }
-      //   }
-      // }}
-   
-      // },
-      // { "$unwind": "$device88" },
-      // { "$group": {
-      //       "_id": "$_id",
-      //       "devices": { "$push": "$devices" },
-      //       "device88": { "$push": "$device88" }
-      //   }}
-      //   $project:{"device":"$device"}
-      // }
-    ]).limit(10)
+    ])
+      .limit(10)
+      .then(res)
+      .catch((err) => {
+        console.log("something went wrong in getDeviceGroups 8541285 ");
+      });
+    // .select("fullName")
     return res.json({
       code: 200,
       populateUser,
     });
+
+    // {
+    //   $unwind: "$devices",
+    // },
+    // {
+    //   $lookup: {
+    //     from: "vehicles",
+    //     localField: "devices",
+    //     foreignField: "_id",
+    //     as: "deviceCustome",
+    //   },
+
+    // },
+    // {
+    //   $unwind: "$deviceCustome",
+    // },
+    // {
+    //   $project:{
+    //     _id: 0,
+
+    //  ddd:{
+    //   $map: {
+    //     input: "$deviceCustome",
+    //     as: "item",
+    //     in: ["$$item.deviceIMEI", "$$item.driverName"],
+    //   },}
+    // }
+    // },
+
+    // {$addFields: {
+    //   "fullName" : {
+    //     label:"$deviceCustome.deviceIMEI",
+    //     value:{$concat:[
+    //       "$deviceCustome.driverName"
+
+    //   ]},
+    //   sum:{$concat:[
+    //     "$deviceCustome.driverName" ," ","$deviceCustome.deviceIMEI"
+
+    // ]},
+    //   }
+    // }}
+
+    // {$group:{
+    //   _id:null,
+    //   deviceGroup_berif:{
+    //     $push:{
+    //      "$fullName"
+    //     }
+    //   }
+    // }}
+    // {
+    // //   $group :{
+    // //   //   _id: "$IMEI",
+    // //   //   devicegr: { $push: {deviceIMEI: "$deviceCustome.deviceIMEI",driverName: "$deviceCustome.driverName",}
+    // //   // }
+
+    // },
+
+    // {$addFields:{
+    //   ss:""
+    // }
+    //  { $project:{
+    //    ee: devicegr.imei
+    //   }}
+    // {
+    //   $project: {
+    //     _id: 0,
+    //     IMEI: "$IMEI",
+    //     devicegr: {
+    //       $map: {
+    //         input: "$devicegr",
+    //         as: "ddd",
+    //         in: ["$$ddd.imei", "$$ddd.imei2"]
+    //       }
+    //     }
+    //   }
+    // }
+    //  {
+    //   $unwind: "$deviceCustome"
+    // },
+    // {
+    //   $project: {
+    //     // _id: 0,
+    //     // label: "$deviceCustome.deviceIMEI"+' '+"$deviceCustome.driverName",
+    //     // // label_2: "$deviceCustome.driverName",
+    //     $push:{
+    //       label: "$$deviceCustome.deviceIMEI"
+    //     }
+
+    //   // {  "itemDescription": { $concat: [ "$item", " - ", "$description" ] } }
+    //   }
+    // }
+    // { $project: { itemDescription: { $concat: [ "$item", " - ", "$description" ] } } }
+
+    // {
+
+    //   $group :{
+    //     _id: "$deviceCustome",
+    //     locations: { $push: {lat: "$lat", lng: "$lng" } }
+    //   }
+    // },
+    // {
+    //   $project: {
+    //     id: "$_id",
+    //     values: {
+    //       $map: {
+    //         input: "$devices",
+    //         as: "device",
+    //         in:  ["$$device"]
+    //       },
+    //       // ss:"$devices"
+    //     },
+    //   },
+    // },
+
+    // {
+    //   $group :{
+    //     "_id": "$_id",
+    //     "devices": "$devices"}
+    //   }
+
+    // { $concat: [ "$user", " - ", "$status" ] },
+    //   {$project: {
+    //     _id: 0,
+
+    //   $map: {
+    //     input: "$devices",
+    //     as: "device",
+    //     in: { $add: [ "$$device"] }
+    //   }
+    // }}
+
+    // },
+    // { "$unwind": "$device88" },
+    // { "$group": {
+    //       "_id": "$_id",
+    //       "devices": { "$push": "$devices" },
+    //       "device88": { "$push": "$device88" }
+    //   }}
+    //   $project:{"device":"$device"}
+    // }
+    // ])
+    // .select("fullName")
+    // .limit(10)
 
     // return res.json({
     //   code: 200,
@@ -208,25 +296,23 @@ const getDeviceGroups2 = async (req, res) => {
   try {
     var userId = req.user._id;
     const populateUser = await DeviceGroupModel.find({
-            $or: [{ user: userId }, { sharees: userId }],
-          })
-          .populate({
-            path: "devices",
-            select:
-              "_id  deviceIMEI   driverName   ",
-            populate: {
-              path: "model",
-              select: { name: 1, _id: 0 },
-              co
-            },
-          })
-  
-          if (!populateUser) {
-            return res.json({
-              code: 400,
-              message: "There is no device group",
-            });
-          }
+      $or: [{ user: userId }, { sharees: userId }],
+    }).populate({
+      path: "devices",
+      select: "_id  deviceIMEI   driverName   ",
+      populate: {
+        path: "model",
+        select: { name: 1, _id: 0 },
+        co,
+      },
+    });
+
+    if (!populateUser) {
+      return res.json({
+        code: 400,
+        message: "There is no device group",
+      });
+    }
     // const populateUser = await DeviceGroupModel.find({
     //   $or: [{ user: userId }, { sharees: userId }],
     // })
@@ -249,62 +335,62 @@ const getDeviceGroups2 = async (req, res) => {
 
     // r
     // const populateUser = await DeviceGroupModel.aggregate([
-      // {
-      //   $match: {
-      //     $or: [{ user: userId }, { sharees: userId }],
-      //   },
-      // },
-      // {
-      //   $unwind: "$devices",
-      // },
-      // {
-      //   $lookup: {
-      //     from: "vehicles",
-      //     localField: "devices",
-      //     foreignField: "_id",
-      //     as: "deviceCustome",
-      //   },
-      // }
-      // {
-      //   $project: {
-      //     id: "$_id",
-      //     values: {
-      //       $map: {
-      //         input: "$devices",
-      //         as: "device",
-      //         in:  ["$$device"] 
-      //       },
-      //       // ss:"$devices"
-      //     },
-      //   },
-      // },
-    
-      // {
-      //   $group :{
-      //     "_id": "$_id",
-      //     "devices": "$devices"}
-      //   }
+    // {
+    //   $match: {
+    //     $or: [{ user: userId }, { sharees: userId }],
+    //   },
+    // },
+    // {
+    //   $unwind: "$devices",
+    // },
+    // {
+    //   $lookup: {
+    //     from: "vehicles",
+    //     localField: "devices",
+    //     foreignField: "_id",
+    //     as: "deviceCustome",
+    //   },
+    // }
+    // {
+    //   $project: {
+    //     id: "$_id",
+    //     values: {
+    //       $map: {
+    //         input: "$devices",
+    //         as: "device",
+    //         in:  ["$$device"]
+    //       },
+    //       // ss:"$devices"
+    //     },
+    //   },
+    // },
 
-      // { $concat: [ "$user", " - ", "$status" ] },
-      //   {$project: {
-      //     _id: 0,
+    // {
+    //   $group :{
+    //     "_id": "$_id",
+    //     "devices": "$devices"}
+    //   }
 
-      //   $map: {
-      //     input: "$devices",
-      //     as: "device",
-      //     in: { $add: [ "$$device"] }
-      //   }
-      // }}
-   
-      // },
-      // { "$unwind": "$device88" },
-      // { "$group": {
-      //       "_id": "$_id",
-      //       "devices": { "$push": "$devices" },
-      //       "device88": { "$push": "$device88" }
-      //   }}
-      //   $project:{"device":"$device"}
-      // }
+    // { $concat: [ "$user", " - ", "$status" ] },
+    //   {$project: {
+    //     _id: 0,
+
+    //   $map: {
+    //     input: "$devices",
+    //     as: "device",
+    //     in: { $add: [ "$$device"] }
+    //   }
+    // }}
+
+    // },
+    // { "$unwind": "$device88" },
+    // { "$group": {
+    //       "_id": "$_id",
+    //       "devices": { "$push": "$devices" },
+    //       "device88": { "$push": "$device88" }
+    //   }}
+    //   $project:{"device":"$device"}
+    // }
     // ]).limit(10);
     return res.json({
       code: 200,
