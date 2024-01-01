@@ -10,7 +10,7 @@ const getDeviceGroups = async (req, res) => {
   try {
     var { deviceGroup } = req.params;
     var deviceGroupArr = [];
-    deviceGroupArr.push(deviceGroup);
+    deviceGroupArr.push(new mongoose.Types.ObjectId(deviceGroup));
     console.log(deviceGroupArr, "deviceGroup");
     var userId = req.user._id;
     //  const populatedUser = await VehicleModel.aggregate({
@@ -67,36 +67,103 @@ const getDeviceGroups = async (req, res) => {
       //       return  new mongoose.Types.ObjectId(item);
       //     })}
       //    },
+      // sum:{$concat:[
+      //   //     "$deviceCustomedriverName" ," ","$deviceCustome.deviceIMEI"
+    
+      //   // ]},
+
+      // {unwind:"$_id"},
+
+      {
+        $group: {
+          _id: "$_id",
+          tempsF: { $push: { _id: "$_id" } },
+        },
+      },
+     { $project:{
+      tempsFs: {
+        $map: {
+          input: "$tempsF",
+          as: "tempInCelsius",
+          in:["$$tempInCelsius._id"]
+        },
+      },
+      }},
+      //     {
+      //   $addFields: {
+      //     idr:"$tempsF",
+      //     tempsF: {
+      //       $map: {
+      //         input: "$tempsF",
+      //         as: "tempInCelsius",
+      //         in:["$$tempInCelsius._id"]
+      //       },
+      //     },
+      //   },
+      // },
       {
         $lookup: {
           from: "devicegroups",
-          let: { "idN": "$_id" },
+          let: { idN: "$_id" },
           // as: "vehicle_q",
 
           pipeline: [
             {
               $match: {
-                // $and: [
-                   $or: [{ "user": "$$idN" }, { "sharees": "$$idN" }] ,
-                  // {
-                  //   devices: {
-                  //     $in: deviceGroupArr
-                  //   },
-                  // },
-                // ],
+                $and: [
+                  { $or: [{ user: userId }, { sharees: userId }] },
+                  {
+                    devices: {
+                      $in: [ new mongoose.Types.ObjectId("5992786211dc0505f290f86b")],
+                    },
+                  },
+                ],
               },
             },
           ],
-          as: "giiiii",
-
+          as: "extracted_device",
         },
       },
-    ])
-      .limit(10)
-      .then(res)
-      .catch((err) => {
-        console.log("something went wrong in getDeviceGroups 8541285 ");
-      });
+
+      {
+        $unwind: "$extracted_device",
+      },
+      {$count:"$extracted_device"}
+
+      // {$match:{}}
+
+
+      // , {
+      //   $lookup: {
+      //     from: "$extracted_device.",
+      //     localField: "devices",
+      //     foreignField: "_id",
+      //     as: "deds",
+      //   }
+      // },
+
+      //       {
+      //       $lookup: {
+      //         from: "$extracted_device",
+      //         localField: "_id",
+      //         foreignField: "devices",
+      //         as: "ddddddddd"
+      //     }
+      // }
+      // {
+      //   $project: {
+      //     _id: null,
+      //     locations: {
+      //       $map: {
+      //         input: "$extracted_device",
+      //         as: "devi",
+      //         in: ["$$devi.desc", "$$devi.status"],
+      //       },
+      //     },
+      //   },
+      // }
+    ]).limit(10);
+
     // .select("fullName")
     return res.json({
       code: 200,

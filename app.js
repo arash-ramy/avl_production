@@ -5,7 +5,6 @@ const controller =require("./controller/userController")
 const cors = require('cors')
 const morgan = require('morgan');
 const net = require('net');
-
 const app = express();
 const chalk = require ('chalk');
 var path = require("path");
@@ -14,13 +13,21 @@ var http = require("http");
 var cron = require('node-cron');
 var shell = require('shelljs');
 
+process.on("uncaughtException", (err) => {
+  console.log("UNCAUGHT EXCEPTION! 💥💥🚀 Shutting down ...");
+  console.log(err.name, err.message);
+  process.exit(1);
+});
+app.use(bodyParser.json());
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "150mb" }));
 
 
-var http = require("http");
+
 const { GT06Controller  } = require("./controller/GT06Controller");
 const { FMXXXXController } = require("./controller/FMXXXXController");
 
-shell.exec('node --version');
 
  require("./DB/DbConnection");
 
@@ -40,24 +47,21 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/media',headerAuth,express.static(path.resolve('./public')));
-app.use(bodyParser.json());
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.urlencoded({ extended: true, limit: "1000mb" }));
+
+
 
 const UserRouter = require("./router/user");
 const DeviceRouter = require("./router/device");
 const DeviceGroupRouter = require("./router/deviceGroupe");
 const GPSLocation = require("./router/gpslocation");
-const scheduleCron = require("./router/cronTest");
+// const scheduleCron = require("./router/cronTest");
 // const scheduleCron = require("./crons/index");
 // scheduleCron.scheduleCron()
     
 
 
 
-
+app.use('/media',headerAuth,express.static(path.resolve('./public')));
 app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/gpsdata", GPSLocation);
 app.use("/api/v1/device", DeviceRouter);

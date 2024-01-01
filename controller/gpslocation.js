@@ -328,11 +328,11 @@ const getNLastDataIMEI = async (req, res) => {
           });
         }
       });
-  } catch (ex) {
-    logger.error(ex);
-    return res({
-      msg: ex,
-    }).code(500);
+  } catch (err) {
+    console.lop(err)
+    return res.json({
+      msg: err.message,
+    })
   }
 };
 
