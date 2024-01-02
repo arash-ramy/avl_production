@@ -2306,9 +2306,9 @@ const exportDeviceAlarmsReportToPdf = async (req, res) => {
 const getLastLocationsOfDeviceInP = async (req, res) => {
   try {
     //   //[1,2,3]
-    //   var devices = req.body.devices;
-    //   var bTime = req.body.bTime;
-    //   var eTime = req.body.eTime;
+      var devices = req.body.devices;
+      var bTime = req.body.bTime;
+      var eTime = req.body.eTime;
     //   // var limit = req.body.limit;
 
     //   // console.log(bTime, eTime, "9999");
@@ -2362,11 +2362,11 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
       {
         $match: {
           IMEI: {
-            $in: ["357454074841063", "350317174339378", "357454074845130"],
+            $in: devices,
           },
           date: {
-            $gte: new Date("2023-01-01"),
-            $lte: new Date("2023-06-14"),
+            $gte: new Date(bTime),
+            $lte: new Date(eTime),
           },
         },
       },
@@ -2388,8 +2388,9 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
             },
           },
         },
+       
       },
-    ]);
+    ])
 
     return res.json({
       gpsfounded,

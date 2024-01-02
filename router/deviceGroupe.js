@@ -3,14 +3,16 @@ const router = express.Router();
 const { headerAuth } = require("../utils/authHeader");
 const DeviceGroups = require("../controller/deviceGroupe");
 
-router.get("/:deviceGroup", headerAuth,DeviceGroups.getDeviceGroups);
+// router.get("/:deviceGroup", headerAuth,DeviceGroups.getDeviceGroups);
 
 router.get("/", headerAuth,DeviceGroups.getDeviceGroups);
-router.get("/li", headerAuth,DeviceGroups.getDeviceGroups2);
+// router.get("/li", headerAuth,DeviceGroups.getDeviceGroups2);
 
 router.put("/", headerAuth,DeviceGroups.editGroup);
 
 router.post("/add", headerAuth,DeviceGroups.addDeviceGroup);
+
+router.get("/getcustomevehicle", headerAuth,DeviceGroups.getCustomeVehicle);
 
 router.get("/:groupId", headerAuth,DeviceGroups.getDeviceGroupById);
 

@@ -6,358 +6,433 @@ const UserModel = require("../model/User/user");
 //   var userId = req.user._id;
 
 // }
-const getDeviceGroups = async (req, res) => {
+
+
+const getCustomeVehicle = async (req, res) => {
   try {
-    var { deviceGroup } = req.params;
-    var deviceGroupArr = [];
-    deviceGroupArr.push(new mongoose.Types.ObjectId(deviceGroup));
-    console.log(deviceGroupArr, "deviceGroup");
-    var userId = req.user._id;
-    //  const populatedUser = await VehicleModel.aggregate({
-    //   $match:{ }
-    //  })
+ const FoundedVehicle = await VehicleModel.aggregate([
+  { $unset: ["_id"] },
+  {$project:{
+  
+  value:"$deviceIMEI",
+  label:{
+  $concat:[
+    "$driverName" ," ", "$deviceIMEI",
+  ]}
+  }}
 
-    // const populateUser = await DeviceGroupModel.find({
-    //         $or: [{ user: userId }, { sharees: userId }],
-    //       })
-    //       .populate({
-    //         path: "devices",
-    //         select:
-    //           "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
-    //         populate: {
-    //           path: "model",
-    //           select: { name: 1, _id: 0 },
-    //         },
-    //       })
-
-    //       if (!populateUser) {
-    //         return res.json({
-    //           code: 400,
-    //           message: "There is no device group",
-    //         });
-    //       }
-    // const populateUser = await DeviceGroupModel.find({
-    //   $or: [{ user: userId }, { sharees: userId }],
-    // })
-    // .populate({
-    //   path: "devices",
-    //   select:
-    //     "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
-    //   populate: {
-    //     path: "model",
-    //     select: { name: 1, _id: 0 },
-    //   },
-    // })
-
-    // if (!populateUser) {
-    //   return res.json({
-    //     code: 400,
-    //     message: "There is no device group",
-    //   });
-    // }
-
-    // r
-    console.log(userId._id);
-    const populateUser = await VehicleModel.aggregate([
-      // {
-      //   $match: { $and:[
-      //    { $or: [{ user: userId }, { sharees: userId }]}
-      //    ,{
-      //     devices :{$in : deviceGroupArr.map((item)=>{
-      //       return  new mongoose.Types.ObjectId(item);
-      //     })}
-      //    },
-      // sum:{$concat:[
-      //   //     "$deviceCustomedriverName" ," ","$deviceCustome.deviceIMEI"
-    
-      //   // ]},
-
-      // {unwind:"$_id"},
-
-      {
-        $group: {
-          _id: "$_id",
-          tempsF: { $push: { _id: "$_id" } },
-        },
-      },
-     { $project:{
-      tempsFs: {
-        $map: {
-          input: "$tempsF",
-          as: "tempInCelsius",
-          in:["$$tempInCelsius._id"]
-        },
-      },
-      }},
-      //     {
-      //   $addFields: {
-      //     idr:"$tempsF",
-      //     tempsF: {
-      //       $map: {
-      //         input: "$tempsF",
-      //         as: "tempInCelsius",
-      //         in:["$$tempInCelsius._id"]
-      //       },
-      //     },
-      //   },
-      // },
-      {
-        $lookup: {
-          from: "devicegroups",
-          let: { idN: "$_id" },
-          // as: "vehicle_q",
-
-          pipeline: [
-            {
-              $match: {
-                $and: [
-                  { $or: [{ user: userId }, { sharees: userId }] },
-                  {
-                    devices: {
-                      $in: [ new mongoose.Types.ObjectId("5992786211dc0505f290f86b")],
-                    },
-                  },
-                ],
-              },
-            },
-          ],
-          as: "extracted_device",
-        },
-      },
-
-      {
-        $unwind: "$extracted_device",
-      },
-      {$count:"$extracted_device"}
-
-      // {$match:{}}
+ ])
 
 
-      // , {
-      //   $lookup: {
-      //     from: "$extracted_device.",
-      //     localField: "devices",
-      //     foreignField: "_id",
-      //     as: "deds",
-      //   }
-      // },
+ return res.json({
+  FoundedVehicle
+ })
 
-      //       {
-      //       $lookup: {
-      //         from: "$extracted_device",
-      //         localField: "_id",
-      //         foreignField: "devices",
-      //         as: "ddddddddd"
-      //     }
-      // }
-      // {
-      //   $project: {
-      //     _id: null,
-      //     locations: {
-      //       $map: {
-      //         input: "$extracted_device",
-      //         as: "devi",
-      //         in: ["$$devi.desc", "$$devi.status"],
-      //       },
-      //     },
-      //   },
-      // }
-    ]).limit(10);
 
-    // .select("fullName")
-    return res.json({
-      code: 200,
-      populateUser,
-    });
 
-    // {
-    //   $unwind: "$devices",
-    // },
-    // {
-    //   $lookup: {
-    //     from: "vehicles",
-    //     localField: "devices",
-    //     foreignField: "_id",
-    //     as: "deviceCustome",
-    //   },
-
-    // },
-    // {
-    //   $unwind: "$deviceCustome",
-    // },
-    // {
-    //   $project:{
-    //     _id: 0,
-
-    //  ddd:{
-    //   $map: {
-    //     input: "$deviceCustome",
-    //     as: "item",
-    //     in: ["$$item.deviceIMEI", "$$item.driverName"],
-    //   },}
-    // }
-    // },
-
-    // {$addFields: {
-    //   "fullName" : {
-    //     label:"$deviceCustome.deviceIMEI",
-    //     value:{$concat:[
-    //       "$deviceCustome.driverName"
-
-    //   ]},
-    //   sum:{$concat:[
-    //     "$deviceCustome.driverName" ," ","$deviceCustome.deviceIMEI"
-
-    // ]},
-    //   }
-    // }}
-
-    // {$group:{
-    //   _id:null,
-    //   deviceGroup_berif:{
-    //     $push:{
-    //      "$fullName"
-    //     }
-    //   }
-    // }}
-    // {
-    // //   $group :{
-    // //   //   _id: "$IMEI",
-    // //   //   devicegr: { $push: {deviceIMEI: "$deviceCustome.deviceIMEI",driverName: "$deviceCustome.driverName",}
-    // //   // }
-
-    // },
-
-    // {$addFields:{
-    //   ss:""
-    // }
-    //  { $project:{
-    //    ee: devicegr.imei
-    //   }}
-    // {
-    //   $project: {
-    //     _id: 0,
-    //     IMEI: "$IMEI",
-    //     devicegr: {
-    //       $map: {
-    //         input: "$devicegr",
-    //         as: "ddd",
-    //         in: ["$$ddd.imei", "$$ddd.imei2"]
-    //       }
-    //     }
-    //   }
-    // }
-    //  {
-    //   $unwind: "$deviceCustome"
-    // },
-    // {
-    //   $project: {
-    //     // _id: 0,
-    //     // label: "$deviceCustome.deviceIMEI"+' '+"$deviceCustome.driverName",
-    //     // // label_2: "$deviceCustome.driverName",
-    //     $push:{
-    //       label: "$$deviceCustome.deviceIMEI"
-    //     }
-
-    //   // {  "itemDescription": { $concat: [ "$item", " - ", "$description" ] } }
-    //   }
-    // }
-    // { $project: { itemDescription: { $concat: [ "$item", " - ", "$description" ] } } }
-
-    // {
-
-    //   $group :{
-    //     _id: "$deviceCustome",
-    //     locations: { $push: {lat: "$lat", lng: "$lng" } }
-    //   }
-    // },
-    // {
-    //   $project: {
-    //     id: "$_id",
-    //     values: {
-    //       $map: {
-    //         input: "$devices",
-    //         as: "device",
-    //         in:  ["$$device"]
-    //       },
-    //       // ss:"$devices"
-    //     },
-    //   },
-    // },
-
-    // {
-    //   $group :{
-    //     "_id": "$_id",
-    //     "devices": "$devices"}
-    //   }
-
-    // { $concat: [ "$user", " - ", "$status" ] },
-    //   {$project: {
-    //     _id: 0,
-
-    //   $map: {
-    //     input: "$devices",
-    //     as: "device",
-    //     in: { $add: [ "$$device"] }
-    //   }
-    // }}
-
-    // },
-    // { "$unwind": "$device88" },
-    // { "$group": {
-    //       "_id": "$_id",
-    //       "devices": { "$push": "$devices" },
-    //       "device88": { "$push": "$device88" }
-    //   }}
-    //   $project:{"device":"$device"}
-    // }
-    // ])
-    // .select("fullName")
-    // .limit(10)
-
-    // return res.json({
-    //   code: 200,
-    //   populateUser,
-    // });
-
-    //label: driverName + " " + deviceIMEI
-    // const getDeviceGroups = async (req, res) => {
-    //   try {
-    //     var userId = req.user._id;
-    //     const populateUser = await DeviceGroupModel.find({
-    //       $or: [{ user: userId }, { sharees: userId }],
-    //     })
-    //     .populate({
-    //       path: "devices",
-    //       select:
-    //         "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
-    //       populate: {
-    //         path: "model",
-    //         select: { name: 1, _id: 0 },
-    //       },
-    //     })
-
-    //     if (!populateUser) {
-    //       return res.json({
-    //         code: 400,
-    //         message: "There is no device group",
-    //       });
-    //     }
-
-    //     return res.json({
-    //       code: 200,
-    //       populateUser,
-    //     })
-  } catch (error) {
-    // logger.error(error);
-    console.log(error);
-    return res.json({
-      messageSys: error.message,
-      message: "somthing went wrong in getDeviceGroups",
-      code: 400,
-    });
   }
-};
+catch(error){
+
+
+
+}}
+
+
+
+const getDeviceGroups = async (req, res) => {
+        try {
+          console.log("coms")
+            var userId = req.user._id;
+         let devicegrp=await DeviceGroupModel.find({ $or: [{ user: userId }, { sharees: userId }] })
+                 .populate({
+                    path: 'devices',
+                    select: '_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model',
+                    populate: {
+                        path: 'model',
+                        select: { name: 1, _id: 0 }
+                    }
+                })
+                .populate('sharees')
+                
+
+                if(!devicegrp){
+                  return res.json({
+                   message: "there is no devices or user doesn't access",
+                   code :400
+                  })
+                }
+                console.log("comes here again 222")
+                return res.json({
+                  devicegrp,
+                  code :200
+                })
+                
+               
+        
+        }
+        catch (err) {
+          console.log("something went wrong in deviceGroup ",err)
+          return res.json({
+                messageSys: err.message,
+                message:"something went wrong in deviceGroup",
+                code:404
+              })
+        }
+}
+
+
+// const getDeviceGroups3 = async (req, res) => {
+//   try {
+//     var { deviceGroup } = req.params;
+//     var deviceGroupArr = [];
+//     deviceGroupArr.push(new mongoose.Types.ObjectId(deviceGroup));
+//     console.log(deviceGroupArr, "deviceGroup");
+//     var userId = req.user._id;
+//     //  const populatedUser = await VehicleModel.aggregate({
+//     //   $match:{ }
+//     //  })
+
+//     // const populateUser = await DeviceGroupModel.find({
+//     //         $or: [{ user: userId }, { sharees: userId }],
+//     //       })
+//     //       .populate({
+//     //         path: "devices",
+//     //         select:
+//     //           "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+//     //         populate: {
+//     //           path: "model",
+//     //           select: { name: 1, _id: 0 },
+//     //         },
+//     //       })
+
+//     //       if (!populateUser) {
+//     //         return res.json({
+//     //           code: 400,
+//     //           message: "There is no device group",
+//     //         });
+//     //       }
+//     // const populateUser = await DeviceGroupModel.find({
+//     //   $or: [{ user: userId }, { sharees: userId }],
+//     // })
+//     // .populate({
+//     //   path: "devices",
+//     //   select:
+//     //     "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+//     //   populate: {
+//     //     path: "model",
+//     //     select: { name: 1, _id: 0 },
+//     //   },
+//     // })
+
+//     // if (!populateUser) {
+//     //   return res.json({
+//     //     code: 400,
+//     //     message: "There is no device group",
+//     //   });
+//     // }
+
+//     // r
+//     console.log(userId._id);
+//     const populateUser = await VehicleModel.aggregate([
+//       // {
+//       //   $match: { $and:[
+//       //    { $or: [{ user: userId }, { sharees: userId }]}
+//       //    ,{
+//       //     devices :{$in : deviceGroupArr.map((item)=>{
+//       //       return  new mongoose.Types.ObjectId(item);
+//       //     })}
+//       //    },
+//       // sum:{$concat:[
+//       //   //     "$deviceCustomedriverName" ," ","$deviceCustome.deviceIMEI"
+    
+//       //   // ]},
+
+//       // {unwind:"$_id"},
+
+//       {
+//         $group: {
+//           _id: "$_id",
+//           tempsF: { $push: { _id: "$_id" } },
+//         },
+//       },
+//      { $project:{
+//       tempsFs: {
+//         $map: {
+//           input: "$tempsF",
+//           as: "tempInCelsius",
+//           in:["$$tempInCelsius._id"]
+//         },
+//       },
+//       }},
+//       //     {
+//       //   $addFields: {
+//       //     idr:"$tempsF",
+//       //     tempsF: {
+//       //       $map: {
+//       //         input: "$tempsF",
+//       //         as: "tempInCelsius",
+//       //         in:["$$tempInCelsius._id"]
+//       //       },
+//       //     },
+//       //   },
+//       // },
+//       {
+//         $lookup: {
+//           from: "devicegroups",
+//           let: { idN: "$_id" },
+//           // as: "vehicle_q",
+
+//           pipeline: [
+//             {
+//               $match: {
+//                 $and: [
+//                   { $or: [{ user: userId }, { sharees: userId }] },
+//                   {
+//                     devices: {
+//                       $in: [ new mongoose.Types.ObjectId("5992786211dc0505f290f86b")],
+//                     },
+//                   },
+//                 ],
+//               },
+//             },
+//           ],
+//           as: "extracted_device",
+//         },
+//       },
+
+//       {
+//         $unwind: "$extracted_device",
+//       },
+//       {$count:"$extracted_device"}
+
+//       // {$match:{}}
+
+
+//       // , {
+//       //   $lookup: {
+//       //     from: "$extracted_device.",
+//       //     localField: "devices",
+//       //     foreignField: "_id",
+//       //     as: "deds",
+//       //   }
+//       // },
+
+//       //       {
+//       //       $lookup: {
+//       //         from: "$extracted_device",
+//       //         localField: "_id",
+//       //         foreignField: "devices",
+//       //         as: "ddddddddd"
+//       //     }
+//       // }
+//       // {
+//       //   $project: {
+//       //     _id: null,
+//       //     locations: {
+//       //       $map: {
+//       //         input: "$extracted_device",
+//       //         as: "devi",
+//       //         in: ["$$devi.desc", "$$devi.status"],
+//       //       },
+//       //     },
+//       //   },
+//       // }
+//     ]).limit(10);
+
+//     // .select("fullName")
+//     return res.json({
+//       code: 200,
+//       populateUser,
+//     });
+
+//     // {
+//     //   $unwind: "$devices",
+//     // },
+//     // {
+//     //   $lookup: {
+//     //     from: "vehicles",
+//     //     localField: "devices",
+//     //     foreignField: "_id",
+//     //     as: "deviceCustome",
+//     //   },
+
+//     // },
+//     // {
+//     //   $unwind: "$deviceCustome",
+//     // },
+//     // {
+//     //   $project:{
+//     //     _id: 0,
+
+//     //  ddd:{
+//     //   $map: {
+//     //     input: "$deviceCustome",
+//     //     as: "item",
+//     //     in: ["$$item.deviceIMEI", "$$item.driverName"],
+//     //   },}
+//     // }
+//     // },
+
+//     // {$addFields: {
+//     //   "fullName" : {
+//     //     label:"$deviceCustome.deviceIMEI",
+//     //     value:{$concat:[
+//     //       "$deviceCustome.driverName"
+
+//     //   ]},
+//     //   sum:{$concat:[
+//     //     "$deviceCustome.driverName" ," ","$deviceCustome.deviceIMEI"
+
+//     // ]},
+//     //   }
+//     // }}
+
+//     // {$group:{
+//     //   _id:null,
+//     //   deviceGroup_berif:{
+//     //     $push:{
+//     //      "$fullName"
+//     //     }
+//     //   }
+//     // }}
+//     // {
+//     // //   $group :{
+//     // //   //   _id: "$IMEI",
+//     // //   //   devicegr: { $push: {deviceIMEI: "$deviceCustome.deviceIMEI",driverName: "$deviceCustome.driverName",}
+//     // //   // }
+
+//     // },
+
+//     // {$addFields:{
+//     //   ss:""
+//     // }
+//     //  { $project:{
+//     //    ee: devicegr.imei
+//     //   }}
+//     // {
+//     //   $project: {
+//     //     _id: 0,
+//     //     IMEI: "$IMEI",
+//     //     devicegr: {
+//     //       $map: {
+//     //         input: "$devicegr",
+//     //         as: "ddd",
+//     //         in: ["$$ddd.imei", "$$ddd.imei2"]
+//     //       }
+//     //     }
+//     //   }
+//     // }
+//     //  {
+//     //   $unwind: "$deviceCustome"
+//     // },
+//     // {
+//     //   $project: {
+//     //     // _id: 0,
+//     //     // label: "$deviceCustome.deviceIMEI"+' '+"$deviceCustome.driverName",
+//     //     // // label_2: "$deviceCustome.driverName",
+//     //     $push:{
+//     //       label: "$$deviceCustome.deviceIMEI"
+//     //     }
+
+//     //   // {  "itemDescription": { $concat: [ "$item", " - ", "$description" ] } }
+//     //   }
+//     // }
+//     // { $project: { itemDescription: { $concat: [ "$item", " - ", "$description" ] } } }
+
+//     // {
+
+//     //   $group :{
+//     //     _id: "$deviceCustome",
+//     //     locations: { $push: {lat: "$lat", lng: "$lng" } }
+//     //   }
+//     // },
+//     // {
+//     //   $project: {
+//     //     id: "$_id",
+//     //     values: {
+//     //       $map: {
+//     //         input: "$devices",
+//     //         as: "device",
+//     //         in:  ["$$device"]
+//     //       },
+//     //       // ss:"$devices"
+//     //     },
+//     //   },
+//     // },
+
+//     // {
+//     //   $group :{
+//     //     "_id": "$_id",
+//     //     "devices": "$devices"}
+//     //   }
+
+//     // { $concat: [ "$user", " - ", "$status" ] },
+//     //   {$project: {
+//     //     _id: 0,
+
+//     //   $map: {
+//     //     input: "$devices",
+//     //     as: "device",
+//     //     in: { $add: [ "$$device"] }
+//     //   }
+//     // }}
+
+//     // },
+//     // { "$unwind": "$device88" },
+//     // { "$group": {
+//     //       "_id": "$_id",
+//     //       "devices": { "$push": "$devices" },
+//     //       "device88": { "$push": "$device88" }
+//     //   }}
+//     //   $project:{"device":"$device"}
+//     // }
+//     // ])
+//     // .select("fullName")
+//     // .limit(10)
+
+//     // return res.json({
+//     //   code: 200,
+//     //   populateUser,
+//     // });
+
+//     //label: driverName + " " + deviceIMEI
+//     // const getDeviceGroups = async (req, res) => {
+//     //   try {
+//     //     var userId = req.user._id;
+//     //     const populateUser = await DeviceGroupModel.find({
+//     //       $or: [{ user: userId }, { sharees: userId }],
+//     //     })
+//     //     .populate({
+//     //       path: "devices",
+//     //       select:
+//     //         "_id simNumber deviceIMEI type plate driverName driverPhoneNumber gpsDataCount model",
+//     //       populate: {
+//     //         path: "model",
+//     //         select: { name: 1, _id: 0 },
+//     //       },
+//     //     })
+
+//     //     if (!populateUser) {
+//     //       return res.json({
+//     //         code: 400,
+//     //         message: "There is no device group",
+//     //       });
+//     //     }
+
+//     //     return res.json({
+//     //       code: 200,
+//     //       populateUser,
+//     //     })
+//   } catch (error) {
+//     // logger.error(error);
+//     console.log(error);
+//     return res.json({
+//       messageSys: error.message,
+//       message: "somthing went wrong in getDeviceGroups",
+//       code: 400,
+//     });
+//   }
+// };
 
 const getDeviceGroups2 = async (req, res) => {
   try {
@@ -868,14 +943,18 @@ const getVehiclesofGroup = async (req, res) => {
 
 const removeVehicleFromGroup = async (req, res) => {
   try {
+
     var vehicleId = req.params.vehicleId;
     var groupId = req.params.groupId;
     var userId;
     if (req.user) {
       userId = req.user._id;
     }
+    console.log(vehicleId , "vehicleId")
+    console.log(groupId,"groupId")
+
     const foundDeviceGroup = await DeviceGroupModel.findOne({
-      $and: [{ user: userId }, { _id: groupId }],
+      $or: [{ user: userId }, { _id: groupId }],
     });
     if (!foundDeviceGroup) {
       return res.json({
@@ -884,24 +963,27 @@ const removeVehicleFromGroup = async (req, res) => {
       });
     }
     const foundedVehicle = await VehicleModel.findOne({ _id: vehicleId });
-
+    console.log(vehicleId,"this is vehicleId")
     if (!foundedVehicle) {
       return res.json({
         message: "There is no vhicle",
         code: 400,
       });
     }
-
+    if(!foundDeviceGroup.devices){
     foundDeviceGroup.devices = new Array();
+  }
     if (foundDeviceGroup.devices.indexOf(vehicleId) >= 0) {
+      console.log("foundDeviceGroup.devices.indexOf(vehicleId)",foundDeviceGroup.devices.indexOf(vehicleId))
       foundDeviceGroup.devices.splice(
         foundDeviceGroup.devices.indexOf(vehicleId),
         1
       );
     }
-    await foundDeviceGroup.save();
-    res.json({ foundedVehicle, code: 200 });
-  } catch (ex) {
+    await foundDeviceGroup.save().then(()=>{
+      res.json({message:"successfuly deleted from deviceGroup",code:200})
+    });
+  } catch (err) {
     // logger.error(ex);
     return res({
       message: "Something went wrong in removeVehicleFromGroup",
@@ -1103,4 +1185,5 @@ module.exports = {
   getUserDeviceGroups,
   getVehiclesofMultiGroup,
   reportVehicleOfGroups,
+  getCustomeVehicle
 };
