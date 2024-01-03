@@ -10,11 +10,11 @@ router.post("/signin", userController.Signin);
 router.post("/signup", userController.signup);
 router.get("/", userController.getUserList);
 
-router.put("/", userController.editUser);
+router.put("/",headerAuth, userController.editUser);
 
-router.get("/lock/:userid", userController.lockUser);
+router.get("/lock/:userid",headerAuth, userController.lockUser);
 
-router.get("/unlock/:userid", userController.unlockUser);
+router.get("/unlock/:userid",headerAuth, userController.unlockUser);
 
 // auth : true
 router.post("/change-password", headerAuth, userController.changeUserPassword);
@@ -25,10 +25,12 @@ router.post(
   userController.changeOtherPassword
 );
 
+router.get("/berif", userController.getLisOftNameAndUserName);
+
 router.post("/passwordrecovery", userController.forgotPasswordRequest);
 
-router.post("/phoneNumbers/add", userController.addPhoneNumber);
-router.get("/phoneNumbers/show", userController.getPhoneBook);
+router.post("/phoneNumbers/add",headerAuth, userController.addPhoneNumber);
+router.get("/phoneNumbers/show",headerAuth, userController.getPhoneBook);
 
 var multer = require("multer");
 const path = require("path");

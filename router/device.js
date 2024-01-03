@@ -16,7 +16,7 @@ router.get("/cmd/sos/:IMEI/:sos",headerAuth, deviceController.setSOS);
 router.get("/cmd/sos/:IMEI/:sos",headerAuth, deviceController.configure);
 // get  CONFIGURE => DEVICE => NOTIFYUTITY => SET CONFIGURE
 router.get("/last",headerAuth, deviceController.getLastLocationOfAllDevice);
-// get  CONFIGURE => DEVICE => NOTIFYUTITY => SET CONFIGURE
+// get  CONFIGURE => DEVICE => NOTIFYUTITY => SET CONFIGURE\
 
 
 
@@ -27,7 +27,7 @@ router.get("/", deviceController.getDevices);
 
 router.get("/tests",headerAuth, deviceController.tests);
 
-// ADD DEVICE =>
+// ADD DEVICE =>    
 router.post("/add",headerAuth, deviceController.addDevice);
 // EDIT DEVICE =>
 router.put("/",headerAuth, deviceController.editDevice);
@@ -35,6 +35,9 @@ router.put("/",headerAuth, deviceController.editDevice);
 router.post("/models/add",headerAuth, deviceController.addDeviceModels);
 // GET ALL TYPES OF DEVICES (VEHICLE MODELS)
 router.get("/models/get",headerAuth, deviceController.getDeviceModels);
+
+router.get("/models/getberif",headerAuth, deviceController.getDeviceModelsBerif);
+
 // ADD POLYGON 
 // router.get("/models/get",headerAuth, deviceController.getDeviceModels);
 
@@ -65,7 +68,7 @@ router.post("/lastlocationsinp",headerAuth, deviceController.getLastLocationsOfD
 
 
 // report pdf status alarms
-router.post("/report/alarms",headerAuth, testcontroller.reportDeviceAlarms);
+router.post("/report/alarms",headerAuth, testcontroller.reportDeviceAlarms2);
 router.post("/report/alarms/pdf",headerAuth, deviceController.exportDeviceAlarmsReportToPdf);
 
 // report pdf status 

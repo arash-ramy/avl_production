@@ -59,8 +59,8 @@ const REPORT_TEMPLATE_DIR = path.resolve(__dirname, "..", "template", "report");
 //       {
 //         $match: {$and :[
 //             {vehicleId: { $in: vehicleG[0].devices }},
-     
-//         ]   
+
+//         ]
 //         },
 //       },
 //       {
@@ -91,8 +91,8 @@ const REPORT_TEMPLATE_DIR = path.resolve(__dirname, "..", "template", "report");
 //     //      }
 //     //  }
 //     //   {
-//     //     $match: 
-       
+//     //     $match:
+
 //     //         {$dateCreated:{ $gte: new Date(startDate),$lte: new Date(startDate)}},
 //     //   },
 //     ]).limit(1000000)
@@ -171,8 +171,6 @@ const REPORT_TEMPLATE_DIR = path.resolve(__dirname, "..", "template", "report");
 //         // })
 //         // return res.json(vehiclesAlarmData)
 
-        
-
 //       })
 //     // return res.json({reportAlarms,"dkd":"dkk"})
 //     //     if (startDate) {
@@ -247,153 +245,345 @@ const REPORT_TEMPLATE_DIR = path.resolve(__dirname, "..", "template", "report");
 //   }
 // }
 
-
 const reportDeviceAlarms = async (req, res) => {
-    try {
-            const userId = req.user._id;
+  try {
+    const userId = req.user._id;
 
-        const {
-          dateFilter: { start: startDate, end: endDate },
-          timeFilter: { start: startTime, end: endTime },
-          groupFilter,
-                deviceFilter,
-              } = req.body;
-        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-          throw new Error(
-            "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-          );
-        }
-        if (startTime && endTime && startTime > endTime) {
-          throw new Error(
-            "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-          );
-        }
-        // const { reportDevices } = await reports.getReportDevices(req);
-        // reportDevices.select({ _id: 1 });
-        // const deviceIds = (await reportDevices).map(
-        //   ({ _id: vehicleId }) => vehicleId
-        // );
+    const {
+      dateFilter: { start: startDate, end: endDate },
+      timeFilter: { start: startTime, end: endTime },
+      groupFilter,
+      deviceFilter,
+    } = req.body;
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      throw new Error(
+        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
+      );
+    }
+    if (startTime && endTime && startTime > endTime) {
+      throw new Error(
+        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
+      );
+    }
+    // const { reportDevices } = await reports.getReportDevices(req);
+    // reportDevices.select({ _id: 1 });
+    // const deviceIds = (await reportDevices).map(
+    //   ({ _id: vehicleId }) => vehicleId
+    // );
 
-
-
-        var reportDevices = await DeviceGroupModel.aggregate([
-                  {
-                    $match: {
-                      $and: [
-                        { $or: [{ user: userId }, { sharees: userId }] },
-                        {
-                          devices: {
-                            $in: deviceFilter.map((item) => {
-                              return new mongoose.Types.ObjectId('5992786811dc0505f290f86b');
-                            }),
-                          },
-                        },
-                      ],
-                    },
-                  },
-                  { $unwind: "$devices" },
-                  {
-                    $group: {
-                      _id: null,
-                      devices: { $addToSet: "$devices" },
-                    },
-                  },
-        ])
+    var reportDevices = await DeviceGroupModel.aggregate([
+      {
+        $match: {
+          $and: [
+            { $or: [{ user: userId }, { sharees: userId }] },
+            {
+              devices: {
+                $in: deviceFilter.map((item) => {
+                  return new mongoose.Types.ObjectId(
+                    "5992786811dc0505f290f86b"
+                  );
+                }),
+              },
+            },
+          ],
+        },
+      },
+      { $unwind: "$devices" },
+      {
+        $group: {
+          _id: null,
+          devices: { $addToSet: "$devices" },
+        },
+      },
+    ]);
 
     // return res.json({reportDevices})
-        const reportAlarms = VehicleAlarmModel.aggregate()
-          .match({ vehicleId: {$in: deviceFilter.map((item) => {
+    const reportAlarms = VehicleAlarmModel.aggregate()
+      .match({
+        vehicleId: {
+          $in: deviceFilter.map((item) => {
             return new mongoose.Types.ObjectId(item);
-          })}})
-          .addFields({
-            dateCreated: {
+          }),
+        },
+      })
+      .addFields({
+        dateCreated: {
+          $dateFromString: {
+            dateString: { $substr: ["$date", 0, 34] },
+          },
+        },
+        dateCreatedHour: {
+          $hour: {
+            date: {
               $dateFromString: {
-                dateString: { $substr: ["$date", 0, 34] },
-              },
-            },
-            dateCreatedHour: {
-              $hour: {
-                date: {
-                  $dateFromString: {
-                    dateString: {
-                      $substr: ["$date", 0, 34],
-                    },
-                  },
-                },
-                timezone: "Asia/Tehran",
-              },
-            },
-          });
-        if (startDate) {
-          reportAlarms.match({
-            dateCreated: { $gte: new Date(startDate) },
-          });
-        }
-        if (endDate) {
-          reportAlarms.match({
-            dateCreated: { $lte: new Date(endDate) },
-          });
-        }
-        if (startTime) {
-          reportAlarms.match({
-            dateCreatedHour: { $gte: startTime },
-          });
-        }
-        if (endTime) {
-          reportAlarms.match({
-            dateCreatedHour: { $lt: endTime },
-          });
-        }
-        const vehiclesAlarmData = await reportAlarms
-          .group({
-            _id: "$vehicleId",
-            alarms: {
-              $push: {
-                date: "$dateCreated",
-                type: "$type",
-                desc: "$desc",
-                hour: "$dateCreatedHour",
-              },
-            },
-          })
-          .lookup({
-            from: "vehicles",
-            localField: "_id",
-            foreignField: "_id",
-            as: "device",
-          })
-          .unwind("device")
-          .lookup({
-            from: "devicegroups",
-            localField: "device._id",
-            foreignField: "devices",
-            as: "device.groups",
-          })
-          .replaceRoot({
-            $mergeObjects: [
-              "$$ROOT",
-              {
-                groups: "$device.groups.name",
-                device: {
-                  IMEI: "$device.deviceIMEI",
-                  type: "$device.type",
-                  simNumber: "$device.simNumber",
-                },
-                driver: {
-                  name: "$device.driverName",
-                  phoneNumber: "$device.driverPhoneNumber",
+                dateString: {
+                  $substr: ["$date", 0, 34],
                 },
               },
-            ],
-          });
-    
-        return res.json({ vehiclesAlarmData, code: 200 });
-      } catch (ex) {
-        console.log(ex);
-        return res.json({ msg: ex.message, code: 500 });
-      }
+            },
+            timezone: "Asia/Tehran",
+          },
+        },
+      });
+    if (startDate) {
+      reportAlarms.match({
+        dateCreated: { $gte: new Date(startDate) },
+      });
+    }
+    if (endDate) {
+      reportAlarms.match({
+        dateCreated: { $lte: new Date(endDate) },
+      });
+    }
+    if (startTime) {
+      reportAlarms.match({
+        dateCreatedHour: { $gte: startTime },
+      });
+    }
+    if (endTime) {
+      reportAlarms.match({
+        dateCreatedHour: { $lt: endTime },
+      });
+    }
+    const vehiclesAlarmData = reportAlarms
+      .group({
+        _id: "$vehicleId",
+        alarms: {
+          $push: {
+            date: "$dateCreated",
+            type: "$type",
+            desc: "$desc",
+            hour: "$dateCreatedHour",
+          },
+        },
+      })
+      .lookup({
+        from: "vehicles",
+        localField: "_id",
+        foreignField: "_id",
+        as: "device",
+      })
+      .unwind("device")
+      .lookup({
+        from: "devicegroups",
+        localField: "device._id",
+        foreignField: "devices",
+        as: "device.groups",
+      })
+      .replaceRoot({
+        $mergeObjects: [
+          "$$ROOT",
+          {
+            groups: "$device.groups.name",
+            device: {
+              IMEI: "$device.deviceIMEI",
+              type: "$device.type",
+              simNumber: "$device.simNumber",
+            },
+            driver: {
+              name: "$device.driverName",
+              phoneNumber: "$device.driverPhoneNumber",
+            },
+          },
+        ],
+      });
+
+    return res.json({ vehiclesAlarmData, code: 200 });
+  } catch (ex) {
+    console.log(ex);
+    return res.json({ msg: ex.message, code: 500 });
+  }
 };
 
+const reportDeviceAlarms2 = async (req, res) => {
+  try {
+    const {
+      dateFilter: { start: startDate, end: endDate },
+      timeFilter: { start: startTime, end: endTime },
+      groupFilter,
+      deviceFilter,
+    } = req.body;
+    const userId = req.user._id;
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      throw new Error(
+        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
+      );
+    }
+    if (startTime && endTime && startTime > endTime) {
+      throw new Error(
+        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
+      );
+    }
+
+    console.log(req.body,"dosokdofsefi");
+    // if (this.authUser && !this.authUser.isAdmin()) {
+    if (req.user?.username === "admin" || req.user?.username === "arash" ) {
+      console.log("the user is  ADMIN");
+
+      var vehiclesFounded = await DeviceGroupModel.aggregate([
+        { $unwind: "$devices" },
+        {
+          $group: {
+            _id: null,
+            devices: { $addToSet: "$devices" },
+          },
+        },
+      ]);
+    } else {
+      console.log("the user is not ADMIN");
+
+      var vehiclesFounded = await DeviceGroupModel.aggregate([
+        // {
+        //   $match: {
+        //     $and: [
+        //       { $or: [{ user: userId }, { sharees: userId }] },
+        //       {
+        //         devices: {
+        //           $in: deviceFilter.map((item) => {
+        //             return new mongoose.Types.ObjectId(item);
+        //           }),
+        //         },
+        //       },
+        //     ],
+        //   },
+        // },
+        { $unwind: "$devices" },
+        {
+          $group: {
+            _id: null,
+            devices: { $addToSet: "$devices" },
+          },
+        },
+      ]);
+    }
+    var ss = "arashrahimi".substr(0, 2);
+    console.log(vehiclesFounded,"vehiclesFoundedddddd");
+
+    // return res.json(vehiclesFounded)
+    const reportAlarms = await VehicleAlarmModel.aggregate([
+      {
+        $match: {
+          vehicleId: {
+            $in: vehiclesFounded[0].devices.map(async(item) => {
+              return await new mongoose.Types.ObjectId(item);
+            }),
+          },
+        },
+      },
+
+      // {
+      //   $addFields: {
+      //     dateCreated: {
+      //       $dateFromString: {
+      //         dateString: { $substr: ["$date", 0, 34] },
+      //       },
+      //     },
+      //     dateCreatedHour: {
+      //       $hour: {
+      //         date: {
+      //           $dateFromString: {
+      //             dateString: {
+      //               $substr: ["$date", 0, 34],
+      //             },
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+
+      // {
+      //   $match: {
+      //     $and: [
+      //       {
+      //         dateCreated: {
+      //           $gte: new Date(startDate), // specify the start date
+      //           $lte: new Date(endDate), // specify the end date
+      //         },
+      //       },
+      //       {
+      //         dateCreatedHour: { $gte: startTime, $lt: endTime },
+      //       },
+      //     ],
+      //   },
+      // },
+      // {
+      //   $group: {
+      //     _id: "$vehicleId",
+      //     alarms: {
+      //       $push: {
+      //         date: "$dateCreated",
+      //         type: "$type",
+      //         desc: "$desc",
+      //         hour: "$dateCreatedHour",
+      //       },
+      //     },
+      //   },
+      // },
+      // {
+      //   $lookup: {
+      //     from: "vehicles",
+      //     localField: "_id",
+      //     foreignField: "_id",
+      //     as: "device",
+      //   },
+      // },
+      // {
+      //   $unwind: "$device",
+      // },
+      // {
+      //   $lookup: {
+      //     from: "devicegroups",
+      //     localField: "device._id",
+      //     foreignField: "devices",
+      //     as: "device.groups",
+      //   },
+      // },
+      // {
+      //  $replaceRoot: {
+      //     newRoot: { 
+      //     $mergeObjects: [
+      //         '$$ROOT',
+      //         {
+      //             groups: '$device.groups.name',
+      //             device: {
+      //                 IMEI: '$device.deviceIMEI',
+      //                 type: '$device.type',
+      //                 simNumber: '$device.simNumber',
+      //             },
+      //             driver: {
+      //                 name: '$device.driverName',
+      //                 phoneNumber: '$device.driverPhoneNumber',
+      //             },
+      //         },
+      //     ],
+      //    }
+      //  } 
+      
+      //  }
+      // ,{
+      //   $project: {
+      //     _id: 0, // Exclude the default _id field if needed
+      //     newField: "$dateCreated"
+      //   }
+      // }
+
+      //   { $addFields:{
+      //     dateCreated: { $dateFromString: {
+      //       dateString: "06-15-2018",
+      //      format: "%m-%d-%Y"
+      //     } }
+      // }}
+    ]).limit(10);
+
+    return res.json(reportAlarms);
+
+    // }
+  } catch (error) {
+    console.log(error);
+  }
+};
 module.exports = {
   reportDeviceAlarms,
+  reportDeviceAlarms2,
 };

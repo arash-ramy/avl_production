@@ -260,31 +260,31 @@ const  editUser = async(req, res)=>{
 const getUserList = async (req, res) => {
   try {
     // updateUserActivity("مشاهده لیست کاربران", req.user);
-    const allUser = await UserModel.find();
-    //    .select({
-    //     _id: 1,
-    //     username: 1,
-    //     firstname: 1,
-    //     lastname: 1,
-    //     gender: 1,
-    //     email: 1,
-    //     mobileNumber: 1,
-    //     roles: 1,
-    //     islockedout: 1,
-    //     deviceModel: 1,
-    // })
-    // .populate({
-    //     path: 'deviceModel',
-    //     select: { name: 1, _id: 0 },
-    // })
+    const allUser = await UserModel.find()
+       .select({
+        _id: 1,
+        username: 1,
+        firstname: 1,
+        lastname: 1,
+        gender: 1,
+        email: 1,
+        mobileNumber: 1,
+        roles: 1,
+        islockedout: 1,
+        deviceModel: 1,
+    })
+    .populate({
+        path: 'deviceModel',
+        select: { name: 1, _id: 0 },
+    })
 
     // console.log(allData, "ramy");
-    // .populate({
-    //     path: 'deviceModel',
-    //     select: { name: 1, _id: 0 },
-    // })
-    // .populate('groups', 'name')
-    // .lean()
+    .populate({
+        path: 'deviceModel',
+        select: { name: 1, _id: 0 },
+    })
+    .populate('groups', 'name').limit(1)
+    .lean()
 
     return res.json({ allUser });
   } catch (error) {
@@ -296,6 +296,46 @@ const getUserList = async (req, res) => {
   }
 };
 
+const getLisOftNameAndUserName = async (req, res) => {
+  try {
+    // updateUserActivity("مشاهده لیست کاربران", req.user);
+    const allUser = await UserModel.aggregate([
+    
+//     {  $group:{
+//         _id:"$_id",
+//         "firstname":"$firstname",
+//         // "username":"$username"
+//         // list :{
+//         // // $concat:["$username" , " " , "admin"]
+//         // }
+//       }
+// },
+
+{
+  $project:{
+            "label":{$concat:["$firstname"," ","$username"]},
+            value :"$_id",
+
+
+  }
+},
+{
+  $unset:"_id"
+},
+
+
+    ])
+      
+
+    return res.json({ allUser });
+  } catch (error) {
+    return res.json({
+      message: "Couldn`t load all users",
+      code: "400",
+      error: error.message,
+    });
+  }
+};
 const unlockUser = async (req, res) => {
   try {
     const user_id = req.params.userid;
@@ -722,6 +762,7 @@ module.exports = {
   getProfilePicture,
   addRoleToUser,
   test,
+  getLisOftNameAndUserName
 };
 
 // let vald = {

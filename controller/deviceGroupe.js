@@ -615,16 +615,16 @@ const getDeviceGroupById = async (req, res) => {
     var groupId = req.params.groupId;
 
     const founded = await DeviceGroupModel.findOne({
-      $and: [{ user: userId }, { _id: groupId }],
-    });
-    // .populate('devices')
-    // .populate({
-    //     path:'sharees',
-    //     populate: {
-    //         path: 'deviceModel',
-    //         select: {name: 1, _id: 0}
-    //     }
-    // })
+      $or: [{ user: userId }, { _id: groupId }],
+    })
+    .populate('devices')
+    .populate({
+        path:'sharees',
+        populate: {
+            path: 'deviceModel',
+            select: {name: 1, _id: 0}
+        }
+    })
     if (!founded) {
       return res.json({
         messag: "There is no device group",
@@ -652,8 +652,11 @@ const editDeviceGroup = async (req, res) => {
     var color = req.body.color;
     var userId = req.user._id;
 
+
+    console.log(req.body)
+
     const founded_DG = await DeviceGroupModel.findOne({
-      $and: [{ user: userId }, { _id: groupId }],
+      $or: [{ user: userId }, { _id: groupId }],
     });
 
     if (!founded_DG) {

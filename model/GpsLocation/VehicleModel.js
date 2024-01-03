@@ -181,7 +181,7 @@ VehicleSchema.post('remove', async vehicle => {
 });
 
     VehicleSchema.pre('find', async function getUserAuthenticatedDevices() {
-        // console.log("ky")
+        console.log("ky")
         // console.log(this.authUser,"this is authuser")
         // console.log(this.user)
         console.log("pp*")
