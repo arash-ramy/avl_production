@@ -72,22 +72,22 @@ router.post("/report/alarms",headerAuth, testcontroller.reportDeviceAlarms2);
 router.post("/report/alarms/pdf",headerAuth, deviceController.exportDeviceAlarmsReportToPdf);
 
 // report pdf status 
-router.post("/report/status",headerAuth, deviceController.reportDeviceStatus);
+router.post("/report/status",headerAuth, testcontroller.reportDeviceStatus2);
 router.post("/report/status/pdf",headerAuth, deviceController.exportDeviceStatusReportToPdf);
 
 
 // report pdf changes  
-router.post("/report/changes",headerAuth, deviceController.reportDeviceChanges);
+router.post("/report/changes",headerAuth, testcontroller.reportDeviceChanges);
 router.post("/report/changes/pdf",headerAuth, deviceController.exportDeviceChangesReportToPdf);
 
 
 // report pdf of devices and vehicle 
-router.post("/report/vehicles",headerAuth, deviceController.reportDriverVehicles);
+router.post("/report/vehicles",headerAuth, testcontroller.reportDriverVehicles);
 router.post("/report/vehicles/pdf",headerAuth, deviceController.exportDriverVehiclesReportToPdf);
 
 
 // report pdf location 
-router.post("/report/locations",headerAuth, deviceController.reportDeviceLocations);
+router.post("/report/locations",headerAuth, testcontroller.reportDeviceLocations);
 router.post("/report/locations/pdf",headerAuth, deviceController.exportDeviceLocationsReportToPdf);
 
 

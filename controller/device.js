@@ -1967,31 +1967,31 @@ const reportDeviceAlarms = async (req, res) => {
           },
         }
       },
-      {$unwind:"$devices"}
-      ,
-      {
-        $group:{
-          _id:null , devices:{$addToSet:"$devices"}
-        }
-      }
-      ,
-      {
-        $addFields:{
-          dateCreated:{
-            $dateFromString:{
-              dateString:{$substr:["$date",0,34]}
-            }
-          },
+      // {$unwind:"$devices"}
+      // ,
+      // {
+      //   $group:{
+      //     _id:null , devices:{$addToSet:"$devices"}
+      //   }
+      // }
+      // ,
+      // {
+      //   $addFields:{
+      //     dateCreated:{
+      //       $dateFromString:{
+      //         dateString:{$substr:["$date",0,34]}
+      //       }
+      //     },
           
-        }
-      }
-,{
-  $project: {
-    _id: 0, // Exclude the default _id field if needed
-    dateCreated: "$dateCreated",
-    II:"dd"
-  }
-}
+      //   }
+      // }
+// ,{
+//   $project: {
+//     _id: 0, // Exclude the default _id field if needed
+//     dateCreated: "$dateCreated",
+//     II:"dd"
+//   }
+// }
 
 
 
