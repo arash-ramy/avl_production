@@ -22,16 +22,9 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: true, limit: "150mb" }));
-
-
-
 const { GT06Controller  } = require("./controller/GT06Controller");
 const { FMXXXXController } = require("./controller/FMXXXXController");
-
-
  require("./DB/DbConnection");
-
-
 app.use(morgan(chalk` {hex('
 #fff200
 ').bold :method} {hex('#f57a33').bold :url} {hex('#9dff00').bold  :status} {hex('#ff0000').bold :response-time ms }-  :res[content-length]  `, new Date().getDay));
@@ -46,43 +39,22 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-
-
-
 const UserRouter = require("./router/user");
 const DeviceRouter = require("./router/device");
 const DeviceGroupRouter = require("./router/deviceGroupe");
 const GPSLocation = require("./router/gpslocation");
-// const scheduleCron = require("./router/cronTest");
-// const scheduleCron = require("./crons/index");
-// scheduleCron.scheduleCron()
-    
-
-
-
 app.use('/media',headerAuth,express.static(path.resolve('./public')));
 app.use("/api/v1/user", UserRouter);
 app.use("/api/v1/gpsdata", GPSLocation);
 app.use("/api/v1/device", DeviceRouter);
 app.use("/api/v1/devicegroup", DeviceGroupRouter);
-app.get('*', function(req, res){
-  res.status(404).send('what???')
-});
+app.use('*', (req, res) => res.status(404).send('Not Found'));
 
-// app.use("/api/v1/testcron", scheduleCron)
-
-// create server
 const server = app.listen(process.env.PORT, () => {
     console.log(
       `Server is running on http://localhost:${process.env.PORT}`
     );
   });
-
-
-
-
-
   const createServer = Controller => {
     const controller = new Controller();
     return net.createServer(socket => {
@@ -94,13 +66,8 @@ const server = app.listen(process.env.PORT, () => {
         socket.on('error', error => console.log("something went wrong in app io"));
     });
 };
-
-
-
 createServer(GT06Controller).listen(10000);
 createServer(FMXXXXController).listen(4000);
-  
-  // unhandled promise rejection
 process.on("unhandledRejection", (err) => {
     console.log(` 🔥🔥🔥shutting down the server for unhandle promise rejection`);
   console.log(err)
@@ -109,11 +76,3 @@ process.on("unhandledRejection", (err) => {
     });
   });
   
-
-      
-// shell.echo('hello world');
-
-// cron.schedule('*/3 * * * * *', () => {
-//   console.log(new Date());
-// });
-// connect dbx

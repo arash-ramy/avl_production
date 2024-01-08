@@ -1,0 +1,62 @@
+var StatusFounded = await VehicleStatusModel.aggregate([
+        {
+          $unset: ["vehicleIMEI", "status", "date", "__v", "_id", "deviceramy"],
+        },
+        {
+          $lookup: {
+            from: "devicegroups",
+            as: "deviceramy",
+            let: { userIds: userString },
+            pipeline: [
+              {
+                $match: {
+                  $and: [
+                    {
+                      $or: [
+                        { user: new mongoose.Types.ObjectId(userString) },
+                        { sharees: new mongoose.Types.ObjectId(userString) }
+                      ]
+                    },
+                    {
+                      devices: {
+                        $in: deviceFilter.map((item) => new mongoose.Types.ObjectId(item))
+                      }
+                    }
+                    // Add more conditions if needed
+                  ]
+                }
+              },
+              {
+                $limit: 1
+              },
+              {
+                $lookup: {
+                  from: "vehicles",
+                  let: { idN: "$_id" },
+                  as: "deviceramy",
+                  pipeline: [
+                    {
+                      $match: {
+                        _id: {
+                          $in: deviceFilter.map((item) => new mongoose.Types.ObjectId(item))
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                $project: {
+                  _id: "$deviceramy.deviceIMEI",
+                  IMEIS: "$deviceramy.deviceIMEI"
+                }
+              },
+              {
+                $unset: ["_id"]
+              }
+            ]
+          }
+        }  ,{
+          $limit: 1 // Limit the entire result to one document
+        }
+      ]);
