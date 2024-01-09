@@ -18,9 +18,9 @@ process.on("uncaughtException", (err) => {
   console.log(err.name, err.message);
   process.exit(1);
 });
-app.use(bodyParser.json());
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json({limit: "150mb" }));
+app.use(express.json({limit: "150mb" }));
+// app.use(bodyParser.urlencoded({ extended: true ,limit: "150mb"}));
 app.use(express.urlencoded({ extended: true, limit: "150mb" }));
 const { GT06Controller  } = require("./controller/GT06Controller");
 const { FMXXXXController } = require("./controller/FMXXXXController");

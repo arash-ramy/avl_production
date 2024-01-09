@@ -139,7 +139,7 @@ html(lang='en')
                                 td #{vehicle.device.type}
                             tr
                                 td.header آدرس آخرین موقعیت
-                                td #{vehicle.lastLocation.address || '-----'}
+                                td #{  || '-----'}
                                 td.header زمان آخرین موقعیت
                                 //- td #{persianDate(vehicle.lastLocation.date) || '-----'}
                             tr
@@ -161,7 +161,7 @@ html(lang='en')
                             th.time زمان
                             th.location موقعیت جغرافیایی
                             th.speed سرعت
-                            th.address آدرس
+                            th.----- آدرس
                             th.map مشاهده بر روی نقشه
                     tbody
                         each location in vehicle.locations
@@ -169,7 +169,7 @@ html(lang='en')
                                 //- td.time #{persianDate(location.date)}
                                 td.location #{round(location.latitude, 4)}, #{round(location.longitude, 4)}
                                 td.speed #{location.speed}
-                                td.address #{location.address}
+                                td.  ------
                                 td.map
                                     a(href=location.url) مشاهده بر روی نقشه
 

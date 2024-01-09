@@ -19,7 +19,7 @@ const morgan = require("morgan");
 const ActionEventModel = require("../model/GpsLocation/ActionEventModel");
 const mongoose = require("mongoose");
 const GPSDataModel = require("../model/GpsLocation/GPSDataModel");
-const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
+const vehiclesAlarmData  = require("../model/GpsLocation/VehicleAlarmModel");
 const REPORT_TEMPLATE_DIR = path.resolve(__dirname, "..", "template", "report");
 
 // RESET DEVICE =>   THIS API IS NOT VERIFIED
@@ -1730,6 +1730,7 @@ const reportDeviceLocations = async (req, res) => {
 
 const exportDeviceLocationsReportToPdf = async (req, res) => {
   try {
+    console.log("arashramy comes heer")
     if (!req.body.dateFilter && !req.body.eportData) {
       return res.json({
         messag: "reportData is required ",
@@ -1745,6 +1746,9 @@ const exportDeviceLocationsReportToPdf = async (req, res) => {
       geolib.getPathLength(vehicle.locations) / 1000.0;
     const round = (floatingPoint, fractionDigits = 2) =>
       parseFloat(floatingPoint).toFixed(fractionDigits);
+
+
+      console.log(vehiclesLocationData,"vehiclesLocationDatavehiclesLocationDatavehiclesLocationData")
     const persianDate = (dateString) =>
       dateString
         ? moment(new Date(dateString)).format("jYYYY/jM/jD HH:mm:ss")
@@ -2457,10 +2461,27 @@ const reportDeviceAlarms = async (req, res) => {
 
 const exportDeviceAlarmsReportToPdf = async (req, res) => {
   try {
-    const {
-      reportData: vehiclesAlarmData,
+    
+    var {
+      type,
       dateFilter: { start: startDate, end: endDate },
+      speedFilter: { min: minSpeed, max: maxSpeed },
+      timeFilter: { start: startTime, end: endTime },
+      groupFilter,
+      deviceFilter,
     } = req.body;
+
+    if (startTime === null && endTime === null) {
+      startTime = 0;
+      endTime = 24;
+    }
+    
+    if (minSpeed === null && maxSpeed === null) {
+      minSpeed = 0;
+      maxSpeed = 150;
+    }
+
+
     const round = (floatingPoint, fractionDigits = 2) =>
       parseFloat(floatingPoint).toFixed(fractionDigits);
     const persianDate = (dateString) =>
@@ -2481,6 +2502,7 @@ const exportDeviceAlarmsReportToPdf = async (req, res) => {
       round,
       persianDate,
     };
+    
     const filePath = await reports.getPdfReport(
       "devicealarms.jade",
       reportContext
@@ -2498,6 +2520,13 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
       var devices = req.body.devices;
       var bTime = req.body.bTime;
       var eTime = req.body.eTime;
+      console.log(req.body)
+      if(req.body.devices.length===0 || req.body.devices [0]=="" || req.body.devices[0] === null  ){
+        return res.json({
+          message:"please check your inputs ",
+          code :400
+        })
+      }
     //   // var limit = req.body.limit;
 
     //   // console.log(bTime, eTime, "9999");

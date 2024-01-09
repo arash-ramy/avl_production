@@ -3,12 +3,12 @@ const bcrypt = require('bcryptjs');
 
 const { Schema } = mongoose;
 
-const UserRole = new Schema({
-    rolename: { type: String },
+const UserRoleSchema = new Schema({
+    rolename: String,
     roledesc: String,
 });
 
-const User = new Schema({
+const UserSchema = new Schema({
     username: {
         type: String,
         unique: true,
@@ -18,8 +18,8 @@ const User = new Schema({
     },
     hashedPassword: { type: String, required: true },
     salt: { type: String, required: true },
-    registeredDate: { type: String, default: new Date()},
-    roles: [UserRole],
+    registeredDate: { type: String, default: new Date() },
+    roles: [UserRoleSchema],
     deviceModel: [
         {
             type: Schema.ObjectId,
@@ -36,64 +36,37 @@ const User = new Schema({
     profileImage: String,
 });
 
-User.virtual('groups', {
+UserSchema.virtual('groups', {
     ref: 'devicegroup',
     localField: '_id',
     foreignField: 'sharees',
 });
 
-//  Hash password
-User.pre("save", async function (next){
-    if(!this.isModified("hashedPassword")){
-      next();
+UserSchema.pre('save', async function (next) {
+    if (!this.isModified('hashedPassword')) {
+        return next();
     }
-  
     this.hashedPassword = await bcrypt.hash(this.hashedPassword, 10);
-  });
-  
-// User.methods.verifyPassword = function(password, callback) {
-//     bcrypt.compare(password, this.hashedPassword, (err, isMatch) => {
-//         if (err) return callback(err);
-//         callback(null, isMatch);
-//     });
-// };
-// compare password
-User.methods.comparePassword = async function (enteredPassword) {
+    next();
+});
+
+UserSchema.methods.comparePassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.hashedPassword);
-  };
-User.methods.getBrief = function() {
-    const {
-        id,
-        username,
-        email,
-        firstname,
-        lastname,
-        registerDate,
-        mobileNumber,
-        gender,
-        roles,
-    } = this;
-    return {
-        id,
-        username,
-        email,
-        firstname,
-        lastname,
-        registerDate,
-        mobileNumber,
-        gender,
-        roles,
-    };
 };
 
-User.methods.isAdmin = function isAdmin() {
-    return  this.username === 'admin';
+UserSchema.methods.getBrief = function () {
+    const { id, username, email, firstname, lastname, registerDate, mobileNumber, gender, roles } = this;
+    return { id, username, email, firstname, lastname, registerDate, mobileNumber, gender, roles };
 };
 
-User.methods.can = function hasRole(roleName) {
+UserSchema.methods.isAdmin = function () {
+    return this.username === 'admin';
+};
+
+UserSchema.methods.can = function (roleName) {
     return this.roles.some(({ rolename }) => rolename === roleName);
 };
 
-const UserModel = mongoose.model('users', User);
+const UserModel = mongoose.model('users', UserSchema);
 
 module.exports = UserModel;

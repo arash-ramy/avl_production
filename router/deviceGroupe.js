@@ -3,37 +3,46 @@ const router = express.Router();
 const { headerAuth } = require("../utils/authHeader");
 const DeviceGroups = require("../controller/deviceGroupe");
 
-// router.get("/:deviceGroup", headerAuth,DeviceGroups.getDeviceGroups);
+// Retrieve all device groups
+router.get("/", headerAuth, DeviceGroups.getDeviceGroups);
 
-router.get("/", headerAuth,DeviceGroups.getDeviceGroups);
-// router.get("/li", headerAuth,DeviceGroups.getDeviceGroups2);
+// Update a device group
+router.put("/", headerAuth, DeviceGroups.editGroup);
 
-router.put("/", headerAuth,DeviceGroups.editGroup);
+// Add a new device group
+router.post("/add", headerAuth, DeviceGroups.addDeviceGroup);
 
-router.post("/add", headerAuth,DeviceGroups.addDeviceGroup);
+// Get a list of custom vehicles
+router.get("/getcustomevehicle", headerAuth, DeviceGroups.getCustomeVehicle);
 
-router.get("/getcustomevehicle", headerAuth,DeviceGroups.getCustomeVehicle);
+// Get device group by ID
+router.get("/:groupId", headerAuth, DeviceGroups.getDeviceGroupById);
 
-router.get("/:groupId", headerAuth,DeviceGroups.getDeviceGroupById);
+// Update device group information
+router.put("/update", headerAuth, DeviceGroups.editDeviceGroup);
 
-router.put("/update", headerAuth,DeviceGroups.editDeviceGroup);
+// Add a vehicle to a device group
+router.post("/device", headerAuth, DeviceGroups.addVehicleToGroup);
 
-router.post("/device", headerAuth,DeviceGroups.addVehicleToGroup);
+// Share device groups with a user
+router.post("/share", headerAuth, DeviceGroups.shareGroupsWithUser);
 
-router.post("/share", headerAuth,DeviceGroups.shareGroupsWithUser);
+// Unshare device groups with a user
+router.post("/unshare", headerAuth, DeviceGroups.unshareGroupsWithUser);
 
-router.post("/unshare", headerAuth,DeviceGroups.unshareGroupsWithUser);
+// Get vehicles of a specific group
+router.get("/vehicleofgroup/:groupId", headerAuth, DeviceGroups.getVehiclesofGroup);
 
-router.get("/vehicleofgroup/:groupId", headerAuth,DeviceGroups.getVehiclesofGroup);
+// Remove a vehicle from a group
+router.delete("/device/:vehicleId/:groupId", headerAuth, DeviceGroups.removeVehicleFromGroup);
 
-router.delete("/device/:vehicleId/:groupId", headerAuth,DeviceGroups.removeVehicleFromGroup);
+// Get device groups of a user
+router.get("/vehicleofgroup/:id", DeviceGroups.getUserDeviceGroups);
 
-router.get("/vehicleofgroup/:id",DeviceGroups.getUserDeviceGroups);
+// Get vehicles of multiple groups
+router.post("/vehicleofgroup", headerAuth, DeviceGroups.getVehiclesofMultiGroup);
 
-router.post("/vehicleofgroup", headerAuth,DeviceGroups.getVehiclesofMultiGroup);
-
-router.get("/report/vehicleofgroup/:groupId/:userId", headerAuth,DeviceGroups.reportVehicleOfGroups);
-
-
+// Report vehicles of specific groups for a user
+router.get("/report/vehicleofgroup/:groupId/:userId", headerAuth, DeviceGroups.reportVehicleOfGroups);
 
 module.exports = router;

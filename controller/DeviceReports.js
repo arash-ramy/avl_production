@@ -1,408 +1,21 @@
 const moment = require("moment");
-const VehicleModel = require("../model/GpsLocation/VehicleModel");
-const VehicleStatusModel = require("../model/GpsLocation/VehicleStatusModel");
-const VehicleTypeModel = require("../model/GpsLocation/VehicleTypeModel");
 const path = require("path");
 const mongoose = require("mongoose");
+// const {
+//   DeviceGroupModel,
+//   VehicleAlarmModel,
+// } = require("../model/GpsLocation"); // Assuming these models exist in a common file
+const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
 
 const DeviceGroupModel = require("../model/GpsLocation/DeviceGroupeModel");
-const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
-const { EROFS } = require("constants");
-const GPSDataModel = require("../model/GpsLocation/GPSDataModel");
+const VehicleStatusModel = require("../model/GpsLocation/VehicleStatusModel");
 const ActionEventModel = require("../model/GpsLocation/ActionEventModel");
+const GPSDataModel = require("../model/GpsLocation/GPSDataModel");
+
 const REPORT_TEMPLATE_DIR = path.resolve(__dirname, "..", "template", "report");
 
-// async function reportDeviceAlarms(req, res) {
-//   try {
-//     const {
-//       dateFilter: { start: startDate, end: endDate },
-//       timeFilter: { start: startTime, end: endTime },
-//       groupFilter,
-//       deviceFilter,
-//     } = req.body;
-//     const userId = req.user._id;
-//     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-//       throw new Error(
-//         "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-//       );
-//     }
-//     if (startTime && endTime && startTime > endTime) {
-//       throw new Error(
-//         "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-//       );
-//     }
-
-//     console.log(deviceFilter, "DEVICE");
-//     var vehicleG = await DeviceGroupModel.aggregate([
-//       {
-//         $match: {
-//           $and: [
-//             { $or: [{ user: userId }, { sharees: userId }] },
-//             {
-//               devices: {
-//                 $in: deviceFilter.map((item) => {
-//                   return new mongoose.Types.ObjectId(item);
-//                 }),
-//               },
-//             },
-//           ],
-//         },
-//       },
-//       { $unwind: "$devices" },
-//       {
-//         $group: {
-//           _id: null,
-//           devices: { $addToSet: "$devices" },
-//         },
-//       },
-//     ]);
-
-//     // return res.json(vehicleG[0].devices )
-//     const reportAlarms =  VehicleAlarmModel.aggregate([
-//       {
-//         $match: {$and :[
-//             {vehicleId: { $in: vehicleG[0].devices }},
-
-//         ]
-//         },
-//       },
-//       {
-//         $addFields: {
-//           dateCreated: {
-//             $dateFromString: {
-//               dateString: { $substr: ["$date", 0, 34] },
-//             },
-//           },
-//           dateCreatedHour: {
-//             $hour: {
-//               date: {
-//                 $dateFromString: {
-//                   dateString: {
-//                     $substr: ["$date", 0, 34],
-//                   },
-//                 },
-//               },
-//               timezone: "Asia/Tehran",
-//             },
-//           },
-//         },
-//       },
-//     //  {
-//     //      $project:{
-//     //         dateCreated : { $gte: {"$dateCreated": new Date(startDate) }}
-
-//     //      }
-//     //  }
-//     //   {
-//     //     $match:
-
-//     //         {$dateCreated:{ $gte: new Date(startDate),$lte: new Date(startDate)}},
-//     //   },
-//     ]).limit(1000000)
-// .then((response)=>{
-
-//         // return res.json({response})
-
-//           console.log("l1")
-//         if (startDate &&!startDate === null) {
-//             response.match({
-//               date: { $gte: startDate },
-//             });
-//           }
-//           if (endDate&&!endDate === null) {
-//             response.match({
-//               date: { $lte: new Date(endDate) },
-//             });
-//           }
-//         //   if (startTime&&!startTime === null) {
-//         //     response.match({
-//         //       dateCreatedHour: { $gte: startTime },
-//         //     });
-//         //   }
-//         //   if (endTime && !endTime ===null) {
-//         //     response.match({
-//         //       dateCreatedHour: { $lt: endTime },
-//         //     });
-//         //   }
-//           console.log("l2")
-//           return res.json(response)
-//         //   const vehiclesAlarmData =  response.aggregate({
-//         //       $group:{
-//         //           id:"$_id"
-//         //       }
-//         //   })
-//         //     .group({
-//         //       _id: "$vehicleId",
-//         //       alarms: {
-//         //         $push: {
-//         //           date: "$dateCreated",
-//         //           type: "$type",
-//         //           desc: "$desc",
-//         //           hour: "$dateCreatedHour",
-//         //         },
-//         //       },
-//         //     })
-//         //     .lookup({
-//         //       from: "vehicles",
-//         //       localField: "_id",
-//         //       foreignField: "_id",
-//         //       as: "device",
-//         //     })
-//         //     .unwind("device")
-//         //     .lookup({
-//         //       from: "devicegroups",
-//         //       localField: "device._id",
-//         //       foreignField: "devices",
-//         //       as: "device.groups",
-//         //     })
-//         //     .replaceRoot({
-//         //       $mergeObjects: [
-//         //         "$$ROOT",
-//         //         {
-//         //           groups: "$device.groups.name",
-//         //           device: {
-//         //             IMEI: "$device.deviceIMEI",
-//         //             type: "$device.type",
-//         //             simNumber: "$device.simNumber",
-//         //           },
-//         //           driver: {
-//         //             name: "$device.driverName",
-//         //             phoneNumber: "$device.driverPhoneNumber",
-//         //           },
-//         //         },
-//         //       ],
-//         // })
-//         // return res.json(vehiclesAlarmData)
-
-//       })
-//     // return res.json({reportAlarms,"dkd":"dkk"})
-//     //     if (startDate) {
-//     //       reportAlarms.match({
-//     //         dateCreated: { $gte: new Date(startDate) },
-//     //       });
-//     //     }
-//     //     if (endDate) {
-//     //       reportAlarms.match({
-//     //         dateCreated: { $lte: new Date(endDate) },
-//     //       });
-//     //     }
-//     //     if (startTime) {
-//     //       reportAlarms.match({
-//     //         dateCreatedHour: { $gte: startTime },
-//     //       });
-//     //     }
-//     //     if (endTime) {
-//     //       reportAlarms.match({
-//     //         dateCreatedHour: { $lt: endTime },
-//     //       });
-//     //     }
-//     //     const vehiclesAlarmData = await reportAlarms
-//     //       .group({
-//     //         _id: "$vehicleId",
-//     //         alarms: {
-//     //           $push: {
-//     //             date: "$dateCreated",
-//     //             type: "$type",
-//     //             desc: "$desc",
-//     //             hour: "$dateCreatedHour",
-//     //           },
-//     //         },
-//     //       })
-//     //       .lookup({
-//     //         from: "vehicles",
-//     //         localField: "_id",
-//     //         foreignField: "_id",
-//     //         as: "device",
-//     //       })
-//     //       .unwind("device")
-//     //       .lookup({
-//     //         from: "devicegroups",
-//     //         localField: "device._id",
-//     //         foreignField: "devices",
-//     //         as: "device.groups",
-//     //       })
-//     //       .replaceRoot({
-//     //         $mergeObjects: [
-//     //           "$$ROOT",
-//     //           {
-//     //             groups: "$device.groups.name",
-//     //             device: {
-//     //               IMEI: "$device.deviceIMEI",
-//     //               type: "$device.type",
-//     //               simNumber: "$device.simNumber",
-//     //             },
-//     //             driver: {
-//     //               name: "$device.driverName",
-//     //               phoneNumber: "$device.driverPhoneNumber",
-//     //             },
-//     //           },
-//     //         ],
-//     //   })
-//     //   .then((response) => {
-//     //     return res.json({ response });
-//     //   });
-
-//     // return res.json({ vehicleG });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// }
-
-// const reportDeviceAlarms = async (req, res) => {
-//   try {
-//     const userId = req.user._id;
-
-//     const {
-//       dateFilter: { start: startDate, end: endDate },
-//       timeFilter: { start: startTime, end: endTime },
-//       groupFilter,
-//       deviceFilter,
-//     } = req.body;
-//     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-//       throw new Error(
-//         "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-//       );
-//     }
-//     if (startTime && endTime && startTime > endTime) {
-//       throw new Error(
-//         "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-//       );
-//     }
-//     // const { reportDevices } = await reports.getReportDevices(req);
-//     // reportDevices.select({ _id: 1 });
-//     // const deviceIds = (await reportDevices).map(
-//     //   ({ _id: vehicleId }) => vehicleId
-//     // );
-
-//     var reportDevices = await DeviceGroupModel.aggregate([
-//       {
-//         $match: {
-//           $and: [
-//             { $or: [{ user: userId }, { sharees: userId }] },
-//             {
-//               devices: {
-//                 $in: deviceFilter.map((item) => {
-//                   return new mongoose.Types.ObjectId(
-//                     "5992786811dc0505f290f86b"
-//                   );
-//                 }),
-//               },
-//             },
-//           ],
-//         },
-//       },
-//       { $unwind: "$devices" },
-//       {
-//         $group: {
-//           _id: null,
-//           devices: { $addToSet: "$devices" },
-//         },
-//       },
-//     ]);
-
-//     // return res.json({reportDevices})
-//     const reportAlarms = VehicleAlarmModel.aggregate()
-//       .match({
-//         vehicleId: {
-//           $in: deviceFilter.map((item) => {
-//             return new mongoose.Types.ObjectId(item);
-//           }),
-//         },
-//       })
-//       .addFields({
-//         dateCreated: {
-//           $dateFromString: {
-//             dateString: { $substr: ["$date", 0, 34] },
-//           },
-//         },
-//         dateCreatedHour: {
-//           $hour: {
-//             date: {
-//               $dateFromString: {
-//                 dateString: {
-//                   $substr: ["$date", 0, 34],
-//                 },
-//               },
-//             },
-//             timezone: "Asia/Tehran",
-//           },
-//         },
-//       });
-//     if (startDate) {
-//       reportAlarms.match({
-//         dateCreated: { $gte: new Date(startDate) },
-//       });
-//     }
-//     if (endDate) {
-//       reportAlarms.match({
-//         dateCreated: { $lte: new Date(endDate) },
-//       });
-//     }
-//     if (startTime) {
-//       reportAlarms.match({
-//         dateCreatedHour: { $gte: startTime },
-//       });
-//     }
-//     if (endTime) {
-//       reportAlarms.match({
-//         dateCreatedHour: { $lt: endTime },
-//       });
-//     }
-//     const vehiclesAlarmData = reportAlarms
-//       .group({
-//         _id: "$vehicleId",
-//         alarms: {
-//           $push: {
-//             date: "$dateCreated",
-//             type: "$type",
-//             desc: "$desc",
-//             hour: "$dateCreatedHour",
-//           },
-//         },
-//       })
-//       .lookup({
-//         from: "vehicles",
-//         localField: "_id",
-//         foreignField: "_id",
-//         as: "device",
-//       })
-//       .unwind("device")
-//       .lookup({
-//         from: "devicegroups",
-//         localField: "device._id",
-//         foreignField: "devices",
-//         as: "device.groups",
-//       })
-//       .replaceRoot({
-//         $mergeObjects: [
-//           "$$ROOT",
-//           {
-//             groups: "$device.groups.name",
-//             device: {
-//               IMEI: "$device.deviceIMEI",
-//               type: "$device.type",
-//               simNumber: "$device.simNumber",
-//             },
-//             driver: {
-//               name: "$device.driverName",
-//               phoneNumber: "$device.driverPhoneNumber",
-//             },
-//           },
-//         ],
-//       });
-
-//     return res.json({ vehiclesAlarmData, code: 200 });
-//   } catch (ex) {
-//     console.log(ex);
-//     return res.json({ msg: ex.message, code: 500 });
-//   }
-// };
-
-// this work ramy
 const reportDeviceAlarms = async (req, res) => {
   try {
-    console.log(req.user?.username, "ramyyyyyyy");
-
     const {
       dateFilter: { start: startDate, end: endDate },
       timeFilter: { start: startTime, end: endTime },
@@ -410,200 +23,157 @@ const reportDeviceAlarms = async (req, res) => {
       deviceFilter,
     } = req.body;
     const userId = req.user._id;
+
+    // Input validation for date and time
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+      throw new Error("Start date cannot be after end date.");
     }
     if (startTime && endTime && startTime > endTime) {
-      throw new Error(
-        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-      );
+      throw new Error("Start time cannot be after end time.");
     }
 
-    console.log(req.body, "dosokdofsefi");
-    // if (this.authUser && !this.authUser.isAdmin()) {
-    if (req.user?.username === "asdmin" || req.user?.username === "arsash") {
-      console.log("the user is  ADMIN");
-
-      var vehiclesFounded = await DeviceGroupModel.aggregate([
-        { $unwind: "$devices" },
-        {
-          $group: {
-            _id: null,
-            devices: { $addToSet: "$devices" },
-          },
-        },
-      ]);
-    } else {
-      console.log("the user is not ADMIN");
-
-      var vehiclesFounded = await DeviceGroupModel.aggregate([
-        {
-          $match: {
-            $and: [
-              { $or: [{ user: userId }, { sharees: userId }] },
-              {
-                devices: {
-                  $in: deviceFilter.map((item) => {
-                    return new mongoose.Types.ObjectId(item);
-                  }),
-                },
-              },
-            ],
-          },
-        },
-        // { $unwind: "$devices" },
-        // {
-        //   $group: {
-        //     _id: null,
-        //     devices: { $addToSet: "$devices" },
-        //   },
-        // },
-        {
-          $lookup: {
-            from: "vehicles",
-            // localField: 'devices',
-            // foreignField: '_id',
-            let: { ddd: "$devices" },
-
-            as: "deviceramy",
-            pipeline: [
-              {
-                $match: {
-                  _id: {
-                    $in: deviceFilter.map((item) => {
-                      return new mongoose.Types.ObjectId(item);
-                    }),
-                  },
-                },
-              },
-            ],
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            fID: { $addToSet: "$deviceramy._id" },
-          },
-        },
-        { $unset: ["_id"] },
-      ]);
-    }
-    // return res.json(vehiclesFounded[0].fID[0])
-    // var ss = "arashrahimi".substr(0, 2);
-    // console.log(vehiclesFounded,"vehiclesFoundedddddd");
-    // return res.json(vehiclesFounded)
-    var catchIMEI = vehiclesFounded[0].fID[0];
-    // return res.json(catchIMEI)
-    const reportAlarms = await VehicleAlarmModel.aggregate(
-      [
-        {
-          $match: {
-            vehicleId: {
-              $in: catchIMEI.map((item) => {
-                return new mongoose.Types.ObjectId(item);
-              }),
-            },
-          },
-        },
-
-        {
-          $addFields: {
-            dateCreated: {
-              $dateFromString: {
-                dateString: { $substr: ["$date", 0, 34] },
-              },
-            },
-        dateCreatedHour: {
-          $hour: {
-            date: {
-              $dateFromString: {
-                dateString: {
-                  $substr: ["$date", 0, 34],
-                },
-              },
-            },
-          },
-            },
-          },
-        },
-
-        {
-          $match: {
-            $and: [
-              {
-                dateCreated: {
-                  $gte: new Date(startDate), // specify the start date
-                  $lte: new Date(endDate), // specify the end date
-                },
-              },
-              {
-                dateCreatedHour: { $gte: startTime, $lt: endTime },
-              },
-            ],
-          },
-        },
-        {
-          $group: {
-            _id: "$vehicleId",
-            alarms: {
-              $push: {
-                date: "$date",
-                type: "$type",
-                desc: "$desc",
-                hour: "$dateCreatedHour",
-              },
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: "vehicles",
-            localField: "_id",
-            foreignField: "_id",
-            as: "device",
-          },
-        },
-        {
-          $unwind: "$device",
-        },
-        {
-          $lookup: {
-            from: "devicegroups",
-            localField: "device._id",
-            foreignField: "devices",
-            as: "device.groups",
-          },
-        },
-        {
-          $replaceRoot: {
-            newRoot: {
-              $mergeObjects: [
-                "$$ROOT",
+    // User role check
+    console.log(req.body)
+    const isAdmin = req.user?.username === "admiedn" || req.user?.username === "arsash";
+    
+    // Fetch vehicles based on user role
+    const vehiclesFounded = isAdmin
+      ? await DeviceGroupModel.aggregate([{ $unwind: "$devices" }, { $group: { _id: null, devices: { $addToSet: "$devices" } } }])
+      : await DeviceGroupModel.aggregate([
+          {
+            $match: {
+              $and: [
+                { $or: [{ user: userId }, { sharees: userId }] },
                 {
-                  groups: "$device.groups.name",
-                  device: {
-                    IMEI: "$device.deviceIMEI",
-                    type: "$device.type",
-                    simNumber: "$device.simNumber",
-                  },
-                  driver: {
-                    name: "$device.driverName",
-                    phoneNumber: "$device.driverPhoneNumber",
+                  devices: {
+                    $in: deviceFilter.map((item) => new mongoose.Types.ObjectId(item)),
                   },
                 },
               ],
             },
           },
+          { $unwind: "$devices" },
+          {
+            $group: {
+              _id: null,
+              devices: { $addToSet: "$devices" },
+            },
+          },
+          {
+            $lookup: {
+              from: "vehicles",
+              let: { ddd: "$devices" },
+              as: "deviceramy",
+              pipeline: [
+                {
+                  $match: {
+                    _id: { $in: deviceFilter.map((item) => new mongoose.Types.ObjectId(item)) },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              fID: { $addToSet: "$deviceramy._id" },
+            },
+          },
+          { $unset: ["_id"] },
+        ]);
+
+    const catchIMEI = vehiclesFounded[0].fID[0];
+    // Fetch report alarms based on filters
+    const reportAlarms = await VehicleAlarmModel.aggregate([
+      {
+        $match: {
+          vehicleId: { $in: catchIMEI.map((item) => new mongoose.Types.ObjectId(item)) },
         },
-      ],
-      { allowDiskUse: true }
-    )
+      },
+      {
+        $addFields: {
+          dateCreated: {
+            $dateFromString: {
+              dateString: { $substr: ["$date", 0, 34] },
+            },
+          },
+          dateCreatedHour: {
+            $hour: {
+              date: {
+                $dateFromString: {
+                  dateString: { $substr: ["$date", 0, 34] },
+                },
+              },
+              timezone: "Asia/Tehran",
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          $and: [
+            { dateCreated: { $gte: new Date(startDate), $lte: new Date(endDate) } },
+            { dateCreatedHour: { $gte: startTime, $lt: endTime } },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: "$vehicleId",
+          alarms: {
+            $push: {
+              date: "$date",
+              type: "$type",
+              desc: "$desc",
+              hour: "$dateCreatedHour",
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "vehicles",
+          localField: "_id",
+          foreignField: "_id",
+          as: "device",
+        },
+      },
+      { $unwind: "$device" },
+      {
+        $lookup: {
+          from: "devicegroups",
+          localField: "device._id",
+          foreignField: "devices",
+          as: "device.groups",
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              "$$ROOT",
+              {
+                groups: "$device.groups.name",
+                device: {
+                  IMEI: "$device.deviceIMEI",
+                  type: "$device.type",
+                  simNumber: "$device.simNumber",
+                },
+                driver: {
+                  name: "$device.driverName",
+                  phoneNumber: "$device.driverPhoneNumber",
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]);
 
     return res.json(reportAlarms);
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    return res.json({ msg: error.message, code: 500 });
   }
 };
 
@@ -717,91 +287,20 @@ const reportDeviceStatus2 = async (req, res) => {
       //  return     res.json(vehiclesFounded[0].IMEIS[0] );
       var userString = userId.toString();
       var imeis = vehiclesFounded[0].IMEIS[0];
-      console.log(vehiclesFounded[0].IMEIS[0]);
+      console.log(imeis);
+        console.log("ss",startDate)
+        console.log("ss",endDate)
+
+        // return res.json({imeis})
+
+        // return res.json(imeis)
       var StatusFounded = await VehicleStatusModel.aggregate([
-        // {
-        //   $lookup: {
-        //     from: "devicegroups",
-        //     as: "deviceramy",
-        //     let: { userIds: userString },
-        //     pipeline: [
-        //       {
-        //         $match: {
-        //           $and: [
-        //             {
-        //               $or: [
-        //                 { user: new mongoose.Types.ObjectId(userString) },
-        //                 { sharees: new mongoose.Types.ObjectId(userString) }
-        //               ]
-        //             },
-        //             {
-        //               devices: {
-        //                 $in: deviceFilter.map((item) => new mongoose.Types.ObjectId(item))
-        //               }
-        //             }
-        //             // Add more conditions if needed
-        //           ]
-        //         }
-        //       },
-        //       {
-        //         $limit: 1
-        //       },
-        //       {
-        //         $lookup: {
-        //           from: "vehicles",
-        //           let: { idN: "$_id" },
-        //           as: "deviceramy",
-        //           pipeline: [
-        //             {
-        //               $match: {
-        //                 _id: {
-        //                   $in: deviceFilter.map((item) => new mongoose.Types.ObjectId(item))
-        //                 }
-        //               }
-        //             }
-        //           ]
-        //         }
-        //       },
-        //       {
-        //         $project: {
-        //           _id: "$deviceramy.deviceIMEI",
-        //           IMEIS: "$deviceramy.deviceIMEI"
-        //         }
-        //       },
-
-        //     ]
-        //   }
-        // },
-        // {
-        //   $replaceRoot: {
-        //     newRoot: {
-        //       $mergeObjects: [
-        //         { $arrayElemAt: ["$deviceramy", 0] },
-        //         {  imei: "$_id" }
-        //       ]
-        //     }
-        //   }
-        // },
-
-        // {
-        //   $project: {
-        //     _id: 0, // Exclude _id field if not needed
-        //     customField: "$imei",
-        //     IMEIS: 1 // Include the IMEIS array
-        //     // Add more fields or manipulations if needed
-        //   }
-        // },
-        // {
-        //   $addFields: {
-        //     IMEIS: ["$IMEIS"] // Convert IMEIS to an array
-        //   }
-        // },
         {
           $match: {
             $and: [
-              { vehicleIMEI: { $in: ["350317170460004"] } },
+              { vehicleIMEI:{$in:imeis}},
               {
-                $or: [
+                $and: [
                   { date: { $gte: new Date(startDate) } },
                   { date: { $lte: new Date(endDate) } },
                 ],
@@ -861,14 +360,14 @@ const reportDeviceStatus2 = async (req, res) => {
             },
           },
         },
-      ]);
+      ]).limit(10)
       //  return     res.json(vehiclesFounded[0].IMEIS[0] );
 
       // $group: {
       //   _id: null,
       //   devices: { $addToSet: "$devices" },
       // },
-      res.json(StatusFounded);
+     return res.json(StatusFounded);
     }
   } catch (err) {
     console.log(err);
@@ -887,6 +386,11 @@ const reportDeviceLocations = async (req, res) => {
       groupFilter,
       deviceFilter,
     } = req.body;
+
+    console.log(req.body)
+    // console.log(req.body)
+    
+    console.log("runned")
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
       throw new Error(
         "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
