@@ -27,8 +27,8 @@ class GT06Controller extends GPSController {
                     raw: packet,
                 });
             }
-        } catch (ex) {
-            logger.error(ex);
+        } catch (error) {
+            console.log(error)
         }
     }
 

@@ -23,6 +23,7 @@
     "http-proxy": "^1.18.1",
     "jade": "^1.9.2",
     "jsonwebtoken": "^9.0.2",
+    "ldap-authentication": "^3.0.3",
     "moment": "^2.29.4",
     "moment-jalaali": "^0.10.0",
     "mongoose": "^7.6.3",
@@ -35,6 +36,8 @@
     "request": "^2.88.2",
     "shelljs": "^0.8.5",
     "simple-ssh": "^1.1.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "validatorjs": "^3.22.1"
   },
   "devDependencies": {

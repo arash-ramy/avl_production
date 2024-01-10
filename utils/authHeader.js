@@ -6,7 +6,7 @@ const UserModel = require("../model/User/user");
 // Middleware for handling authentication through JWT tokens
 exports.headerAuth = async (req, res, next) => {
   try {
-    console.log("Middleware executed for authentication");
+    // console.log("Middleware executed for authentication");
 
     // Check if the request has the Authorization header
     if (!req.headers.authorization) {
@@ -40,7 +40,7 @@ exports.headerAuth = async (req, res, next) => {
         code: 401,
       });
     }
-
+console.log("username ===>",foundedUser.username)
     // Check if the token exists in the TokenModel collection
     const tokenExist = await TokenModel.exists({
       token: token,

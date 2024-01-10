@@ -606,6 +606,7 @@ async function setSOS(req, res) {
 }
 async function getDevices(req, res) {
   try {
+    console.log("comes")
     console.log(req.user, "c`est user ");
     const allVehicles = await VehicleModel.find()
       .setAuthorizationUser(req.user)
@@ -659,7 +660,7 @@ async function getDevices(req, res) {
           path: "smsReceivers",
         },
       })
-      
+      .limit(10)
       .sort({ _id: -1 })
       .lean()
       .clone();
@@ -1747,7 +1748,7 @@ const exportDeviceLocationsReportToPdf = async (req, res) => {
     const round = (floatingPoint, fractionDigits = 2) =>
       parseFloat(floatingPoint).toFixed(fractionDigits);
 
-
+        
       console.log(vehiclesLocationData,"vehiclesLocationDatavehiclesLocationDatavehiclesLocationData")
     const persianDate = (dateString) =>
       dateString
@@ -2469,6 +2470,7 @@ const exportDeviceAlarmsReportToPdf = async (req, res) => {
       timeFilter: { start: startTime, end: endTime },
       groupFilter,
       deviceFilter,
+      reportData:vehiclesAlarmData
     } = req.body;
 
     if (startTime === null && endTime === null) {
@@ -2486,7 +2488,7 @@ const exportDeviceAlarmsReportToPdf = async (req, res) => {
       parseFloat(floatingPoint).toFixed(fractionDigits);
     const persianDate = (dateString) =>
       dateString
-        ? moment(new Date(dateString)).format("jYYYY/jM/jD HH:mm:ss")
+        ? moment(new Date(dateString)).format("YYYY/M/D HH:mm:ss")
         : null;
 
     const reportContext = {
