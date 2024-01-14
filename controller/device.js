@@ -187,6 +187,7 @@ async function editDevice(req, res) {
     }
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
     return res.json({
       message: error.message,
       code: 500,
@@ -209,7 +210,9 @@ async function addDeviceModels(req, res) {
     return res.json({ vehicleType, code: 200 });
   } catch (error) {
     // logger.error(ex);
-    return res({
+    console.log(error)
+
+    return res.json({
       message: "something went wrong in Add device ",
       code: 400,
       messageSys: error.message,
@@ -236,6 +239,8 @@ async function getDeviceModels(req, res) {
     });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       messageSys: error.message,
       message: "something went wrong in getDeviceModels . ",
@@ -276,6 +281,8 @@ async function getDeviceModelsBerif(req, res) {
     });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       messageSys: error.message,
       message: "something went wrong in getDeviceModels . ",
@@ -489,7 +496,7 @@ async function setInterval(req, res) {
         interval,
         vehicle.trackerModel === "GT06"
       ).then(() => {
-        res({ msg: "OK" }).code(200);
+      return  res.json({ msg: "OK",code:200 })
       });
     }
   } catch (error) {
@@ -597,7 +604,7 @@ async function setSOS(req, res) {
       res.json({ msg: "Not Implemented", code: 404 });
     }
   } catch (error) {
-    return res({
+    return res.json({
       messageSys: error.message,
       code: 500,
       message: "somthing went wrong in Set Sos",
@@ -660,7 +667,7 @@ async function getDevices(req, res) {
           path: "smsReceivers",
         },
       })
-      .limit(10)
+      // .limit(10)
       .sort({ _id: -1 })
       .lean()
       .clone();
@@ -699,6 +706,8 @@ async function getDevices(req, res) {
     // });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       messageSys: error.message,
       code: 500,
@@ -1176,9 +1185,10 @@ const getBachInfoViaIMEI = async (req, res) => {
     // });
   } catch (ex) {
     logger.error(ex);
-    return res({
+    return res.json({
       msg: ex,
-    }).code(500);
+      code:500
+    })
   }
 };
 
@@ -1188,9 +1198,8 @@ const reportDeviceStatus = async (req, res) => {
       dateFilter: { start: startDate, end: endDate },
     } = req.body;
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+      return res.json({message:"check the dates ",messageSys:"reportDriverVehicles",code:400})
+
     }
 
     const { reportDevices } = await reports.getReportDevices(req);
@@ -1309,9 +1318,9 @@ const reportDeviceChanges = async (req, res) => {
       dateFilter: { start: startDate, end: endDate },
     } = req.body;
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+      
+      return res.json({message:"تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.",messageSys:"reportDriverVehicles",code:400})
+
     }
 
     const { reportDevices } = await reports.getReportDevices(req);
@@ -1428,7 +1437,7 @@ const exportDeviceChangesReportToPdf = async (req, res) => {
     return res.download(filePath);
   } catch (error) {
     console.log(error);
-    return res({ msg: error.message });
+    return res.json({ msg: error.message });
   }
 };
 
@@ -1438,9 +1447,9 @@ const reportDriverVehicles = async (req, res) => {
       dateFilter: { start: startDate, end: endDate },
     } = req.body;
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+      
+      return res.json({message:"تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد",messageSys:"reportDriverVehicles",code:400})
+
     }
 
     const { reportDevices } = await reports.getReportDevices(req);
@@ -1592,19 +1601,19 @@ const reportDeviceLocations = async (req, res) => {
       timeFilter: { start: startTime, end: endTime },
     } = req.body;
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+  
+      return res.json({message:"تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد",messageSys:"reportDriverVehicles",code:400})
+
     }
     if (startTime && endTime && startTime > endTime) {
-      throw new Error(
-        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-      );
+     
+      return res.json({message:"ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.",messageSys:"reportDriverVehicles",code:400})
+
     }
     if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
-      throw new Error(
-        "کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد."
-      );
+      
+      return res.json({message:"کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد",messageSys:"reportDriverVehicles",code:400})
+
     }
     const { reportDevices } = await reports.getReportDevices(req);
     console.log("cmosd255");
@@ -1752,9 +1761,10 @@ const exportDeviceLocationsReportToPdf = async (req, res) => {
       console.log(vehiclesLocationData,"vehiclesLocationDatavehiclesLocationDatavehiclesLocationData")
     const persianDate = (dateString) =>
       dateString
-        ? moment(new Date(dateString)).format("jYYYY/jM/jD HH:mm:ss")
+        ? moment(new Date(dateString)).format("YYYY/M/D HH:mm:ss")
         : null;
-
+        var ss = req.user
+    console.log(ss,"43rt43t")
     const reportContext = {
       title: "Locations of Devices",
       date: new Date(),
@@ -1939,14 +1949,15 @@ const reportDeviceAlarms = async (req, res) => {
     // const { } = req.body;
 
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+  
+      return res.json({message: "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.",messageSys:"parsePacket",code:400})
+
     }
     if (startTime && endTime && startTime > endTime) {
-      throw new Error(
-        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-      );
+
+      return res.json({message: "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.",messageSys:"parsePacket",code:400})
+
+      
     }
     console.log(new Date(startDate).toUTCString(), "ooo");
     // console.log(ISODate(endDate), "ooo");

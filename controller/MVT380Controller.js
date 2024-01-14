@@ -1,9 +1,9 @@
-require('safe_datejs');
+
 const crc = require('crc');
 const pad = require('pad');
 const moment = require('moment');
 const { GPSController } = require('./GPSController');
-const { logger } = require('../utility/customlog');
+// const { logger } = require('../utility/customlog');
 
 const patterns = {
     mvt380: /^\$\$([\x41-\x7A])(\d{1,3}),(\d{15}),([0-9A-F]{3}),(\d{1,3}),([-]?\d+\.\d+),([-]?\d+\.\d+),(\d{12}),([AV]),(\d{1,3}),(\d{1,2}),(\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?),(\d+),(\d{3})\|(\d{1,3})\|([0-9A-F]{4})\|([0-9A-F]{4}),([0-9A-F]{4}),([0-9A-F]{1,4})?\|([0-9A-F]{1,4})?\|([0-9A-F]{1,4})?\|([0-9A-F]{1,4})\|([0-9A-F]{1,4}),([0-9A-F]{8})?,?([0-9A-F]+)?,?(\d{1,2})?,?([0-9A-F]{4})?,?([0-9A-F]{6})?\|?([0-9A-F]{6})?\|?([0-9A-F]{6})?\|?\*([0-9A-F]{2})\r\n$/,
@@ -32,9 +32,10 @@ class MVT380Controller extends GPSController {
         if (patterns.ok.test(packet)) {
             return this.parseCode(packet);
         }
-        logger.debug('Unknown MVT380 packet format', {
-            packet: packet.toString('ascii'),
-        });
+        // logger.debug('Unknown MVT380 packet format', {
+        //     packet: packet.toString('ascii'),
+        // });
+        console.log('Unknown MVT380 packet format')
     }
 
     static parseAlrm(event) {

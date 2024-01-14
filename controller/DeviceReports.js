@@ -26,10 +26,13 @@ const reportDeviceAlarms = async (req, res) => {
 
     // Input validation for date and time
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error("Start date cannot be after end date.");
+      return res.json({message:"Start date cannot be after end date.",messageSys:"reportDeviceAlarms",code:400})
+
+
     }
     if (startTime && endTime && startTime > endTime) {
-      throw new Error("Start time cannot be after end time.");
+      return res.json({message:"Start time cannot be after end time.",messageSys:"reportDeviceAlarms",code:400})
+
     }
 
     // User role check
@@ -186,34 +189,23 @@ const reportDeviceStatus2 = async (req, res) => {
       groupFilter,
       deviceFilter,
     } = req.body;
+
     const userId = req.user._id;
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+    
+      return res.json({message:"تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.",messageSys:"reportDriverVehicles",code:400})
+
     }
     if (startTime && endTime && startTime > endTime) {
-      throw new Error(
-        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-      );
+      return res.json({message:"ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد",messageSys:"reportDriverVehicles",code:400})
+
+    
     }
 
     // console.log(req.body, "dosokdofsefi");
     // if (this.authUser && !this.authUser.isAdmin()) {
 
-    if (req.user?.username === "admin" || req.user?.username === "arsash") {
-      console.log("the user is  ADMIN");
-
-      var vehiclesFounded = await DeviceGroupModel.aggregate([
-        { $unwind: "$devices" },
-        {
-          $group: {
-            _id: null,
-            devices: { $addToSet: "$devices" },
-          },
-        },
-      ]);
-    } else {
+  
       console.log("the user is not ADMIN");
 
       var vehiclesFounded = await DeviceGroupModel.aggregate([
@@ -235,7 +227,7 @@ const reportDeviceStatus2 = async (req, res) => {
 
         //   $group: {
         //     _id: null,
-        //     devices: { $addToSet: "$devices" },
+        //     devices: { $addToSet: "$devices" },  
         //   },
         // },
         {
@@ -360,7 +352,8 @@ const reportDeviceStatus2 = async (req, res) => {
             },
           },
         },
-      ]).limit(10)
+      ])
+      // .limit(10)
       //  return     res.json(vehiclesFounded[0].IMEIS[0] );
 
       // $group: {
@@ -368,7 +361,7 @@ const reportDeviceStatus2 = async (req, res) => {
       //   devices: { $addToSet: "$devices" },
       // },
      return res.json(StatusFounded);
-    }
+    
   } catch (err) {
     console.log(err);
   }
@@ -392,19 +385,19 @@ const reportDeviceLocations = async (req, res) => {
     
     console.log("runned")
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+     
+      return res.json({message:"تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.",messageSys:"reportDeviceLocations",code:400})
+
     }
     if (startTime && endTime && startTime > endTime) {
-      throw new Error(
-        "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد."
-      );
+   
+      return res.json({message:"ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.",messageSys:"reportDeviceLocations",code:400})
+
     }
     if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
-      throw new Error(
-        "کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد."
-      );
+    
+      return res.json({message:"کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد.",messageSys:"reportDeviceLocations",code:400})
+
     }
     if (startTime === null && endTime === null) {
       startTime = 0;
@@ -572,7 +565,8 @@ const reportDeviceLocations = async (req, res) => {
           },
         },
       },
-    ]).limit(10);
+    ])
+    // .limit(10);
 
     return res.json(reportLocations);
   } catch (err) {
@@ -592,9 +586,7 @@ const reportDriverVehicles = async (req, res) => {
     } = req.body;
     let userId = req.user._id;
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-      throw new Error(
-        "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد."
-      );
+   return res.json({message:"check the dates ",messageSys:"reportDriverVehicles",code:400})
     }
 
     var vehiclesFounded = await DeviceGroupModel.aggregate([
@@ -972,10 +964,134 @@ const reportDeviceChanges = async (req, res) => {
   }
 };
 
+const reportDeviceLocationsCustome = async (req, res) => {
+try {
+  const userId = req.user._id;
+
+  var {
+    type,
+    dateFilter: { start: startDate, end: endDate },
+    speedFilter: { min: minSpeed, max: maxSpeed },
+    timeFilter: { start: startTime, end: endTime },
+    groupFilter,
+    deviceFilter,
+  } = req.body;
+  if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+
+    return res.json({message: "تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.",messageSys:"reportDeviceAlarms",code:400})
+
+  }
+  if (startTime && endTime && startTime > endTime) {
+
+    return res.json({message:  "ساعت شروع گزارش نمی‌تواند از ساعت پایان گزارش جلوتر باشد.",messageSys:"reportDeviceAlarms",code:400})
+
+  }
+  if (minSpeed && maxSpeed && +minSpeed > +maxSpeed) {
+   
+    return res.json({message: "کمینه سرعت گزارش نمی‌تواند از بیشینه سرعت گزارش بیشتر باشد.",messageSys:"reportDeviceAlarms",code:400})
+
+  }
+  if (startTime === null && endTime === null) {
+    startTime = 0;
+    endTime = 24;
+  }
+  if (minSpeed === null && maxSpeed === null) {
+    minSpeed = 0;
+    maxSpeed = 180;
+  }
+
+  var vehiclesFounded = await DeviceGroupModel.aggregate([
+    {$match: {
+      $and: [
+        { $or: [{ user: userId }, { sharees: userId }] },
+        {
+          devices: {
+            $in: deviceFilter.map((item) => {
+              return new mongoose.Types.ObjectId(item);
+            }),
+          },
+        },
+      ],
+    },   
+  },  {
+    $lookup: {
+      from: "vehicles",
+      // localField: 'devices',
+      // foreignField: '_id',
+      let: { ddd: "$devices" },
+
+      as: "deviceramy",
+      pipeline: [
+        {
+          $match: {
+            _id: {
+              $in: deviceFilter.map((item) => {
+                return new mongoose.Types.ObjectId(item);
+              }),
+            },
+          },
+        },
+      ],
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      fID: { $addToSet: "$deviceramy._id" },
+    },
+  },      { $unset: ["_id"] },
+])
+var ii = vehiclesFounded[0].fID[0];
+const reportLocations = await GPSDataModel.aggregate([
+  {
+    $match: {
+      vehicleId: {
+        $in: ii.map((item) => {
+          return new mongoose.Types.ObjectId(item);
+        }),
+      },
+    },
+ 
+  },
+  {$group:{
+    _id:"$IMEI"
+    ,
+    locations:{
+      $addToSet:{
+        lat:"$lat",
+        lng:"$lng"
+        
+      }
+    },
+  }},
+  {
+    $project:{
+      _id: 0,
+      IMEI: "$_id",
+      locations: {
+        $map: {
+          input: "$locations",
+          as: "location",
+          in: ["$$location.lat", "$$location.lng"],
+        },
+      },
+    }
+  }
+])
+return res.json(reportLocations)
+
+}catch(err){
+  return res.json({message:"something went  wrong in reportDeviceLocationsCustome",messageSys:err.message,code:500})
+}
+
+
+}
+
 module.exports = {
   reportDeviceAlarms,
   reportDeviceStatus2,
   reportDeviceLocations,
   reportDriverVehicles,
   reportDeviceChanges,
+  reportDeviceLocationsCustome
 };

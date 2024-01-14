@@ -72,6 +72,8 @@ const getGPSDataIMEI = async (req, res) => {
     return res.json({ foundedItem, code: 200 });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       messageSys: error.message,
       code: 500,
@@ -97,6 +99,8 @@ const getAllIMEIs = async (req, res) => {
     });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       messageSys: error.message,
       message: "somthing went wrong in getAllIMEIs .",
@@ -206,8 +210,8 @@ const getGPSDataIMEIReport = async (req, res) => {
           code: "422",
           validate: false,
           field: "IMEI",
+          code:200
         })
-        .code(422);
     }
 
     const gpsDate = await GPSDataModel.find({ IMEI: IMEI }).sort({ date: -1 });
@@ -275,7 +279,7 @@ const getNLastDataIMEI = async (req, res) => {
     var IMEI = req.params.IMEI;
     var count = req.params.count;
     if (!IMEI) {
-      return res({
+      return res.json({
         msg: "IMEI required",
         code: "404",
         validate: false,
@@ -285,34 +289,31 @@ const getNLastDataIMEI = async (req, res) => {
 
     if (!count) count = 10;
 
-    GPSDataModel.find({ IMEI: IMEI })
+   const data = await GPSDataModel.find({ IMEI: IMEI })
       .sort({ date: -1 })
       .limit(count)
 
-      .exec(function (err, data) {
-        if (err) {
-          logger.error(err);
-          return res({
-            msg: err,
-          }).code(500);
-        } else if (!data) {
-          return res({
-            msg: "There is no gps data",
-          }).code(404);
+   
+         if (!data) {
+          return res.json({
+            msg: "There is no gps data"
+          ,code:404})
         } else {
           VehicleModel.findOne({ deviceIMEI: IMEI }).exec(function (
             err,
             vehicle
           ) {
             if (err) {
-              logger.error(err);
-              return res({
+              console.log(err)
+              return res.json({
                 msg: err,
-              }).code(500);
+                code:400
+              })
             } else if (!vehicle) {
-              return res({
+              return res.json({
                 msg: "There is no vehicle",
-              }).code(404);
+                code:404
+              })
             } else {
               if (data[0]) {
                 var oneDay = 24 * 60 * 60 * 1000;
@@ -323,11 +324,11 @@ const getNLastDataIMEI = async (req, res) => {
                 );
                 data[0].lastLocationDiff = remainingDate;
               }
-              return res(data).code(200);
+              return res.json({data,code:200});
             }
           });
         }
-      });
+      
   } catch (err) {
     console.lop(err)
     return res.json({

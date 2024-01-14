@@ -44,6 +44,7 @@ router.post("/report/vehicles", headerAuth, testcontroller.reportDriverVehicles)
 router.post("/report/vehicles/pdf", headerAuth, deviceController.exportDriverVehiclesReportToPdf);
 router.post("/report/locations", headerAuth, testcontroller.reportDeviceLocations);
 router.post("/report/locations/pdf", headerAuth, deviceController.exportDeviceLocationsReportToPdf);
+router.post("/report/locations-ct", headerAuth, testcontroller.reportDeviceLocationsCustome);
 
 // Polygon Management
 router.post("/addpolygon", headerAuth, deviceController.setPolygon);

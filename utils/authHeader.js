@@ -62,7 +62,7 @@ console.log("username ===>",foundedUser.username)
     console.log(error);
     return res.json({
       message: "Authorization failed",
-      code: 403,
+      code: 403
     });
   }
 };

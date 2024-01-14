@@ -15,7 +15,7 @@ const VehicleModel = require('../model/GpsLocation/VehicleModel');
 // const { logger } = require('../utility/customlog.js');
 // const { GPSDataModel, VehicleModel } = require('../models/gpslocation');
 
-console.log("removeOldGPSData ramy4")
+// console.log("removeOldGPSData ramy4")
 
 const backupOptions = {
     removeOldBackups: true,
@@ -26,7 +26,7 @@ const backupOptions = {
 
 class DatabaseBackupCron {
     static async removeOldGPSData(expirationDate) {
-        console.log("removeOldGPSData")
+        // console.log("removeOldGPSData")
 
         //  ------- delete gps data for before 9 months ago -------
         try {
@@ -36,7 +36,7 @@ class DatabaseBackupCron {
             ).map(item => item.lastLocation);
 
 
-            console.log(vehicleLastLocations,"ramy")
+            // console.log(vehicleLastLocations,"ramy")
             const oldGPSDataQuery = await GPSDataModel.deleteMany({
                 _id: { $nin: vehicleLastLocations },
                 date: { $lte: expirationDate },
@@ -48,6 +48,7 @@ class DatabaseBackupCron {
             //     } created before ${expirationDate} has been deleted on ${new Date()}`
             // );
         } catch (error) {
+            console.log(error)
             // logger.warn(
             //     `An error occurred while deleting ${
             //         GPSDataModel.modelName
@@ -57,18 +58,18 @@ class DatabaseBackupCron {
     }
 
     static async removeOldData() {
-        console.log("removeOldGPSData ramy 6")
+        // console.log("removeOldGPSData ramy 6")
 
         // this method set expiration Date for delete GPS data and call removeOldGPSData method
         const timePoint = new Date();
         timePoint.setHours(0, 0, 0);
         timePoint.setMonth(new Date().getMonth() - 9, 1); // Last 9 Month
-    console.log(timePoint,"timePoint")
+    // console.log(timePoint,"timePoint")
         await DatabaseBackupCron.removeOldGPSData(timePoint).catch(console.log("something went wrong in removeOldData"));
     }
 
     static async removeOldDatabaseBackups() {
-        console.log("removeOldGPSData ramy 8")
+        // console.log("removeOldGPSData ramy 8")
 
         // ------- delete old backups -------
         const {
@@ -125,14 +126,14 @@ class DatabaseBackupCron {
         const { backupDir } = backupOptions;
         const backupName = moment(today).format('YYYY-MM-DD');
         const backupPath = path.resolve(backupDir, backupName);
-        console.log(backupPath,"backupPath ********************************************")
-        console.log(backupName,"backupName ********************************************")
-        console.log(backupDir,"backupDir ********************************************")
+        // console.log(backupPath,"backupPath ********************************************")
+        // console.log(backupName,"backupName ********************************************")
+        // console.log(backupDir,"backupDir ********************************************")
         const databases = db.base.connections.map(
 
             connection => connection.name,
         );
-        console.log(databases,"databases")
+        // console.log(databases,"databases")
         // console.log(db,"db ********************************************")
 
         // console.log(db.base.connections,"db.connections ********************************************")
@@ -161,7 +162,7 @@ class DatabaseBackupCron {
             // });
         } catch (error) {
             // logger.error(error);]
-            console.log(error)
+            // console.log(error)
         }
     }
 
@@ -173,12 +174,12 @@ class DatabaseBackupCron {
             // (() => {
                 try{
 
-                    console.log(DatabaseBackupCron,"DatabaseBackupCron")
+                    // console.log(DatabaseBackupCron,"DatabaseBackupCron")
             DatabaseBackupCron.removeOldData().then(() => {
                 DatabaseBackupCron.backupDatabase().then(() => {
                     const { removeOldBackups } = backupOptions;
                     if (removeOldBackups) {
-                        console.log(removeOldBackups,"ok------------------------------------------")
+                        // console.log(removeOldBackups,"ok------------------------------------------")
                         DatabaseBackupCron.removeOldDatabaseBackups().catch(e =>
                             // logger.error(e)
                             console.log(e)

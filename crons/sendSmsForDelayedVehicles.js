@@ -48,7 +48,7 @@ class DeviceCheckLastLocationDelayCron {
           receivers: this.getReceivers(group),
         });
       });
-      console.log(delays,"delaysssssssss")
+      // console.log(delays,"delaysssssssss")
 
       const vehicles = await VehicleModel.find()
         .select("_id deviceIMEI lastLocation driverName plate")
@@ -56,8 +56,8 @@ class DeviceCheckLastLocationDelayCron {
         .populate({
           path: "groups",
           select: "name",
-        }).limit(30)
-        console.log("___________________________________________________________________________")
+        })
+        // console.log("___________________________________________________________________________")
 
       console.log(vehicles,"vehicles")
 
@@ -68,8 +68,8 @@ class DeviceCheckLastLocationDelayCron {
                 .duration(today.getTime() - vehicle.lastLocation.date.getTime())
                 .asDays()
             : 0;
-          console.log(lastLocationDurationDays,"lastLocationDurationDays")
-          console.log(vehicle._id,"___id")
+          // console.log(lastLocationDurationDays,"lastLocationDurationDays")
+          // console.log(vehicle._id,"___id")
 
           const lastVehicleDelayAlarm = await VehicleAlarmModel.findOne(
             {
@@ -78,8 +78,8 @@ class DeviceCheckLastLocationDelayCron {
             },
             "date"
           ).sort({ date: -1 });
-          console.log(lastVehicleDelayAlarm,"iiiiiiiiiiiiiiiiii");
-          console.log(vehicle.groups[0], "9999999999999");
+          // console.log(lastVehicleDelayAlarm,"iiiiiiiiiiiiiiiiii");
+          // console.log(vehicle.groups[0], "9999999999999");
           // console.log( delays.findIndex(delay => delay.groupName === vehicle?.groups[0]?.name),"0000000000000");
 
           if (
@@ -112,7 +112,7 @@ class DeviceCheckLastLocationDelayCron {
                 (delay) => delay.groupName === vehicle?.groups[0]?.name
               );
 
-              console.log("delayIndex" ,delayIndex)
+              // console.log("delayIndex" ,delayIndex)
 
               delays[delayIndex].vehicles.push({
                 IMEI: vehicle.deviceIMEI,
@@ -122,7 +122,7 @@ class DeviceCheckLastLocationDelayCron {
               });
             }
           }
-          console.log("ramy this is  delays" ,delays[0].vehicles)
+          // console.log("ramy this is  delays" ,delays[0].vehicles)
           return delays;
           
         } catch (e) {
@@ -137,7 +137,7 @@ class DeviceCheckLastLocationDelayCron {
 
       Promise.all(result)
       .then(async (values) => {
-        console.log("____________________________________________________")
+        // console.log("____________________________________________________")
         console.log(values,"result***")
 
 
@@ -153,7 +153,7 @@ class DeviceCheckLastLocationDelayCron {
   }
 
   static sendDelaySmsToAdmins(delays, today) {
-    console.log(delays,"thisislenght*")
+    // console.log(delays,"thisislenght*")
     delays[0].map(delay => {
       console.log(delay.vehicles,"vehicles****----")
         if (delay.vehicles.length > 0) {
@@ -168,9 +168,9 @@ class DeviceCheckLastLocationDelayCron {
                 'YYYY-M-D'
             )
                 .format('jYYYY/jM/jD');
-                console.log("||||",vehicles)
-                console.log("||||++++",groupName)
-                console.log("||||____",receivers)
+                // console.log("||||",vehicles)
+                // console.log("||||++++",groupName)
+                // console.log("||||____",receivers)
 
             const context = {
                 groupName,
@@ -194,43 +194,43 @@ class DeviceCheckLastLocationDelayCron {
     switch (groupName) {
       case "کاوه سودا":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
       case "کاوه سیلیس":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
       case "فلوت کاویان":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
       case "متانول کاوه":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
       case "کربنات کاوه":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
       case "ابهر سیلیس":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
       case "مظروف یزد":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
       case "دفتر مرکزی":
         return {
-          phone: ["09381378120", "09370713134"],
-          email: ["ar-rahimi@kavehglass.com", "arashramy@gmail.com"]
+          phone: ["09121167210", "09381378120","09191160065"],
+          email: ["ma-yasari@kavehglass.com", "arashramy@gmail.com","soleimani-m@KavehGlass.com"]
         };
     }
   }

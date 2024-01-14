@@ -279,11 +279,11 @@ const getUserList = async (req, res) => {
     })
 
     // console.log(allData, "ramy");
-    .populate({
-        path: 'deviceModel',
-        select: { name: 1, _id: 0 },
-    })
-    .populate('groups', 'name').limit(1)
+    // .populate({
+    //     path: 'deviceModel',
+    //     select: { name: 1, _id: 0 },
+    // })
+    .populate('groups', 'name')
     .lean()
 
     return res.json({ allUser });

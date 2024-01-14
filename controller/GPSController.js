@@ -28,7 +28,9 @@ class GPSController {
   }
 
   static async parsePacket(packet, socket) {
-    throw new Error("Not Implemented");
+ 
+    return res.json({message: "Not Implemented.",messageSys:"parsePacket",code:400})
+
   }
 
   static async savePacketData(data, force = false, lastData) {
@@ -48,6 +50,8 @@ class GPSController {
       //   { event: "NEW_PACKET", type: gpsData.deviceName },
       //   { IMEI: gpsData.IMEI, time: gpsData.date }
       // );
+      // console.log(error)
+
       gpsData.url = `http://maps.google.com/maps?q=${gpsData.lat},${gpsData.lng}`;
 
 
@@ -201,7 +205,7 @@ class GPSController {
 
     smsgw
       .sendSmsToNumber(message, [...new Set(receivers)])
-      .catch((e) => logger.error(e));
+      .catch((e) => console.log(e));
       // console.log("SMSGW4")
 
   }
@@ -274,7 +278,9 @@ class GPSController {
         const { packet, socket } = this.messageQueue.shift();
         this.constructor.parsePacket(packet, socket).catch((e) => {
           if (!(e instanceof RangeError)) {
-            logger.error(e);
+            // logger.error(e);
+            console.log(e)
+
           }
         });
       } else {
@@ -289,8 +295,8 @@ class GPSController {
       const newMessage = { packet, socket };
       this.messageQueue.push(newMessage);
       if (!this.timerId) this.startTaskManager();
-    } catch (ex) {
-      logger.error(ex);
+    } catch (error) {
+       console.log(error)
     }
   }
 
@@ -451,7 +457,7 @@ console.log(ex)
     }
     smsgw
       .sendSmsToNumber(message, [...new Set(receivers)])
-      .catch((e) => logger.error(e));
+      .catch((e) =>console.log(e));
   }
 
   static sendZoneEmail(vehicle, permissibleZone, point, IMEI) {

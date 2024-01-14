@@ -51,6 +51,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.use(express.urlencoded({ extended: true, limit: "150mb" }));
   const { GT06Controller  } = require("./controller/GT06Controller");
   const { FMXXXXController } = require("./controller/FMXXXXController");
+  const { MVT380Controller  } = require("./controller/MVT380Controller");
+
   require("./DB/DbConnection");
   app.use(morgan(chalk` {hex('
   #fff200
@@ -70,11 +72,15 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   const DeviceRouter = require("./router/device");
   const DeviceGroupRouter = require("./router/deviceGroupe");
   const GPSLocation = require("./router/gpslocation");
+  const testCron = require("./router/cronTest");
+
   app.use('/media',headerAuth,express.static(path.resolve('./public')));
   app.use("/api/v1/user", UserRouter);
   app.use("/api/v1/gpsdata", GPSLocation);
   app.use("/api/v1/device", DeviceRouter);
   app.use("/api/v1/devicegroup", DeviceGroupRouter);
+  app.use("/api/v1/crontest", testCron);
+
   app.use('*', (req, res) => res.status(404).send('Not Found'));
 
   const server = app.listen(process.env.PORT, () => {
@@ -94,7 +100,23 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
       });
   };
   createServer(GT06Controller).listen(10000);
+  createServer(MVT380Controller).listen(11000);
+  createServer(FMXXXXController).listen(11002);
+  createServer(FMXXXXController).listen(11003);
+  createServer(FMXXXXController).listen(11004);
+  createServer(FMXXXXController).listen(11005);
+  createServer(FMXXXXController).listen(11006);
+
+  createServer(GT06Controller).listen(12000);
+  createServer(MVT380Controller).listen(13000);
+  createServer(FMXXXXController).listen(18000);
+
   createServer(FMXXXXController).listen(4000);
+
+
+
+
+  
   process.on("unhandledRejection", (err) => {
       console.log(` 🔥🔥🔥shutting down the server for unhandle promise rejection`);
     console.log(err)

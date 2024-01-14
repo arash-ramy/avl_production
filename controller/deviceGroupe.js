@@ -602,7 +602,9 @@ const addDeviceGroup = async (req, res) => {
       code: 200,
     });
   } catch (error) {
-    logger.error(ex);
+    // logger.error(ex);
+    console.log(error)
+
     return resjson({
       message: error.message,
       code: 400,
@@ -637,6 +639,8 @@ const getDeviceGroupById = async (req, res) => {
     });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       code: 500,
       messageSys: error.message,
@@ -676,6 +680,8 @@ const editDeviceGroup = async (req, res) => {
     });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       message: error.message,
       message: "somthing went wrong in edit deviceGroup",
@@ -718,6 +724,8 @@ const addVehicleToGroup = async (req, res) => {
     //
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       message: "somthing went wrong in add vehicle to device group",
       code: 400,
@@ -937,6 +945,8 @@ const getVehiclesofGroup = async (req, res) => {
     // })
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       message: "somthing went wrong in Get Vehicles Of Group",
       code: 500,
@@ -988,7 +998,9 @@ const removeVehicleFromGroup = async (req, res) => {
     });
   } catch (err) {
     // logger.error(ex);
-    return res({
+    console.log(error)
+
+    return res.json({
       message: "Something went wrong in removeVehicleFromGroup",
       code: 500,
     });
@@ -1012,6 +1024,8 @@ const getUserDeviceGroups = async (req, res) => {
     });
   } catch (error) {
     // logger.error(ex);
+    console.log(error)
+
     return res.json({
       messagesys: error.message,
       message: "somthing went wrong in getUserDeviceGroups",
@@ -1097,11 +1111,12 @@ const getVehiclesofMultiGroup = async (req, res) => {
 
     //     }
     // })
-  } catch (ex) {
-    logger.error(ex);
-    return res({
-      msg: ex,
-    }).code(404);
+  } catch (error) {
+    console.log(error)
+    return res.json({
+      msg: error.message,
+      code:400
+    })
   }
 };
 
@@ -1153,24 +1168,15 @@ const getBachInfoViaIMEI = async (req, res) => {
 
     var condition = { $or: arrayOfIMEIS };
 
-    VehicleModel.find(condition).exec(function (err, vehicles) {
-      if (err) {
-        return res({
-          msg: err,
-        }).code(500);
-      } else {
-        return res({
-          msg: "fetched successfully",
-          vehicles: vehicles,
-          code: 200,
-        }).code(200);
-      }
-    });
-  } catch (ex) {
-    logger.error(ex);
-    return res({
-      msg: ex,
-    }).code(500);
+   var foundedvehicle = await VehicleModel.find(condition)
+      return res.json({foundedvehicle, code:200})
+    
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      msg: error.message,
+      code:500
+    })
   }
 };
 module.exports = {
