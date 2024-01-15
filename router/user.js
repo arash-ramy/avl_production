@@ -42,13 +42,13 @@ router.post("/phoneNumbers/add", headerAuth, userController.addPhoneNumber);
 router.get("/phoneNumbers/show", headerAuth, userController.getPhoneBook);
 
 // Profile Picture Routes
-router.post("/upload-profile", headerAuth, upload.single("file"), userController.uploadProfilePicture);
-router.get("/get-profile", userController.getProfilePicture);
+// router.post("/upload-profile", headerAuth, upload.single("file"), userController.uploadProfilePicture);
+// router.get("/get-profile", userController.getProfilePicture);
 
 // Role Management Routes
 router.post("/addRoleToUser", userController.addRoleToUser);
 
 // Testing Route
-router.post("/test", headerAuth, userController.test);
+// router.post("/test", headerAuth, userController.test);
 
 module.exports = router;

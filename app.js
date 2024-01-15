@@ -13,7 +13,6 @@
   var cron = require('node-cron');
   var shell = require('shelljs');
 
-  
 // Swagger setup
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
@@ -39,12 +38,6 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-
-  process.on("uncaughtException", (err) => {
-    console.log("UNCAUGHT EXCEPTION! 💥💥🚀 Shutting down ...");
-    console.log(err.name, err.message);
-    process.exit(1);
-  });
   // app.use(bodyParser.json({limit: "150mb" }));
   app.use(express.json({limit: "150mb" }));
   // app.use(bodyParser.urlencoded({ extended: true ,limit: "150mb"}));
@@ -72,17 +65,40 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   const DeviceRouter = require("./router/device");
   const DeviceGroupRouter = require("./router/deviceGroupe");
   const GPSLocation = require("./router/gpslocation");
-  const testCron = require("./router/cronTest");
+  // const testCron = require("./router/cronTest");
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection 🔥🔥🔥 :', promise, 'reason:', reason);
+    // Log the error or perform cleanup
+  });
+  
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception 💥💥🚀:', error);
+    // Log the error or perform cleanup
+  });
+
 
   app.use('/media',headerAuth,express.static(path.resolve('./public')));
   app.use("/api/v1/user", UserRouter);
   app.use("/api/v1/gpsdata", GPSLocation);
   app.use("/api/v1/device", DeviceRouter);
   app.use("/api/v1/devicegroup", DeviceGroupRouter);
-  app.use("/api/v1/crontest", testCron);
+  // app.use("/api/v1/crontest", testCron);
+  app.on('error', (err) => {
+    console.error('Express App Error:', err);
+    // Log the error or perform cleanup
+  });
+  app.use('*', (req, res) => res.json({message:'Not Found',code:404}))
 
-  app.use('*', (req, res) => res.status(404).send('Not Found'));
+    
+  app.use((err, req, res, next) => {
+    console.error(err.stack);
 
+
+    res.json({errors:err,message:"somehting went wrong please chech them ." });
+  });
+
+  
   const server = app.listen(process.env.PORT, () => {
       console.log(
         `Server is running on http://localhost:${process.env.PORT}`
@@ -115,13 +131,3 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 
-
-  
-  process.on("unhandledRejection", (err) => {
-      console.log(` 🔥🔥🔥shutting down the server for unhandle promise rejection`);
-    console.log(err)
-      server.close(() => {
-        process.exit(1);
-      });
-    });
-    

@@ -36,7 +36,6 @@ const reportDeviceAlarms = async (req, res) => {
     }
 
     // User role check
-    console.log(req.body)
     const isAdmin = req.user?.username === "admiedn" || req.user?.username === "arsash";
     
     // Fetch vehicles based on user role
@@ -173,15 +172,14 @@ const reportDeviceAlarms = async (req, res) => {
       },
     ]);
 
-    return res.json(reportAlarms);
+    return res.json({data:reportAlarms,code:200});
   } catch (error) {
     console.error(error);
-    return res.json({ msg: error.message, code: 500 });
+    return res.json({ msg: error.message, code: 400 });
   }
 };
 
-const reportDeviceStatus2 = async (req, res) => {
-  console.log("runned");
+const reportDeviceStatus = async (req, res) => {
   try {
     const {
       dateFilter: { start: startDate, end: endDate },
@@ -206,7 +204,6 @@ const reportDeviceStatus2 = async (req, res) => {
     // if (this.authUser && !this.authUser.isAdmin()) {
 
   
-      console.log("the user is not ADMIN");
 
       var vehiclesFounded = await DeviceGroupModel.aggregate([
         {
@@ -279,9 +276,6 @@ const reportDeviceStatus2 = async (req, res) => {
       //  return     res.json(vehiclesFounded[0].IMEIS[0] );
       var userString = userId.toString();
       var imeis = vehiclesFounded[0].IMEIS[0];
-      console.log(imeis);
-        console.log("ss",startDate)
-        console.log("ss",endDate)
 
         // return res.json({imeis})
 
@@ -360,17 +354,18 @@ const reportDeviceStatus2 = async (req, res) => {
       //   _id: null,
       //   devices: { $addToSet: "$devices" },
       // },
-     return res.json(StatusFounded);
+     return res.json({data:StatusFounded,code:200});
     
   } catch (err) {
     console.log(err);
+    return res.json({message:"something went wrong in reportDeviceStatus ", code:400})
+    
   }
 };
 
 const reportDeviceLocations = async (req, res) => {
   try {
     const userId = req.user._id;
-
     var {
       type,
       dateFilter: { start: startDate, end: endDate },
@@ -380,10 +375,10 @@ const reportDeviceLocations = async (req, res) => {
       deviceFilter,
     } = req.body;
 
-    console.log(req.body)
+    // console.log(req.body)
     // console.log(req.body)
     
-    console.log("runned")
+    // console.log("runned")
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
      
       return res.json({message:"تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.",messageSys:"reportDeviceLocations",code:400})
@@ -568,9 +563,10 @@ const reportDeviceLocations = async (req, res) => {
     ])
     // .limit(10);
 
-    return res.json(reportLocations);
+    return res.json({data:reportLocations,code :200});
   } catch (err) {
     console.log(err);
+    return res.json({error :err.message,messageSys:"reportDeviceLocations",code:400})
   }
 };
 
@@ -716,12 +712,13 @@ const reportDriverVehicles = async (req, res) => {
       { $unset: "group" },
     ]);
 
-    return res.json({ operation, code: 200 });
+    return res.json({ data:operation, code: 200 });
   } catch (error) {
     console.log(error);
     return res.json({
       messageSys: error.message,
-      code: 500,
+      code: 400,
+      message:"something went wrong in reportDriverVehicles"
     });
   }
 };
@@ -953,7 +950,7 @@ const reportDeviceChanges = async (req, res) => {
 }}
     ]);
 
-    return res.json({ ActionPr });
+    return res.json({data: ActionPr,code:200 });
   } catch (err) {
     console.log(err);
     return res.json({
@@ -1078,7 +1075,7 @@ const reportLocations = await GPSDataModel.aggregate([
     }
   }
 ])
-return res.json(reportLocations)
+return res.json({reportLocations,code:200})
 
 }catch(err){
   return res.json({message:"something went  wrong in reportDeviceLocationsCustome",messageSys:err.message,code:500})
@@ -1089,7 +1086,7 @@ return res.json(reportLocations)
 
 module.exports = {
   reportDeviceAlarms,
-  reportDeviceStatus2,
+  reportDeviceStatus,
   reportDeviceLocations,
   reportDriverVehicles,
   reportDeviceChanges,

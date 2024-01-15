@@ -49,7 +49,6 @@ async function resetDevice(req, res) {
 
 // ADD NEW VHICELS            === COLLECTION => VEHICLE
 async function addDevice(req, res) {
-  console.log(req.body);
   try {
     var simNumber = req.body.simNumber;
     var deviceIMEI = req.body.deviceIMEI;
@@ -109,7 +108,7 @@ async function addDevice(req, res) {
   } catch (error) {
     return res.json({
       code: 500,
-      message: "something went wrong in Adding vehicle ",
+      message: "something went wrong in Adding vehicle addDevice",
       error: error.message,
     });
   }
@@ -141,6 +140,7 @@ async function editDevice(req, res) {
     if (!vehicle) {
       return res.json({
         msg: "vehicle not found",
+        code:200
       });
     }
     // if (vehicle.deviceIMEI !== deviceIMEI) {
@@ -474,9 +474,9 @@ async function deleteDeviceStatus(req, res) {
     //     }
   } catch (error) {
     return res.json({
-      message: "somthing went wrong in  deleteDeviceStatus .",
+      message: "somthing went wrong in deleteDeviceStatus .",
       messageSys: error.message,
-      code: 500,
+      code: 400,
     });
   }
 }
@@ -613,8 +613,8 @@ async function setSOS(req, res) {
 }
 async function getDevices(req, res) {
   try {
-    console.log("comes")
-    console.log(req.user, "c`est user ");
+    // console.log("comes")
+    // console.log(req.user, "c`est user ");
     const allVehicles = await VehicleModel.find()
       .setAuthorizationUser(req.user)
 
@@ -673,7 +673,7 @@ async function getDevices(req, res) {
       .clone();
 
     return res.json({
-      allVehicles,
+      allVehicles,code:200
     });
 
     // .exec((err, vehicles) => {
@@ -822,9 +822,9 @@ async function setAlarmSettings(req, res) {
     var pmDistance = req.body.maxPmDistance;
     let phoneNumbers = req.body.smsReceivers;
 
-    console.log(req.body, "89888888");
+    // console.log(req.body, "89888888");
     const vehicle = await VehicleModel.findOne({ deviceIMEI: IMEI });
-    console.log(vehicle);
+    // console.log(vehicle);
 
     if (!vehicle) {
       return res.json({
@@ -835,7 +835,7 @@ async function setAlarmSettings(req, res) {
     let receivers = await PhoneBookModel.find({
       phoneNumber: { $in: [...new Set(phoneNumbers)] },
     });
-    console.log(receivers, "this is ph");
+    // console.log(receivers, "this is ph");
     var setting = {
       sendSMS: sendSMS.toString() == "true" ? true : false,
       rcvSMSNumbers: smsNumbers,
@@ -845,7 +845,7 @@ async function setAlarmSettings(req, res) {
     };
 
     if (settingsType.toString().toLowerCase() === "speed") {
-      console.log("speedddddddddddddddddddddddd");
+      // console.log("speedddddddddddddddddddddddd");
       await vehicle
         .updateOne({ speedAlarm: setting }, { multi: true })
         .then(() => {
@@ -935,7 +935,7 @@ async function setAlarmSettings(req, res) {
 
 async function tests(req, res) {
   try {
-    console.log("runned tests controller ");
+    // console.log("runned tests controller ");
     const data = {
       deviceName: "GT06",
       date: new Date(),
@@ -1037,6 +1037,7 @@ async function tests(req, res) {
 }
 
 const setPolygon = async (req, res) => {
+  try {
   var id = req.body.id;
   var Polygon = req.body.coordinates;
   var createDate = new Date();
@@ -1048,7 +1049,7 @@ const setPolygon = async (req, res) => {
   var emails = req.body.emails;
   var smsInterval = req.body.smsInterval || 3;
 
-  console.log(req.body, "this is body");
+  // console.log(req.body, "this is body");
 
   let receivers = await PhoneBookModel.find({
     phoneNumber: { $in: [...new Set(smsReceivers)] },
@@ -1068,7 +1069,7 @@ const setPolygon = async (req, res) => {
     alarmInterval: smsInterval,
   };
 
-  console.log(receivers, "receivers");
+  // console.log(receivers, "receivers");
   if (!id) {
     return res.json({
       msg: "id required",
@@ -1086,7 +1087,7 @@ const setPolygon = async (req, res) => {
     { upsert: true, new: true }
   );
 
-  console.log(foundedandupdated, "foundedandupdated");
+  // console.log(foundedandupdated, "foundedandupdated");
   return res.json({ foundedandupdated, code: 200 });
   //         .code(422);
   // } else {
@@ -1113,9 +1114,13 @@ const setPolygon = async (req, res) => {
   //             }
   //         });
   // }
+}catch(err){
+  res.json({message:"something went wrong in setPolygon" ,err,code:400})
+}
 };
 
 const deletePolygon = async (req, res) => {
+  try {
   var deviceId = req.params.id;
   if (!deviceId) {
     return res.json({
@@ -1129,12 +1134,15 @@ const deletePolygon = async (req, res) => {
       { _id: deviceId },
       { $unset: { permissibleZone: 1 } }
     );
-    console.log(deletePer);
+    // console.log(deletePer);
     return res.json({
       code: 200,
       message: "Permission Zone Delete Successfully",
     });
   }
+}catch(err){
+  res.json({message:"something went wrong in deletePolygon" ,err,code:400})
+}
 };
 
 // OK
@@ -1153,12 +1161,12 @@ const getBachInfoViaIMEI = async (req, res) => {
         });
       }
     }
-    console.log(arrayOfIMEIS, "befor");
+    // console.log(arrayOfIMEIS, "befor");
 
     for (var i = 0; i < req.body.IMEIs.length; i++) {
       arrayOfIMEIS.push({ deviceIMEI: req.body.IMEIs[i] });
     }
-    console.log(arrayOfIMEIS, "after");
+    // console.log(arrayOfIMEIS, "after");
 
     var condition = { $or: arrayOfIMEIS };
 
@@ -1183,17 +1191,20 @@ const getBachInfoViaIMEI = async (req, res) => {
     //             .code(200);
     //     }
     // });
-  } catch (ex) {
-    logger.error(ex);
+  } catch (error) {
+    // logger.error(ex);
+    console.log(error)
     return res.json({
-      msg: ex,
-      code:500
+      msg: error,
+      code:400,
+      messageSys:"something went wrong in getBachInfoViaIMEI "
     })
   }
 };
 
 const reportDeviceStatus = async (req, res) => {
   try {
+    // console.log("ssafsdfi")
     const {
       dateFilter: { start: startDate, end: endDate },
     } = req.body;
@@ -1313,6 +1324,7 @@ const exportDeviceStatusReportToPdf = async (req, res) => {
 };
 
 const reportDeviceChanges = async (req, res) => {
+  console.log("sdsdsd")
   try {
     const {
       dateFilter: { start: startDate, end: endDate },
@@ -1584,7 +1596,7 @@ const exportDriverVehiclesReportToPdf = async (req, res) => {
       "driverVehicles.jade",
       reportContext
     );
-    console.log(filePath, "this is pdffile*****^&");
+    // console.log(filePath, "this is pdffile*****^&");
     return res.download(filePath);
   } catch (err) {
     console.log(err);
@@ -1616,19 +1628,19 @@ const reportDeviceLocations = async (req, res) => {
 
     }
     const { reportDevices } = await reports.getReportDevices(req);
-    console.log("cmosd255");
-    console.log("this is reportDevice121s ", reportDevices);
+    // console.log("cmosd255");
+    // console.log("this is reportDevice121s ", reportDevices);
     // await reportDevices.select({ deviceIMEI: 1 });
     // // const deviceIMEIs = (await reportDevices).map=>{
     // //     return vehicle => vehicle.deviceIMEI}
     // // ;
 
-    console.log("_______________________________________");
-    console.log("iiiii23", reportDevices);
-    console.log("_______________________________________");
+    // console.log("_______________________________________");
+    // console.log("iiiii23", reportDevices);
+    // console.log("_______________________________________");
 
     const deviceIds = (await reportDevices).map((vehicle) => vehicle._id);
-    console.log("deviceIds211", deviceIds);
+    // console.log("deviceIds211", deviceIds);
 
     const reportLocations = GPSDataModel.aggregate()
       .match({ vehicleId: { $in: deviceIds } })
@@ -1651,7 +1663,7 @@ const reportDeviceLocations = async (req, res) => {
           },
         },
       });
-    console.log("reportLocations8888", reportLocations);
+    // console.log("reportLocations8888", reportLocations);
 
     if (startDate) {
       reportLocations.match({
@@ -1764,7 +1776,7 @@ const exportDeviceLocationsReportToPdf = async (req, res) => {
         ? moment(new Date(dateString)).format("YYYY/M/D HH:mm:ss")
         : null;
         var ss = req.user
-    console.log(ss,"43rt43t")
+    // console.log(ss,"43rt43t")
     const reportContext = {
       title: "Locations of Devices",
       date: new Date(),
@@ -1785,7 +1797,7 @@ const exportDeviceLocationsReportToPdf = async (req, res) => {
       "devicelocations.jade",
       reportContext
     );
-    console.log(filePath, "5871452");
+    // console.log(filePath, "5871452");
     return res.download(filePath);
   } catch (error) {
     console.log(error);
@@ -1959,17 +1971,17 @@ const reportDeviceAlarms = async (req, res) => {
 
       
     }
-    console.log(new Date(startDate).toUTCString(), "ooo");
+    // console.log(new Date(startDate).toUTCString(), "ooo");
     // console.log(ISODate(endDate), "ooo");
 
     // this was external function
-    console.log(req.body,"dddddd8")
+    // console.log(req.body,"dddddd8")
 
 
     const reportDevices = await VehicleModel.find()
       .setAuthorizationUser(req.user)
       .select("_id");
-    console.log("commmmmmes222",reportDevices);
+    // console.log("commmmmmes222",reportDevices);
     // console.log("ee2")
     // if (groupFilter.length) {
     //   console.log("ee3")
@@ -2533,7 +2545,7 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
       var devices = req.body.devices;
       var bTime = req.body.bTime;
       var eTime = req.body.eTime;
-      console.log(req.body)
+      // console.log(req.body)
       if(req.body.devices.length===0 || req.body.devices [0]=="" || req.body.devices[0] === null  ){
         return res.json({
           message:"please check your inputs ",
@@ -2842,7 +2854,7 @@ const getLastLocationsOfDeviceInP = async (req, res) => {
     console.log(err);
     return res.json({
       msg: err.message,
-      code: 500,
+      code: 400,
     });
   }
 };
@@ -2878,7 +2890,7 @@ const reports = {
       const fileName = `${context.title
         .toLowerCase()
         .replace(/ /g, "-")}-${moment(context.date).format(
-        "jYYYY-jM-jD-HH-mm-ss"
+        "YYYY-M-D-HH-mm-ss"
       )}.pdf`;
       pdf
         .create(html, reportConfig)
@@ -2893,16 +2905,16 @@ const reports = {
 
   getReportDevices: async (req) => {
     const { groupFilter, deviceFilter } = req.body;
-    console.log("ee");
-    console.log(groupFilter, "groupFilter", deviceFilter, "deviceFilter");
+    // console.log("ee");
+    // console.log(groupFilter, "groupFilter", deviceFilter, "deviceFilter");
     const reportDevices = await VehicleModel.find().setAuthorizationUser(
       req.user
     );
-    console.log("commmmmmes222", reportDevices);
-    console.log("ee2");
+    // console.log("commmmmmes222", reportDevices);
+    // console.log("ee2");
 
     if (groupFilter.length) {
-      console.log("ee3");
+      // console.log("ee3");
       const groupDevices = await DeviceGroupModel.aggregate()
         .match({
           _id: {
@@ -2921,30 +2933,30 @@ const reports = {
         });
       }
     }
-    console.log("ee5");
+    // console.log("ee5");
 
-    console.log("commmmmmes");
-    console.log(reportDevices, "reportDevices2");
+    // console.log("commmmmmes");
+    // console.log(reportDevices, "reportDevices2");
 
     if (deviceFilter.length) {
       await reportDevices.find({
         deviceIMEI: { $in: deviceFilter },
       });
     }
-    console.log(reportDevices, "arash ramyyyyyyy");
+    // console.log(reportDevices, "arash ramyyyyyyy");
     return { reportDevices };
   },
   getReportDevices2: async (req, res) => {
-    console.log("xozzzz");
+    // console.log("xozzzz");
     const { groupFilter, deviceFilter } = req.body;
-    console.log(groupFilter, "groupFilter", deviceFilter, "deviceFilter");
+    // console.log(groupFilter, "groupFilter", deviceFilter, "deviceFilter");
     const reportDevices = await VehicleModel.find()
       .setAuthorizationUser(req.user)
       .select("_id");
     // const reportDevices =await  VehicleModel.aggregate()
     // .unwind("_id")
     // .setAuthorizationUser(req.user)
-    console.log(reportDevices, "2xozzzz");
+    // console.log(reportDevices, "2xozzzz");
 
     // console.log(reportDevices,"reportDevices**********");
 
@@ -2990,12 +3002,12 @@ const reports = {
     const { groupFilter, deviceFilter } = req.body;
     const reportDevices = VehicleModel.find().setAuthorizationUser(req.user);
 
-    console.log(reportDevices, "userrrrr555555");
+    // console.log(reportDevices, "userrrrr555555");
     if (groupFilter.length) {
       const dd = await DeviceGroupModel.find({
         id: { $in: ["5b740879365e010646bc70e9"] },
       });
-      console.log(dd, "88888888888889");
+      // console.log(dd, "88888888888889");
       const groupDevices = await DeviceGroupModel.aggregate().match({
         _id: {
           $in: ["5b740879365e010646bc70e9"],
@@ -3003,7 +3015,7 @@ const reports = {
       });
       // .unwind('devices')
       // .group({ _id: null, devices: { $addToSet: '$devices' } });
-      console.log(groupDevices, "line 66666");
+      // console.log(groupDevices, "line 66666");
 
       if (groupDevices && groupDevices.length)
         reportDevices.find({
@@ -3016,7 +3028,7 @@ const reports = {
         deviceIMEI: { $in: deviceFilter },
       });
     }
-    console.log(reportDevices, "8525");
+    // console.log(reportDevices, "8525");
     return { reportDevices };
   },
 

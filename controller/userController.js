@@ -197,12 +197,13 @@ const signup = async (req, res) => {
           error,
         });
       });
-  } catch (ex) {
+  } catch (error) {
     // logger.error(ex);
-    console.log(ex);
+    console.log(error);
     return res.json({
-      ex,
+      error,
       code: "404",
+      message:"something went wrong in signup"
     });
   }
 
@@ -248,11 +249,12 @@ const  editUser = async(req, res)=>{
           user,
         });
 
-  } catch (ex) {
+  } catch (error) {
     // logger.error(ex);
     return res.json({
-      message: ex,
+      message: error,
       code: "404",
+      message:"something went wrong in editUser"
     });
   }
 }
@@ -330,7 +332,7 @@ const getLisOftNameAndUserName = async (req, res) => {
     return res.json({ allUser });
   } catch (error) {
     return res.json({
-      message: "Couldn`t load all users",
+      message: "Couldn`t load all users error ecuure",
       code: "400",
       error: error.message,
     });
@@ -365,7 +367,6 @@ const unlockUser = async (req, res) => {
 const lockUser = async (req, res) => {
   try {
     const user_id = req.params.userid;
-
     const updateToLock = await UserModel.updateOne(
       { _id: user_id },
       { $set: { islockedout: true } }
@@ -504,7 +505,7 @@ const changeOtherPassword = async (req, res) => {
     });
   } catch (error) {
     return res.json({
-      message: "",
+      message: "somehging went wrong in changeOtherPassword ",
       systemMsg: error?.message,
       code: 400,
     });
@@ -691,7 +692,9 @@ const addRoleToUser = async (req, res) => {
 
       roleName.forEach(myFunction);
 
-      await user.save();
+      await user.save().then(()=>{
+        res.json({message:"role add successfully",code :201})
+      })
 
   }
     //   // console.log("user.roles",user.roles)

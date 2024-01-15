@@ -17,11 +17,11 @@ var geolib = require('geolib');
 
 var CronJob = function () {
 var m_checkPmDistanceIns;
-console.log("www")
+// console.log("www")
 
 var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceId, sim) {
     try {
-        console.log("thisone")
+        // console.log("thisone")
         if (lastIndex) {
            var data=  await  GPSDataModel.find(
                 {
@@ -34,7 +34,7 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
                 
                 if (!data) {
                     // logger.debug();
-                    console.log('There is no gps data')
+                    // console.log('There is no gps data')
                 }
                 else {
                     var locations = new Array;
@@ -42,7 +42,7 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
                         locations.push({latitude: data[i].lat, longitude: data[i].lng});
                     }
                     var dist = (geolib.getPathLength(locations) / 1000.0).toFixed(2);
-                    console.log("this si dist",dist)
+                    // console.log("this si dist",dist)
                     if (parseFloat(dist) > parseFloat(thr)) {
                         var newAlarm = new AlarmModel({
                             type: "Over Distance",
@@ -69,13 +69,13 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
             
         }
         else{
-            console.log("thisforels")
+            // console.log("thisforels")
 
                 var  data=await   GPSDataModel.find({IMEI: IMEI})
              
                  if (!data) {
                     // logger.debug('There is no gps data');
-                    console.log('There is no gps data')
+                    // console.log('There is no gps data')
                 }
                 else {
                     console.log("2else")
@@ -119,7 +119,7 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
                         const numbers = [phoneNumber];
                         SMSGW().sendSmsToNumber(sign, numbers);
                     }
-                    console.log("dk")
+                    // console.log("dk")
                 }
             
         }
@@ -133,7 +133,6 @@ var checkAllPMDistance = function () {
     try {
         const hhh= async()=> {
         // m_checkPmDistanceIns = new CronJob('00 00 12 * * 1-7', function() {
-            console.log("thison122e")
 
                var vehicles=await VehicleModel.find();
 
@@ -175,10 +174,20 @@ console.log(ex)    }
 }
 
 var startScheduleEngine = function () {
-    console.log("debu")
     checkAllPMDistance();
 }
-startScheduleEngine()
+const EVERY_WEEK_ON_FRIDAY_3_AM = '00 00 12 * * 1-7'; 
+
+cron.schedule(EVERY_WEEK_ON_FRIDAY_3_AM, () => {
+    try{
+    startScheduleEngine()
+}catch(err){
+    console.log(err)
+}
+
+});
+
+
 return {
     startScheduleEngine: startScheduleEngine
 }

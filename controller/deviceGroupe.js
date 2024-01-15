@@ -41,7 +41,7 @@ catch(error){
 
 const getDeviceGroups = async (req, res) => {
         try {
-          console.log("coms")
+          // console.log("coms")
             var userId = req.user._id;
          let devicegrp=await DeviceGroupModel.find({ $or: [{ user: userId }, { sharees: userId }] })
                  .populate({
@@ -61,7 +61,7 @@ const getDeviceGroups = async (req, res) => {
                    code :400
                   })
                 }
-                console.log("comes here again 222")
+                // console.log("comes here again 222")
                 return res.json({
                   devicegrp,
                   code :200
@@ -808,7 +808,7 @@ const shareGroupsWithUser = async (req, res) => {
 };
 const unshareGroupsWithUser = async (req, res) => {
   try {
-    console.log("shared3");
+    // console.log("shared3");
     var userId = req.user._id;
     var groupId = req.body.groupId;
     var sharee = req.body.sharee;
@@ -822,7 +822,7 @@ const unshareGroupsWithUser = async (req, res) => {
     const foundedGroup = await DeviceGroupModel.findOne({
       $and: [{ user: userId }, { _id: groupId }],
     }).populate("devices");
-    console.log("shared4");
+    // console.log("shared4");
 
     if (!foundedGroup) {
       return res.json({
@@ -830,7 +830,7 @@ const unshareGroupsWithUser = async (req, res) => {
         code: 400,
       });
     }
-    console.log("object1");
+    // console.log("object1");
     if (!foundedGroup.sharees) foundedGroup.sharees = new Array();
     if (foundedGroup.sharees.indexOf(sharee) >= 0) {
       foundedGroup.sharees.splice(foundedGroup.sharees.indexOf(sharee), 1);
@@ -850,8 +850,8 @@ const getVehiclesofGroup = async (req, res) => {
   try {
     var groupId = req.params.groupId;
     var userId = req.user._id;
-    console.log(groupId, "groupId");
-    console.log(userId, "userId");
+    // console.log(groupId, "groupId");
+    // console.log(userId, "userId");
 
     const vehiclesofGroup = await DeviceGroupModel.findOne({
       _id: groupId,
@@ -864,7 +864,7 @@ const getVehiclesofGroup = async (req, res) => {
         select: { name: 1, _id: 1 },
       },
     });
-    console.log(vehiclesofGroup, "dddd");
+    // console.log(vehiclesofGroup, "dddd");
 
     if (!vehiclesofGroup) {
       return res.json({
@@ -945,7 +945,7 @@ const getVehiclesofGroup = async (req, res) => {
     // })
   } catch (error) {
     // logger.error(ex);
-    console.log(error)
+    // console.log(error)
 
     return res.json({
       message: "somthing went wrong in Get Vehicles Of Group",
@@ -963,8 +963,8 @@ const removeVehicleFromGroup = async (req, res) => {
     if (req.user) {
       userId = req.user._id;
     }
-    console.log(vehicleId , "vehicleId")
-    console.log(groupId,"groupId")
+    // console.log(vehicleId , "vehicleId")
+    // console.log(groupId,"groupId")
 
     const foundDeviceGroup = await DeviceGroupModel.findOne({
       $or: [{ user: userId }, { _id: groupId }],
@@ -976,7 +976,7 @@ const removeVehicleFromGroup = async (req, res) => {
       });
     }
     const foundedVehicle = await VehicleModel.findOne({ _id: vehicleId });
-    console.log(vehicleId,"this is vehicleId")
+    // console.log(vehicleId,"this is vehicleId")
     if (!foundedVehicle) {
       return res.json({
         message: "There is no vhicle",
@@ -987,7 +987,7 @@ const removeVehicleFromGroup = async (req, res) => {
     foundDeviceGroup.devices = new Array();
   }
     if (foundDeviceGroup.devices.indexOf(vehicleId) >= 0) {
-      console.log("foundDeviceGroup.devices.indexOf(vehicleId)",foundDeviceGroup.devices.indexOf(vehicleId))
+      // console.log("foundDeviceGroup.devices.indexOf(vehicleId)",foundDeviceGroup.devices.indexOf(vehicleId))
       foundDeviceGroup.devices.splice(
         foundDeviceGroup.devices.indexOf(vehicleId),
         1
@@ -998,7 +998,7 @@ const removeVehicleFromGroup = async (req, res) => {
     });
   } catch (err) {
     // logger.error(ex);
-    console.log(error)
+    // console.log(error)
 
     return res.json({
       message: "Something went wrong in removeVehicleFromGroup",
@@ -1009,7 +1009,7 @@ const removeVehicleFromGroup = async (req, res) => {
 const getUserDeviceGroups = async (req, res) => {
   try {
     var userId = req.params.id;
-    console.log(userId);
+    // console.log(userId);
     const deviceFounded = await DeviceGroupModel.find({ user: userId });
 
     if (!deviceFounded) {
@@ -1024,7 +1024,7 @@ const getUserDeviceGroups = async (req, res) => {
     });
   } catch (error) {
     // logger.error(ex);
-    console.log(error)
+    // console.log(error)
 
     return res.json({
       messagesys: error.message,
@@ -1044,7 +1044,7 @@ const getVehiclesofMultiGroup = async (req, res) => {
         { _id: { $in: groupId } },
       ],
     }).populate("devices");
-    console.log(foundItem);
+    // console.log(foundItem);
 
     if (!foundItem) {
       return res.json({
@@ -1135,7 +1135,7 @@ const reportVehicleOfGroups = async (req, res) => {
   }
   req.user = userId;
 
-  console.log(req.user);
+  // console.log(req.user);
   const foundedDevice = await DeviceGroupModel.findOne({
     $and: [{ $or: [{ user: userId }, { sharees: userId }] }, { _id: groupId }],
   })

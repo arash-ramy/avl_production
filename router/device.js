@@ -14,7 +14,7 @@ router.get("/cmd/sos/:IMEI/:sos", headerAuth, deviceController.configure);
 // Device Information
 router.get("/last", headerAuth, deviceController.getLastLocationOfAllDevice);
 router.get("/", deviceController.getDevices);
-router.get("/tests", headerAuth, deviceController.tests);
+// router.get("/tests", headerAuth, deviceController.tests);
 router.post("/getinfo", headerAuth, deviceController.getBachInfoViaIMEI);
 
 // Device Management
@@ -36,7 +36,7 @@ router.get("/alarmsettings/:IMEI/:settingsType", headerAuth, deviceController.ge
 router.post("/status", headerAuth, deviceController.setDeviceStatus);
 router.post("/report/alarms", headerAuth, testcontroller.reportDeviceAlarms);
 router.post("/report/alarms/pdf", headerAuth, deviceController.exportDeviceAlarmsReportToPdf);
-router.post("/report/status", headerAuth, testcontroller.reportDeviceStatus2);
+router.post("/report/status", headerAuth, testcontroller.reportDeviceStatus);
 router.post("/report/status/pdf", headerAuth, deviceController.exportDeviceStatusReportToPdf);
 router.post("/report/changes", headerAuth, testcontroller.reportDeviceChanges);
 router.post("/report/changes/pdf", headerAuth, deviceController.exportDeviceChangesReportToPdf);
