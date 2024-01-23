@@ -1,10 +1,6 @@
 const moment = require("moment");
 const path = require("path");
 const mongoose = require("mongoose");
-// const {
-//   DeviceGroupModel,
-//   VehicleAlarmModel,
-// } = require("../model/GpsLocation"); // Assuming these models exist in a common file
 const VehicleAlarmModel = require("../model/GpsLocation/VehicleAlarmModel");
 
 const DeviceGroupModel = require("../model/GpsLocation/DeviceGroupeModel");
@@ -200,9 +196,6 @@ const reportDeviceStatus = async (req, res) => {
     
     }
 
-    // console.log(req.body, "dosokdofsefi");
-    // if (this.authUser && !this.authUser.isAdmin()) {
-
   
 
       var vehiclesFounded = await DeviceGroupModel.aggregate([
@@ -220,13 +213,7 @@ const reportDeviceStatus = async (req, res) => {
             ],
           },
         },
-        // { $unwind: "$devices" },
 
-        //   $group: {
-        //     _id: null,
-        //     devices: { $addToSet: "$devices" },  
-        //   },
-        // },
         {
           $lookup: {
             from: "vehicles",
@@ -259,27 +246,12 @@ const reportDeviceStatus = async (req, res) => {
         {
           $unset: ["_id"],
         },
-        //    {
-        //   $replaceRoot: {
-        //     newRoot: {
-        //       $mergeObjects: [
-        //         "$ROOT",
-        //         {
-        //           THISISIMEI: "$imei",
-
-        //         },
-        //       ],
-        //     },
-        //   },
-        // },
+ 
       ]);
-      //  return     res.json(vehiclesFounded[0].IMEIS[0] );
       var userString = userId.toString();
       var imeis = vehiclesFounded[0].IMEIS[0];
 
-        // return res.json({imeis})
 
-        // return res.json(imeis)
       var StatusFounded = await VehicleStatusModel.aggregate([
         {
           $match: {
@@ -315,7 +287,6 @@ const reportDeviceStatus = async (req, res) => {
             as: "device",
           },
         },
-        // { $unwind: "$device.devices" },
         { $unwind: "$device" },
         {
           $lookup: {
@@ -347,13 +318,7 @@ const reportDeviceStatus = async (req, res) => {
           },
         },
       ])
-      // .limit(10)
-      //  return     res.json(vehiclesFounded[0].IMEIS[0] );
 
-      // $group: {
-      //   _id: null,
-      //   devices: { $addToSet: "$devices" },
-      // },
      return res.json({data:StatusFounded,code:200});
     
   } catch (err) {
@@ -375,10 +340,7 @@ const reportDeviceLocations = async (req, res) => {
       deviceFilter,
     } = req.body;
 
-    // console.log(req.body)
-    // console.log(req.body)
-    
-    // console.log("runned")
+
     if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
      
       return res.json({message:"تاریخ شروع گزارش نمی‌تواند از تاریخ پایان گزارش جلوتر باشد.",messageSys:"reportDeviceLocations",code:400})
@@ -413,18 +375,11 @@ const reportDeviceLocations = async (req, res) => {
           ],
         },
       },
-      // { $unwind: "$devices" },
-      // {
-      //   $group: {
-      //     _id: null,
-      //     devices: { $addToSet: "$devices" },
-      //   },
-      // },
+ 
       {
         $lookup: {
           from: "vehicles",
-          // localField: 'devices',
-          // foreignField: '_id',
+         
           let: { ddd: "$devices" },
 
           as: "deviceramy",
@@ -450,7 +405,6 @@ const reportDeviceLocations = async (req, res) => {
       { $unset: ["_id"] },
     ]);
     var ii = vehiclesFounded[0].fID[0];
-    // console.log(startTime, endTime);
     const reportLocations = await GPSDataModel.aggregate([
       {
         $match: {
@@ -561,7 +515,6 @@ const reportDeviceLocations = async (req, res) => {
         },
       },
     ])
-    // .limit(10);
 
     return res.json({data:reportLocations,code :200});
   } catch (err) {
@@ -600,18 +553,11 @@ const reportDriverVehicles = async (req, res) => {
           ],
         },
       },
-      // { $unwind: "$devices" },
-      // {
-      //   $group: {
-      //     _id: null,
-      //     devices: { $addToSet: "$devices" },
-      //   },
-      // },
+ 
       {
         $lookup: {
           from: "vehicles",
-          // localField: 'devices',
-          // foreignField: '_id',
+    
           let: { ddd: "$devices" },
 
           as: "deviceramy",
@@ -635,9 +581,7 @@ const reportDriverVehicles = async (req, res) => {
           driverName: { $addToSet: "$deviceramy.driverName" },
         },
       },
-      // { $unset: ["_id"] },
     ]);
-    // return res.json(vehiclesFounded[0].driverName[0])
     let outputvehcile = vehiclesFounded[0].driverName[0];
     var operation = await ActionEventModel.aggregate([
       {
@@ -723,7 +667,6 @@ const reportDriverVehicles = async (req, res) => {
   }
 };
 
-// until here
 const reportDeviceChanges = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -752,17 +695,11 @@ const reportDeviceChanges = async (req, res) => {
           ],
         },
       },
-      // { $unwind: "$devices" },
 
-      //   $group: {
-      //     _id: null,
-      //     devices: { $addToSet: "$devices" },
-      // },
       {
         $lookup: {
           from: "vehicles",
-          // localField: "devices",
-          // foreignField:"5fb8b502d61a492f96dfc934",
+   
           let: { idN: "$_id" },
 
           as: "deviceramy",
@@ -780,101 +717,23 @@ const reportDeviceChanges = async (req, res) => {
           ],
         },
       },
-      // ,{$unwind:"$deviceramy"},
       {
         $group: {
           _id: "$deviceramy._id",
           _isd: { $addToSet: "$deviceramy._id" },
         },
-        // result: { $push: { k: "$deviceramy._id", v: "$deviceramy._id" } }
       },
       { $unset: ["_id"] },
 
-      // {
-      //   $project: {
-      //     _id: 0,
-      //     mergedObject: {
-      //       $mergeObjects: {
-      //         // _id: "$_id",
-      //         _isd: "$_isd"
-      //       }
-      //     }
-      //   }
-      // },
-      // {
-      //   $merge: {
-      //     into: "_isd" // Specify the name for the result collection
-      //   }
-      // }
-      // }
-      // {
-      //   $project :{
-      //   ss: { $push: { k: "$deviceramy._id" }}
-      //   }
-      // }
 
-      // }
-      // {
-      //   $unset: ["_id"],
-      // },
-      //    {
-      //   $replaceRoot: {
-      //     newRoot:{ FID :"$IMEIS"},
 
-      //   },
-      // },
-      // actionevents
-
-      // {$group:{
-
-      //   _id:"$deviceramy._id"
-
-      // }}
-
-      // {
-      //   $project: {
-      //    _id:"$deviceramy._id"
-      //   }
-      // }
-      // {
-      //   $lookup: {
-      //     from: "actionevents",
-
-      //     let: {  middd:"$_isd"},
-
-      //     as: "foundedAction",
-
-      //     pipeline: [
-      //       {
-      //         $match: {
-      //           $and: [
-      //             { objectId: { $in:"$$middd" },}
-      //             // {
-      //             //     $or: [
-      //             //         { date: { $gte: new Date(startDate) } },
-      //             //         { date: { $lte: new Date(endDate) } },
-      //             //     ],
-      //             // },
-      //         ],
-      //         },
-      //       },
-      //     ],
-      //   },
-      // },
     ]);
 
-    // var operationOnActionEvent = ActionEventModel.aggregate([
-    //   {$match: }
+
     var ooo = vehiclesFounded[0]._isd[0];
-    // return res.json({ooo})
 
 
 
-    // .map((item) => {
-    //   return new mongoose.Types.ObjectId(item);
-    // }),
-
-    // let dd = vehiclesFounded[0].resultVariable.ss[0]
     let ActionPr =await  ActionEventModel.aggregate([
       {
         $match: {

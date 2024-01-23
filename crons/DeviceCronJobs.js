@@ -1,27 +1,19 @@
 var schedule = require('node-cron').CronJob;
-// const {
-//     GPSDataModel,
-//     VehicleModel,
-//     VehicleAlarmModel: AlarmModel,
-// } = require('../models/gpslocation');
+
 const GPSDataModel = require("../model/GpsLocation/GPSDataModel")
 const VehicleModel = require("../model/GpsLocation/VehicleModel")
 const AlarmModel = require("../model/GpsLocation/VehicleAlarmModel")
 
-// const GPSDataModel = require("../model/GpsLocation/GPSDataModel")
-
 var { SMSGW } = require('../utils/smsgw');
-// const { logger } = require('../utility/customlog');
 var geolib = require('geolib');
 
 
 var CronJob = function () {
 var m_checkPmDistanceIns;
-// console.log("www")
+
 
 var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceId, sim) {
     try {
-        // console.log("thisone")
         if (lastIndex) {
            var data=  await  GPSDataModel.find(
                 {
@@ -33,8 +25,7 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
                 
                 
                 if (!data) {
-                    // logger.debug();
-                    // console.log('There is no gps data')
+                  
                 }
                 else {
                     var locations = new Array;
@@ -42,7 +33,6 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
                         locations.push({latitude: data[i].lat, longitude: data[i].lng});
                     }
                     var dist = (geolib.getPathLength(locations) / 1000.0).toFixed(2);
-                    // console.log("this si dist",dist)
                     if (parseFloat(dist) > parseFloat(thr)) {
                         var newAlarm = new AlarmModel({
                             type: "Over Distance",
@@ -69,13 +59,10 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
             
         }
         else{
-            // console.log("thisforels")
-
                 var  data=await   GPSDataModel.find({IMEI: IMEI})
              
                  if (!data) {
-                    // logger.debug('There is no gps data');
-                    // console.log('There is no gps data')
+            
                 }
                 else {
                     console.log("2else")
@@ -119,7 +106,6 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
                         const numbers = [phoneNumber];
                         SMSGW().sendSmsToNumber(sign, numbers);
                     }
-                    // console.log("dk")
                 }
             
         }
@@ -132,11 +118,9 @@ var checkPMDistance = async function (IMEI, lastIndex, thr, phoneNumber, deviceI
 var checkAllPMDistance = function () {
     try {
         const hhh= async()=> {
-        // m_checkPmDistanceIns = new CronJob('00 00 12 * * 1-7', function() {
 
                var vehicles=await VehicleModel.find();
 
-            //    console.log(vh.length,"|||")
 
                for(var i = 632 ; i < vehicles.length; i++){
     
@@ -144,27 +128,7 @@ var checkAllPMDistance = function () {
    checkPMDistance(vehicles[i].deviceIMEI, vehicles[i].lastPMIndex, vehicles[i].maxPMDistance, vehicles[i].driverPhoneNumber, vehicles[i]._id, vehicles[i].simNumber);
 
                }
-                //             checkPMDistance(vehicles[i].deviceIMEI, vehicles[i].lastPMIndex, vehicles[i].maxPMDistance, vehicles[i].driverPhoneNumber, vehicles[i]._id, vehicles[i].simNumber);
-                //         }
-                // .exec(function (error, vehicles) {
-                //     if (error) {
-                //         logger.error(error);
-                //     }
-                //     else if (!vehicle) {
-                //         logger.debug('vehicle not found');
-                //     }
-                //     else {
-                //         for(var i = 0 ; i < vehicles.length; i++){
-                //             checkPMDistance(vehicles[i].deviceIMEI, vehicles[i].lastPMIndex, vehicles[i].maxPMDistance, vehicles[i].driverPhoneNumber, vehicles[i]._id, vehicles[i].simNumber);
-                //         }
-                //     }
-                // });
-        //     }, function () {
-        //         /* This function is executed when the job stops */
-        //     },
-        //     true, /* Start the job right now */
-        //     "UTC" /* Time zone of this job. */
-        // );
+
        }
        hhh()
 

@@ -37,12 +37,16 @@ router.get("/vehicleofgroup/:groupId", headerAuth, DeviceGroups.getVehiclesofGro
 router.delete("/device/:vehicleId/:groupId", headerAuth, DeviceGroups.removeVehicleFromGroup);
 
 // Get device groups of a user
-router.get("/vehicleofgroup/:id", DeviceGroups.getUserDeviceGroups);
+router.get("/vehicleofgroup/:id", headerAuth, DeviceGroups.getUserDeviceGroups);
 
 // Get vehicles of multiple groups
 router.post("/vehicleofgroup", headerAuth, DeviceGroups.getVehiclesofMultiGroup);
 
 // Report vehicles of specific groups for a user
 router.get("/report/vehicleofgroup/:groupId/:userId", headerAuth, DeviceGroups.reportVehicleOfGroups);
+
+// Report vehicles of specific groups for a user
+router.get("/userofgroup/:_id", headerAuth, DeviceGroups.getUsersOfDevicesGroup);
+
 
 module.exports = router;

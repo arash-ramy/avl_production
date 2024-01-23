@@ -26,13 +26,14 @@ const getCustomeVehicle = async (req, res) => {
 
  return res.json({
   FoundedVehicle
- })
+ ,code :200})
 
 
 
   }
 catch(error){
-
+console.log(error)
+res.json({message:"something went wrong ",code:400})
 
 
 }}
@@ -775,14 +776,15 @@ const shareGroupsWithUser = async (req, res) => {
     if (!sharee) {
       return res.json({
         message: "sharee required",
-        code: 413,
+        code: 400,
         validate: false,
       });
     }
+    console.log(req.body)
     const foundedGroup = await DeviceGroupModel.findOne({
-      $and: [{ user: userId }, { _id: groupId }],
-    }).populate("devices");
-    console.log("shared4");
+      $and: [{ user: userId }, { _id: groupId },{sharees:userId}],
+    })
+    console.log("shared4",foundedGroup);
 
     if (!foundedGroup) {
       return res.json({
@@ -835,7 +837,7 @@ const unshareGroupsWithUser = async (req, res) => {
     if (foundedGroup.sharees.indexOf(sharee) >= 0) {
       foundedGroup.sharees.splice(foundedGroup.sharees.indexOf(sharee), 1);
       await foundedGroup.save();
-      return res.json({ group: foundedGroup, sharee: sharee, code: 200 });
+      return res.json({ group: foundedGroup, sharee: sharee, code: 200,message:"user successfuly deleted  " });
     }
   } catch (error) {
     console.log(error);
@@ -848,10 +850,12 @@ const unshareGroupsWithUser = async (req, res) => {
 };
 const getVehiclesofGroup = async (req, res) => {
   try {
+    console.log("runnnnnn")
     var groupId = req.params.groupId;
     var userId = req.user._id;
     // console.log(groupId, "groupId");
-    // console.log(userId, "userId");
+    console.log(userId, "userId");
+    console.log("runed")
 
     const vehiclesofGroup = await DeviceGroupModel.findOne({
       _id: groupId,
@@ -1038,6 +1042,15 @@ const getVehiclesofMultiGroup = async (req, res) => {
   try {
     var groupId = req.body.groups;
     var userId = req.user._id;
+
+    console.log("runned")
+    console.log("body",groupId)
+    if(!groupId ||groupId===undefined|| groupId===null|| groupId===""  || !userId){
+      return res.json({
+        message: "please check your inputs ",
+        code: 400,
+      });
+    } 
     const foundItem = await DeviceGroupModel.find({
       $and: [
         // { $or: [{user: userId}, {sharees: userId}] },
@@ -1179,6 +1192,45 @@ const getBachInfoViaIMEI = async (req, res) => {
     })
   }
 };
+
+const getUsersOfDevicesGroup  = async (req, res) => {
+  try{
+  const id = req.params._id;
+
+  const foundedDevice = await DeviceGroupModel
+  .aggregate([
+    {$match:{"_id": new mongoose.Types.ObjectId(id)}}
+ ,
+{ $unwind:
+   "$sharees"
+ }
+ ,{
+  $lookup: {
+    from: "users",
+    localField: "sharees",
+    foreignField: "_id",
+    as: "ds",
+  }, }
+,
+{$project:{
+  _id:null,
+Users:"$ds"
+}},
+{$unset: "_id"},
+  ])
+
+  return res.json(foundedDevice)
+}
+catch(err){
+  return res.json({err:err.message,code:400})
+}
+}
+
+
+
+
+
+
 module.exports = {
   getDeviceGroups,
   getDeviceGroups2,
@@ -1193,6 +1245,7 @@ module.exports = {
   removeVehicleFromGroup,
   getUserDeviceGroups,
   getVehiclesofMultiGroup,
+  getUsersOfDevicesGroup,
   reportVehicleOfGroups,
   getCustomeVehicle
 };

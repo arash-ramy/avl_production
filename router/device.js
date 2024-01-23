@@ -13,7 +13,7 @@ router.get("/cmd/sos/:IMEI/:sos", headerAuth, deviceController.configure);
 
 // Device Information
 router.get("/last", headerAuth, deviceController.getLastLocationOfAllDevice);
-router.get("/", deviceController.getDevices);
+router.get("/",headerAuth, deviceController.getDevices);
 // router.get("/tests", headerAuth, deviceController.tests);
 router.post("/getinfo", headerAuth, deviceController.getBachInfoViaIMEI);
 
@@ -55,6 +55,11 @@ router.post("/lastlocationsinp", headerAuth, deviceController.getLastLocationsOf
 
 // Additional Testing
 router.post("/tests", headerAuth, deviceController.tests);
+
+router.post("/add-deviceModel-user", headerAuth, deviceController.setUserDeviceModel);
+
+
+
 
 module.exports = router;
  

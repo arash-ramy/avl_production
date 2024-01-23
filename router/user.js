@@ -28,7 +28,7 @@ router.post("/signin", userController.Signin);
 router.post("/signup", userController.signup);
 
 // User Management Routes
-router.get("/", userController.getUserList);
+router.get("/",headerAuth, userController.getUserList);
 router.put("/", headerAuth, userController.editUser);
 router.get("/lock/:userid", headerAuth, userController.lockUser);
 router.get("/unlock/:userid", headerAuth, userController.unlockUser);
@@ -36,8 +36,8 @@ router.post("/change-password", headerAuth, userController.changeUserPassword);
 router.post("/change-password-other", headerAuth, userController.changeOtherPassword);
 
 // Additional User Information Routes
-router.get("/berif", userController.getLisOftNameAndUserName);
-router.post("/passwordrecovery", userController.forgotPasswordRequest);
+router.get("/berif", headerAuth, userController.getLisOftNameAndUserName);
+router.post("/passwordrecovery", headerAuth, userController.forgotPasswordRequest);
 router.post("/phoneNumbers/add", headerAuth, userController.addPhoneNumber);
 router.get("/phoneNumbers/show", headerAuth, userController.getPhoneBook);
 
@@ -46,7 +46,7 @@ router.get("/phoneNumbers/show", headerAuth, userController.getPhoneBook);
 // router.get("/get-profile", userController.getProfilePicture);
 
 // Role Management Routes
-router.post("/addRoleToUser", userController.addRoleToUser);
+router.post("/addRoleToUser",headerAuth, userController.addRoleToUser);
 
 // Testing Route
 // router.post("/test", headerAuth, userController.test);
