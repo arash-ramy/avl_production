@@ -37,7 +37,7 @@ router.post("/change-password-other", headerAuth, userController.changeOtherPass
 
 // Additional User Information Routes
 router.get("/berif", headerAuth, userController.getLisOftNameAndUserName);
-router.post("/passwordrecovery", headerAuth, userController.forgotPasswordRequest);
+router.post("/passwordrecovery",  userController.forgotPasswordRequest);
 router.post("/phoneNumbers/add", headerAuth, userController.addPhoneNumber);
 router.get("/phoneNumbers/show", headerAuth, userController.getPhoneBook);
 

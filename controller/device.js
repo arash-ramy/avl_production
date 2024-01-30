@@ -490,6 +490,7 @@ async function setSOS(req, res) {
     if (!vehicle) {
       return res.json({ msg: "vehicle not found", code: 404 });
     }
+     if(s)
 
     if (vehicle.trackerModel === "GT06") {
       NotifyUtility.setSOSNumber(vehicle.simNumber, sos);
@@ -512,6 +513,7 @@ async function setSOS(req, res) {
 }
 async function getDevices(req, res) {
   try {
+ 
     const allVehicles = await VehicleModel.find()
       .setAuthorizationUser(req.user)
 
@@ -1758,6 +1760,16 @@ const setUserDeviceModel = async (req, res) => {
   }
 };
 
+const getDevicesImei = async (req, res) => {
+  const imei = req.params.imei
+  console.log(imei)
+  if(!imei){
+    return res.json({message:"imei is not valid "})
+  }
+  var imeifound =await  VehicleModel.findOne({deviceIMEI:imei})
+
+  return res.json({imeifound})
+}
 var helpers = {};
 
 module.exports = {
@@ -1793,4 +1805,5 @@ module.exports = {
   exportDeviceAlarmsReportToPdf,
   setUserDeviceModel,
   getDeviceModelsBerif,
+  getDevicesImei
 };

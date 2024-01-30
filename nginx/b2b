@@ -1,0 +1,79 @@
+server {
+
+
+	listen 65.109.167.49:80;
+   server_name b2bgrainmarket.com www.b2bgrainmarket.com;
+  location / {
+        root /var/www/b2bgrainmarket.com;
+        index  index.html index.htm;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        try_files $uri $uri/ /index.html;
+  }
+}
+
+server {
+	listen 65.109.167.49:80;
+   server_name admin.b2bgrainmarket.com;
+   location / {
+        root /var/www/admin-b2b;
+        index  index.html index.htm;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        try_files $uri $uri/ /index.html;
+  }
+}
+
+#panel v2ray
+server {
+listen 65.109.167.49:80;
+    server_name v2r.b2bgrainmarket.com;
+    location / {
+    proxy_pass http://localhost:2096;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+    }
+}
+
+
+
+
+#last port was 8008
+# test shayan api
+server {
+listen 65.109.167.49:80;
+    server_name shayanapi.b2bgrainmarket.com;
+    location / {
+    proxy_pass http://localhost:5002;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+    }
+}
+
+server {
+listen 65.109.167.49:80;
+    server_name api.b2bgrainmarket.com;
+    location / {
+    proxy_pass http://localhost:8008;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+    }
+}
+
+
+

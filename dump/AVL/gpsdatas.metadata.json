@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"vehicleId":{"$numberInt":"1"}},"name":"vehicleId_1","background":true}],"uuid":"59657511e12846c7be26ae977a5465a0","collectionName":"gpsdatas","type":"collection"}

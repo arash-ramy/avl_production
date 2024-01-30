@@ -1,4 +1,3 @@
-console.log("////////////////////////////////////////////////")
 const  VehicleModel  = require('../model/GpsLocation/VehicleModel');
 const VehicleStatusModel = require('../model/GpsLocation/VehicleStatusModel');
 // const { logger } = require('../utility/customlog');

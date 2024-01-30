@@ -14,6 +14,8 @@ router.get("/cmd/sos/:IMEI/:sos", headerAuth, deviceController.configure);
 // Device Information
 router.get("/last", headerAuth, deviceController.getLastLocationOfAllDevice);
 router.get("/",headerAuth, deviceController.getDevices);
+router.get("/:imei",headerAuth, deviceController.getDevicesImei);
+
 // router.get("/tests", headerAuth, deviceController.tests);
 router.post("/getinfo", headerAuth, deviceController.getBachInfoViaIMEI);
 

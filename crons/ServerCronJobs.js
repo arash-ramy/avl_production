@@ -7,9 +7,9 @@ class ServerCronJobs {
     static run() {
         console.log("servercronjobsssss")
         DatabaseBackupCron.run();
-        DeviceStatusCron.run();
-        DeviceMonthlyDistanceCron.run();
-        DeviceCheckLastLocationDelayCron.run();
+        // DeviceStatusCron.run();
+        // DeviceMonthlyDistanceCron.run();
+        // DeviceCheckLastLocationDelayCron.run();
     }
 }
 

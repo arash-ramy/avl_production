@@ -65,7 +65,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   const DeviceRouter = require("./router/device");
   const DeviceGroupRouter = require("./router/deviceGroupe");
   const GPSLocation = require("./router/gpslocation");
-  // const testCron = require("./router/cronTest");
+  const testCron = require("./router/cronTest");
 
   process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection 🔥🔥🔥 :', promise, 'reason:', reason);
@@ -83,7 +83,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.use("/api/v1/gpsdata", GPSLocation);
   app.use("/api/v1/device", DeviceRouter);
   app.use("/api/v1/devicegroup", DeviceGroupRouter);
-  // app.use("/api/v1/crontest", testCron);
+  app.use("/api/v1/crontest", testCron);
   app.on('error', (err) => {
     console.error('Express App Error:', err);
     // Log the error or perform cleanup

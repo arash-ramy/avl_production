@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"176a1d85ca7f47f8bd74de1d336a8144","collectionName":"activationschemas","type":"collection"}

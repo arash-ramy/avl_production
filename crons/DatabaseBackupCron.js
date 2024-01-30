@@ -1,10 +1,9 @@
-console.log("removeOldGPSData ramy");
+
 const path = require("path");
 const moment = require("moment");
 const cron = require("node-cron");
 const { promises: fs } = require("fs");
 const { execSync: exec } = require("child_process");
-console.log("removeOldGPSData ramy2");
 var shell = require("shelljs");
 
 const { log } = require("debug");
@@ -25,43 +24,30 @@ const backupOptions = {
 
 class DatabaseBackupCron {
   static async removeOldGPSData(expirationDate) {
-    // console.log("removeOldGPSData")
 
     //  ------- delete gps data for before 9 months ago -------
     try {
       const vehicleLastLocations = (
         await VehicleModel.find().select("lastLocation")
-      ).map((item) => item.lastLocation);
-
+      ).map((item) => item.lastLocation)
+        console.log("|||||||||||========>",vehicleLastLocations)
       // console.log(vehicleLastLocations,"ramy")
       const oldGPSDataQuery = await GPSDataModel.deleteMany({
         _id: { $nin: vehicleLastLocations },
         date: { $lte: expirationDate },
       });
-
-      // logger.info(
-      //     `${oldGPSDataQuery.deletedCount} instances of ${
-      //         GPSDataModel.modelName
-      //     } created before ${expirationDate} has been deleted on ${new Date()}`
-      // );
     } catch (error) {
       console.log(error);
-      // logger.warn(
-      //     `An error occurred while deleting ${
-      //         GPSDataModel.modelName
-      //     } instances created before ${expirationDate} on ${new Date()}`
-      // );
     }
   }
 
   static async removeOldData() {
-    // console.log("removeOldGPSData ramy 6")
+    console.log("removeOldGPSData ramy 6")
 
-    // this method set expiration Date for delete GPS data and call removeOldGPSData method
     const timePoint = new Date();
     timePoint.setHours(0, 0, 0);
     timePoint.setMonth(new Date().getMonth() - 9, 1); // Last 9 Month
-    // console.log(timePoint,"timePoint")
+
     await DatabaseBackupCron.removeOldGPSData(timePoint).catch(
       console.log("something went wrong in removeOldData")
     );
@@ -111,19 +97,15 @@ class DatabaseBackupCron {
   }
 
   static async backupDatabase() {
-    // console.log("removeOldGPSData ramy 9 ********************************************")
-    // console.log("removeOldGPSData ramy 9")
-    // console.log("removeOldGPSData ramy 9")
-
+try{
     const today = new Date();
     const { backupDir } = backupOptions;
     const backupName = moment(today).format("YYYY-MM-DD");
+
     const backupPath = path.resolve(backupDir, backupName);
-    // console.log(backupPath,"backupPath ********************************************")
-    // console.log(backupName,"backupName ********************************************")
-    // console.log(backupDir,"backupDir ********************************************")
+  
     const databases = db.base.connections.map((connection) => connection.name);
-    // console.log(databases,"databases")
+    console.log(databases,"databases")
     // console.log(db,"db ********************************************")
 
     // console.log(db.base.connections,"db.connections ********************************************")
@@ -142,7 +124,8 @@ class DatabaseBackupCron {
       // console.log(commands.join(' && '),"commands.join(' && ')")
       var stringCommand = commands.join(" && ");
 
-      shell.exec(stringCommand);
+      shell.exec(  'mongodump --host 127.0.0.1 --port 27017 --db AVL-RAMY --out C:\\Users\\ar-rahimi\\Desktop\\avl-server-master\\ramy\\avl-server-ramy\\db-backups\\2024-01-28',
+      'tar cfj C:\\Users\\ar-rahimi\\Desktop\\avl-server-master\\ramy\\avl-server-ramy\\db-backups\\2024-01-28.tar.bz2 -C C:\\Users\\ar-rahimi\\Desktop\\avl-server-master\\ramy\\avl-server-ramy\\db-backups\\2024-01-28 ../2024-01-28');
 
       // await exec(commands.join(' && '));
       // logger.info('Database backup file generated successfully.', {
@@ -150,16 +133,20 @@ class DatabaseBackupCron {
       // });
     } catch (error) {
       // logger.error(error);]
-      // console.log(error)
+      console.log(error)
     }
+  }catch(err){
+  console.log(err,"err")
+
+  }
   }
 
   static run() {
     // console.log("654123" )
 
-    const EVERY_WEEK_ON_FRIDAY_3_AM = "1 * * * *"; // 3 AM every week on Thursday
-    cron.schedule(EVERY_WEEK_ON_FRIDAY_3_AM, () => {
-      // (() => {
+    // const EVERY_WEEK_ON_FRIDAY_3_AM = "1 * * * *"; // 3 AM every week on Thursday
+    // cron.schedule(EVERY_WEEK_ON_FRIDAY_3_AM, () => {
+      (() => {
       try {
         // console.log(DatabaseBackupCron,"DatabaseBackupCron")
         DatabaseBackupCron.removeOldData().then(() => {
@@ -178,8 +165,8 @@ class DatabaseBackupCron {
         console.log(err);
       }
 
-      // })();
-    });
+      })();
+    // });
   }
 }
 

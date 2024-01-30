@@ -95,7 +95,7 @@ const Signin = async (req, res) => {
     const id = user._id;
     const createActivationToken = (id) => {
       return jwt.sign({ id }, process.env.ACTIVATION_SECRET, {
-        expiresIn: "7d",
+        expiresIn: "1d",
       });
     };
     // console.log("object");

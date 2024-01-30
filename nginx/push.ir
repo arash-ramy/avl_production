@@ -1,0 +1,61 @@
+server {
+    if ($host = www.pushakomde.ir) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = pushakomde.ir) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+  listen 65.109.167.49:80;
+  server_name pushakomde.ir www.pushakomde.ir;
+  location / {
+  root /var/www/pushakomde.ir;
+  index  index.html index.htm;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection 'upgrade';
+  proxy_set_header Host $host;
+  proxy_cache_bypass $http_upgrade;
+  try_files $uri $uri/ /index.html;
+  }
+
+
+
+
+}
+server {
+	listen 65.109.167.49:443 ssl http2;
+    server_name api.pushakomde.ir ;
+     ssl_certificate /etc/letsencrypt/live/pushakomde.ir/fullchain.pem; # managed by Certbot
+        ssl_certificate_key /etc/letsencrypt/live/pushakomde.ir/privkey.pem; # managed by Certbot
+    location / {
+    proxy_pass http://localhost:3006;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+    }
+}
+server
+{
+	listen 65.109.167.49:443 ssl http2;
+	server_name pushakomde.ir www.pushakomde.ir ;
+    root /var/www/pushakomde.ir;
+    index  index.html index.htm;
+    ssl_certificate /etc/letsencrypt/live/pushakomde.ir/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/pushakomde.ir/privkey.pem; # managed by Certbot
+	#include /usr/local/directadmin/data/users/b2bgrainm/nginx_php.conf;
+    # Mail auto configuration (Thunderbird, MS Outlook)
+    location ~ "^/\.well-known/autoconfig/mail/config-v1\.1\.xml$|^/([Aa]utodiscover)/\1\.xml$" {
+        proxy_pass http://unix:/usr/local/directadmin/shared/internal.sock;
+        proxy_set_header X-Forwarded-For  $remote_addr;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+	include /etc/nginx/webapps.ssl.conf;
+
+
+}

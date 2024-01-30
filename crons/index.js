@@ -7,11 +7,11 @@ console.log("sfjk")
 
 const scheduleCron = async () => {
   // console.log("this runnnnnnn 852147896")
-//   ServerCronJobs.run()
-  DeviceCronJobs();
+  ServerCronJobs.run()
+  // DeviceCronJobs();
 };
 
 module.exports = {
-  DeviceCronJobs,
+  // DeviceCronJobs,
   scheduleCron,
 };
